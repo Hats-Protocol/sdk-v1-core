@@ -1,15 +1,30 @@
 import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
-import { GET_HAT } from "../subgraph/queries";
 import type { GqlHat } from "../subgraph/types";
+import type { PublicClient, WalletClient, hexToBigInt } from "viem";
+import { GET_HAT } from "../subgraph/queries";
+import { HATS_ABI } from "../abi/Hats";
+import type { Account, Address, Hash } from "viem";
 
 export class HatsClient {
   readonly chainId: number;
+  private readonly _publicClient: PublicClient | undefined;
+  private readonly _walletClient: WalletClient | undefined;
   private readonly _graphqlClient: GraphQLClient | undefined;
 
-  constructor({ chainId }: { chainId: number }) {
+  constructor({
+    chainId,
+    publicClient,
+    walletClient,
+  }: {
+    chainId: number;
+    publicClient: PublicClient | undefined;
+    walletClient: WalletClient | undefined;
+  }) {
     this.chainId = chainId;
     this._graphqlClient = getGraphqlClient(chainId);
+    this._publicClient = publicClient;
+    this._walletClient = walletClient;
   }
 
   protected async _makeGqlRequest<ResponseType>(
@@ -28,6 +43,10 @@ export class HatsClient {
     return result;
   }
 
+  /*//////////////////////////////////////////////////////////////
+                      Subgraph Read Functions
+    //////////////////////////////////////////////////////////////*/
+
   async getHat({ hatId }: { hatId: string }): Promise<GqlHat> {
     const respone = await this._makeGqlRequest<{ hat: GqlHat }>(GET_HAT, {
       id: hatId,
@@ -37,5 +56,755 @@ export class HatsClient {
     }
 
     return respone.hat;
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                      Onchain Read Functions
+    //////////////////////////////////////////////////////////////*/
+
+  async viewHat({ hatId }: { hatId: string }): Promise<{
+    details: string;
+    maxSupply: number;
+    supply: number;
+    eligibility: Address;
+    toggle: Address;
+    imageUri: string;
+    numChildren: number;
+    mutable: boolean;
+    active: boolean;
+  }> {
+    if (this._publicClient === undefined) {
+      throw new Error();
+    }
+
+    const result = await this._publicClient.readContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "viewHat",
+      args: [BigInt(hatId)],
+    });
+
+    return {
+      details: result[0],
+      maxSupply: result[1],
+      supply: result[2],
+      eligibility: result[3],
+      toggle: result[4],
+      imageUri: result[5],
+      numChildren: result[6],
+      mutable: result[7],
+      active: result[8],
+    };
+  }
+
+  async isWearerOfHat({
+    address,
+    hatId,
+  }: {
+    address: Address;
+    hatId: string;
+  }): Promise<boolean> {
+    if (this._publicClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._publicClient.readContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "isWearerOfHat",
+      args: [address, BigInt(hatId)],
+    });
+
+    return res;
+  }
+
+  async isAdminOfHat({
+    address,
+    hatId,
+  }: {
+    address: Address;
+    hatId: string;
+  }): Promise<boolean> {
+    if (this._publicClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._publicClient.readContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "isAdminOfHat",
+      args: [address, BigInt(hatId)],
+    });
+
+    return res;
+  }
+
+  async isActive(hatId: string): Promise<boolean> {
+    if (this._publicClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._publicClient.readContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "isActive",
+      args: [BigInt(hatId)],
+    });
+
+    return res;
+  }
+
+  async isInGoodStanding({
+    address,
+    hatId,
+  }: {
+    address: Address;
+    hatId: string;
+  }): Promise<boolean> {
+    if (this._publicClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._publicClient.readContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "isInGoodStanding",
+      args: [address, BigInt(hatId)],
+    });
+
+    return res;
+  }
+
+  async isEligible({
+    address,
+    hatId,
+  }: {
+    address: Address;
+    hatId: string;
+  }): Promise<boolean> {
+    if (this._publicClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._publicClient.readContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "isEligible",
+      args: [address, BigInt(hatId)],
+    });
+
+    return res;
+  }
+
+  async predictHatId({ admin }: { admin: bigint }): Promise<bigint> {
+    if (this._publicClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._publicClient.readContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "getNextId",
+      args: [admin],
+    });
+
+    return res;
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                      Write Functions
+    //////////////////////////////////////////////////////////////*/
+
+  async mintTopHat({
+    account,
+    target,
+    details,
+    imageURI,
+  }: {
+    account: Account | Address;
+    target: Address;
+    details: string;
+    imageURI: string;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "mintTopHat",
+      args: [target, details, imageURI],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async createHat({
+    account,
+    admin,
+    details,
+    maxSupply,
+    eligibility,
+    toggle,
+    mutable,
+    imageURI,
+  }: {
+    account: Account | Address;
+    admin: string;
+    details: string;
+    maxSupply: number;
+    eligibility: Address;
+    toggle: Address;
+    mutable: boolean;
+    imageURI: string;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "createHat",
+      args: [
+        BigInt(admin),
+        details,
+        maxSupply,
+        eligibility,
+        toggle,
+        mutable,
+        imageURI,
+      ],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async batchCreateHats({
+    account,
+    admins,
+    details,
+    maxSupplies,
+    eligibilityModules,
+    toggleModules,
+    mutables,
+    imageURIs,
+  }: {
+    account: Account | Address;
+    admins: bigint[];
+    details: string[];
+    maxSupplies: number[];
+    eligibilityModules: Address[];
+    toggleModules: Address[];
+    mutables: boolean[];
+    imageURIs: string[];
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "batchCreateHats",
+      args: [
+        admins,
+        details,
+        maxSupplies,
+        eligibilityModules,
+        toggleModules,
+        mutables,
+        imageURIs,
+      ],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async mintHat({
+    account,
+    hatId,
+    wearer,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearer: Address;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "mintHat",
+      args: [hatId, wearer],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async batchMintHats({
+    account,
+    hatIds,
+    wearers,
+  }: {
+    account: Account | Address;
+    hatIds: bigint[];
+    wearers: Address[];
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "batchMintHats",
+      args: [hatIds, wearers],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async setHatStatus({
+    account,
+    hatId,
+    newStatus,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    newStatus: boolean;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "setHatStatus",
+      args: [hatId, newStatus],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async checkHatStatus({
+    account,
+    hatId,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "checkHatStatus",
+      args: [hatId],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async setHatWearerStatus({
+    account,
+    hatId,
+    wearer,
+    eligible,
+    standing,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearer: Address;
+    eligible: boolean;
+    standing: boolean;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "setHatWearerStatus",
+      args: [hatId, wearer, eligible, standing],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async checkHatWearerStatus({
+    account,
+    hatId,
+    wearer,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearer: Address;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "checkHatWearerStatus",
+      args: [hatId, wearer],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async renounceHat({
+    account,
+    hatId,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "renounceHat",
+      args: [hatId],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async transferHat({
+    account,
+    hatId,
+    from,
+    to,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    from: Address;
+    to: Address;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "transferHat",
+      args: [hatId, from, to],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async makeHatImmutable({
+    account,
+    hatId,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "makeHatImmutable",
+      args: [hatId],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async changeHatDetails({
+    account,
+    hatId,
+    newDetails,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    newDetails: string;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "changeHatDetails",
+      args: [hatId, newDetails],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async changeHatEligibility({
+    account,
+    hatId,
+    newEligibility,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    newEligibility: Address;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "changeHatEligibility",
+      args: [hatId, newEligibility],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async changeHatToggle({
+    account,
+    hatId,
+    newToggle,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    newToggle: Address;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "changeHatToggle",
+      args: [hatId, newToggle],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async changeHatImageURI({
+    account,
+    hatId,
+    newImageURI,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    newImageURI: string;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "changeHatImageURI",
+      args: [hatId, newImageURI],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async changeHatMaxSupply({
+    account,
+    hatId,
+    newMaxSupply,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    newMaxSupply: number;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "changeHatMaxSupply",
+      args: [hatId, newMaxSupply],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async requestLinkTopHatToTree({
+    account,
+    topHatDomain,
+    requestedAdminHat,
+  }: {
+    account: Account | Address;
+    topHatDomain: number;
+    requestedAdminHat: bigint;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "requestLinkTopHatToTree",
+      args: [topHatDomain, requestedAdminHat],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async approveLinkTopHatToTree({
+    account,
+    topHatDomain,
+    newAdminHat,
+    newEligibility,
+    newToggle,
+    newDetails,
+    newImageURI,
+  }: {
+    account: Account | Address;
+    topHatDomain: number;
+    newAdminHat: bigint;
+    newEligibility: Address;
+    newToggle: Address;
+    newDetails: string;
+    newImageURI: string;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "approveLinkTopHatToTree",
+      args: [
+        topHatDomain,
+        newAdminHat,
+        newEligibility,
+        newToggle,
+        newDetails,
+        newImageURI,
+      ],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async unlinkTopHatFromTree({
+    account,
+    topHatDomain,
+    wearer,
+  }: {
+    account: Account | Address;
+    topHatDomain: number;
+    wearer: Address;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "unlinkTopHatFromTree",
+      args: [topHatDomain, wearer],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
+  }
+
+  async relinkTopHatWithinTree({
+    account,
+    topHatDomain,
+    newAdminHat,
+    newEligibility,
+    newToggle,
+    newDetails,
+    newImageURI,
+  }: {
+    account: Account | Address;
+    topHatDomain: number;
+    newAdminHat: bigint;
+    newEligibility: Address;
+    newToggle: Address;
+    newDetails: string;
+    newImageURI: string;
+  }): Promise<Hash> {
+    if (this._walletClient === undefined) {
+      throw new Error();
+    }
+
+    const res = await this._walletClient.writeContract({
+      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      abi: HATS_ABI,
+      functionName: "relinkTopHatWithinTree",
+      args: [
+        topHatDomain,
+        newAdminHat,
+        newEligibility,
+        newToggle,
+        newDetails,
+        newImageURI,
+      ],
+      account,
+      chain: this._walletClient.chain,
+    });
+
+    return res;
   }
 }
