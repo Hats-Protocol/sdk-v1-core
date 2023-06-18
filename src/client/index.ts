@@ -62,7 +62,7 @@ export class HatsClient {
                       Onchain Read Functions
     //////////////////////////////////////////////////////////////*/
 
-  async viewHat({ hatId }: { hatId: string }): Promise<{
+  async viewHat(hatId: bigint): Promise<{
     details: string;
     maxSupply: number;
     supply: number;
@@ -98,11 +98,11 @@ export class HatsClient {
   }
 
   async isWearerOfHat({
-    address,
+    wearer,
     hatId,
   }: {
-    address: Address;
-    hatId: string;
+    wearer: Address;
+    hatId: bigint;
   }): Promise<boolean> {
     if (this._publicClient === undefined) {
       throw new Error();
@@ -112,18 +112,18 @@ export class HatsClient {
       address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
       abi: HATS_ABI,
       functionName: "isWearerOfHat",
-      args: [address, BigInt(hatId)],
+      args: [wearer, hatId],
     });
 
     return res;
   }
 
   async isAdminOfHat({
-    address,
+    user,
     hatId,
   }: {
-    address: Address;
-    hatId: string;
+    user: Address;
+    hatId: bigint;
   }): Promise<boolean> {
     if (this._publicClient === undefined) {
       throw new Error();
@@ -133,13 +133,13 @@ export class HatsClient {
       address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
       abi: HATS_ABI,
       functionName: "isAdminOfHat",
-      args: [address, BigInt(hatId)],
+      args: [user, hatId],
     });
 
     return res;
   }
 
-  async isActive(hatId: string): Promise<boolean> {
+  async isActive(hatId: bigint): Promise<boolean> {
     if (this._publicClient === undefined) {
       throw new Error();
     }
@@ -148,18 +148,18 @@ export class HatsClient {
       address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
       abi: HATS_ABI,
       functionName: "isActive",
-      args: [BigInt(hatId)],
+      args: [hatId],
     });
 
     return res;
   }
 
   async isInGoodStanding({
-    address,
+    wearer,
     hatId,
   }: {
-    address: Address;
-    hatId: string;
+    wearer: Address;
+    hatId: bigint;
   }): Promise<boolean> {
     if (this._publicClient === undefined) {
       throw new Error();
@@ -169,18 +169,18 @@ export class HatsClient {
       address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
       abi: HATS_ABI,
       functionName: "isInGoodStanding",
-      args: [address, BigInt(hatId)],
+      args: [wearer, hatId],
     });
 
     return res;
   }
 
   async isEligible({
-    address,
+    wearer,
     hatId,
   }: {
-    address: Address;
-    hatId: string;
+    wearer: Address;
+    hatId: bigint;
   }): Promise<boolean> {
     if (this._publicClient === undefined) {
       throw new Error();
@@ -190,13 +190,13 @@ export class HatsClient {
       address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
       abi: HATS_ABI,
       functionName: "isEligible",
-      args: [address, BigInt(hatId)],
+      args: [wearer, hatId],
     });
 
     return res;
   }
 
-  async predictHatId({ admin }: { admin: bigint }): Promise<bigint> {
+  async predictHatId(admin: bigint): Promise<bigint> {
     if (this._publicClient === undefined) {
       throw new Error();
     }
@@ -253,7 +253,7 @@ export class HatsClient {
     imageURI,
   }: {
     account: Account | Address;
-    admin: string;
+    admin: bigint;
     details: string;
     maxSupply: number;
     eligibility: Address;
