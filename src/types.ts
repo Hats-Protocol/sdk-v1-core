@@ -9,3 +9,16 @@ export type Hat = {
   mutable: boolean;
   active: boolean;
 };
+
+interface TransactionResult {
+  status: "success" | "reverted";
+  transactionHash: `0x${string}`;
+}
+
+export interface CreateHatResult extends TransactionResult {
+  hatId: bigint;
+}
+
+export interface MintTopHatResult extends TransactionResult {
+  hatId: bigint;
+}

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
-    "lib": ["DOM", "DOM.Iterable", "ES2016"],
+    "lib": ["ES2022"],
     "outDir": "./dist",
     "baseUrl": "./src",
     "allowJs": false,

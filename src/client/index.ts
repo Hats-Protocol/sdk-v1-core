@@ -1,14 +1,15 @@
 import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
 import type { GqlHat } from "../subgraph/types";
-import type { PublicClient, WalletClient, hexToBigInt } from "viem";
+import type { PublicClient, WalletClient, Account, Address, Hash } from "viem";
+import { decodeEventLog, parseAbiItem } from "viem";
 import { GET_HAT } from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
-import type { Account, Address, Hash } from "viem";
+import type { CreateHatResult, MintTopHatResult } from "../types";
 
 export class HatsClient {
   readonly chainId: number;
-  private readonly _publicClient: PublicClient | undefined;
+  private readonly _publicClient: PublicClient;
   private readonly _walletClient: WalletClient | undefined;
   private readonly _graphqlClient: GraphQLClient | undefined;
 
@@ -18,7 +19,7 @@ export class HatsClient {
     walletClient,
   }: {
     chainId: number;
-    publicClient: PublicClient | undefined;
+    publicClient: PublicClient;
     walletClient: WalletClient | undefined;
   }) {
     this.chainId = chainId;
@@ -225,21 +226,43 @@ export class HatsClient {
     target: Address;
     details: string;
     imageURI: string;
-  }): Promise<Hash> {
+  }): Promise<MintTopHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "mintTopHat",
-      args: [target, details, imageURI],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "mintTopHat",
+        args: [target, details, imageURI],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      const event = decodeEventLog({
+        abi: [
+          parseAbiItem(
+            "event HatCreated(uint256,string,uint32,address,address,bool,string)"
+          ),
+        ],
+        data: receipt.logs[0].data,
+        topics: receipt.logs[0].topics,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+        hatId: event.args[0],
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async createHat({
@@ -260,29 +283,51 @@ export class HatsClient {
     toggle: Address;
     mutable: boolean;
     imageURI: string;
-  }): Promise<Hash> {
+  }): Promise<CreateHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "createHat",
-      args: [
-        BigInt(admin),
-        details,
-        maxSupply,
-        eligibility,
-        toggle,
-        mutable,
-        imageURI,
-      ],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "createHat",
+        args: [
+          BigInt(admin),
+          details,
+          maxSupply,
+          eligibility,
+          toggle,
+          mutable,
+          imageURI,
+        ],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      const event = decodeEventLog({
+        abi: [
+          parseAbiItem(
+            "event HatCreated(uint256,string,uint32,address,address,bool,string)"
+          ),
+        ],
+        data: receipt.logs[0].data,
+        topics: receipt.logs[0].topics,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+        hatId: event.args[0],
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async batchCreateHats({
