@@ -5,7 +5,23 @@ import type { PublicClient, WalletClient, Account, Address, Hash } from "viem";
 import { decodeEventLog, parseAbiItem } from "viem";
 import { GET_HAT } from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
-import type { CreateHatResult, MintTopHatResult } from "../types";
+import type {
+  CreateHatResult,
+  MintTopHatResult,
+  BatchCreateHatsResult,
+  MintHatResult,
+  RenounceHatResult,
+  ChangeHatDetailsResult,
+  ChangeHatEligibilityResult,
+  ChangeHatToggleResult,
+  ChangeHatImageURIResult,
+  ChangeHatMaxSupplyResult,
+  MakeHatImmutableResult,
+  BatchMintHatsResult,
+  SetHatStatusResult,
+  TransferHatResult,
+  SetHatWearerStatusResult,
+} from "../types";
 
 export class HatsClient {
   readonly chainId: number;
@@ -348,29 +364,57 @@ export class HatsClient {
     toggleModules: Address[];
     mutables: boolean[];
     imageURIs: string[];
-  }): Promise<Hash> {
+  }): Promise<BatchCreateHatsResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "batchCreateHats",
-      args: [
-        admins,
-        details,
-        maxSupplies,
-        eligibilityModules,
-        toggleModules,
-        mutables,
-        imageURIs,
-      ],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "batchCreateHats",
+        args: [
+          admins,
+          details,
+          maxSupplies,
+          eligibilityModules,
+          toggleModules,
+          mutables,
+          imageURIs,
+        ],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      let newHatIds: bigint[] = [];
+
+      for (let i = 0; i < admins.length; i++) {
+        const event = decodeEventLog({
+          abi: [
+            parseAbiItem(
+              "event HatCreated(uint256,string,uint32,address,address,bool,string)"
+            ),
+          ],
+          data: receipt.logs[i].data,
+          topics: receipt.logs[i].topics,
+        });
+
+        newHatIds.push(event.args[0]);
+      }
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+        hatIds: newHatIds,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async mintHat({
@@ -381,21 +425,32 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     wearer: Address;
-  }): Promise<Hash> {
+  }): Promise<MintHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "mintHat",
-      args: [hatId, wearer],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "mintHat",
+        args: [hatId, wearer],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async batchMintHats({
@@ -406,21 +461,32 @@ export class HatsClient {
     account: Account | Address;
     hatIds: bigint[];
     wearers: Address[];
-  }): Promise<Hash> {
+  }): Promise<BatchMintHatsResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "batchMintHats",
-      args: [hatIds, wearers],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "batchMintHats",
+        args: [hatIds, wearers],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async setHatStatus({
@@ -431,21 +497,32 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     newStatus: boolean;
-  }): Promise<Hash> {
+  }): Promise<SetHatStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "setHatStatus",
-      args: [hatId, newStatus],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "setHatStatus",
+        args: [hatId, newStatus],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async checkHatStatus({
@@ -483,21 +560,32 @@ export class HatsClient {
     wearer: Address;
     eligible: boolean;
     standing: boolean;
-  }): Promise<Hash> {
+  }): Promise<SetHatWearerStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "setHatWearerStatus",
-      args: [hatId, wearer, eligible, standing],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "setHatWearerStatus",
+        args: [hatId, wearer, eligible, standing],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async checkHatWearerStatus({
@@ -531,21 +619,32 @@ export class HatsClient {
   }: {
     account: Account | Address;
     hatId: bigint;
-  }): Promise<Hash> {
+  }): Promise<RenounceHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "renounceHat",
-      args: [hatId],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "renounceHat",
+        args: [hatId],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async transferHat({
@@ -558,21 +657,32 @@ export class HatsClient {
     hatId: bigint;
     from: Address;
     to: Address;
-  }): Promise<Hash> {
+  }): Promise<TransferHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "transferHat",
-      args: [hatId, from, to],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "transferHat",
+        args: [hatId, from, to],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async makeHatImmutable({
@@ -581,21 +691,32 @@ export class HatsClient {
   }: {
     account: Account | Address;
     hatId: bigint;
-  }): Promise<Hash> {
+  }): Promise<MakeHatImmutableResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "makeHatImmutable",
-      args: [hatId],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "makeHatImmutable",
+        args: [hatId],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async changeHatDetails({
@@ -606,21 +727,32 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     newDetails: string;
-  }): Promise<Hash> {
+  }): Promise<ChangeHatDetailsResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "changeHatDetails",
-      args: [hatId, newDetails],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "changeHatDetails",
+        args: [hatId, newDetails],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async changeHatEligibility({
@@ -631,21 +763,32 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     newEligibility: Address;
-  }): Promise<Hash> {
+  }): Promise<ChangeHatEligibilityResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "changeHatEligibility",
-      args: [hatId, newEligibility],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "changeHatEligibility",
+        args: [hatId, newEligibility],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async changeHatToggle({
@@ -656,21 +799,32 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     newToggle: Address;
-  }): Promise<Hash> {
+  }): Promise<ChangeHatToggleResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "changeHatToggle",
-      args: [hatId, newToggle],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "changeHatToggle",
+        args: [hatId, newToggle],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async changeHatImageURI({
@@ -681,21 +835,32 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     newImageURI: string;
-  }): Promise<Hash> {
+  }): Promise<ChangeHatImageURIResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "changeHatImageURI",
-      args: [hatId, newImageURI],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "changeHatImageURI",
+        args: [hatId, newImageURI],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async changeHatMaxSupply({
@@ -706,21 +871,32 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     newMaxSupply: number;
-  }): Promise<Hash> {
+  }): Promise<ChangeHatMaxSupplyResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "changeHatMaxSupply",
-      args: [hatId, newMaxSupply],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "changeHatMaxSupply",
+        args: [hatId, newMaxSupply],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async requestLinkTopHatToTree({

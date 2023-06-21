@@ -4,7 +4,22 @@ import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
 import { HATS_ABI } from "./abi/Hats";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
-import type { CreateHatResult, MintTopHatResult } from "./types";
+import type {
+  CreateHatResult,
+  MintTopHatResult,
+  BatchCreateHatsResult,
+  BatchMintHatsResult,
+  RenounceHatResult,
+  ChangeHatDetailsResult,
+  ChangeHatEligibilityResult,
+  ChangeHatToggleResult,
+  ChangeHatImageURIResult,
+  ChangeHatMaxSupplyResult,
+  MakeHatImmutableResult,
+  SetHatStatusResult,
+  TransferHatResult,
+  SetHatWearerStatusResult,
+} from "./types";
 
 describe("Client tests", () => {
   let publicClient: PublicClient;
@@ -266,18 +281,19 @@ describe("Client tests", () => {
       });
     });
 
-    /*
     describe("Hat 1.1 is minted", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.mintHat({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-          wearer: address1,
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.mintHat({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+            wearer: address1,
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test hat 1.1 minted", async () => {
@@ -296,18 +312,19 @@ describe("Client tests", () => {
         expect(res).toBe(true);
       });
     });
-    
 
     describe("Hat 1.1 is renounced", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.renounceHat({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.renounceHat({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test hat 1.1 is renounced", async () => {
@@ -329,15 +346,17 @@ describe("Client tests", () => {
 
     describe("Change Hat 1.1 details", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.changeHatDetails({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-          newDetails: "Hat 1.1 new details",
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.changeHatDetails({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+            newDetails: "Hat 1.1 new details",
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test Hat 1.1 new details", async () => {
@@ -358,15 +377,17 @@ describe("Client tests", () => {
 
     describe("Change Hat 1.1 eligibility", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.changeHatEligibility({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-          newEligibility: "0x0000000000000000000000000000000000000001",
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.changeHatEligibility({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+            newEligibility: "0x0000000000000000000000000000000000000001",
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test Hat 1.1 new eligibility", async () => {
@@ -387,15 +408,17 @@ describe("Client tests", () => {
 
     describe("Change Hat 1.1 toggle", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.changeHatToggle({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-          newToggle: "0x0000000000000000000000000000000000000001",
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.changeHatToggle({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+            newToggle: "0x0000000000000000000000000000000000000001",
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test Hat 1.1 new toggle", async () => {
@@ -416,15 +439,17 @@ describe("Client tests", () => {
 
     describe("Change Hat 1.1 image URI", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.changeHatImageURI({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-          newImageURI: "Hat 1.1 new image URI",
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.changeHatImageURI({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+            newImageURI: "Hat 1.1 new image URI",
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test Hat 1.1 new image URI", async () => {
@@ -445,15 +470,17 @@ describe("Client tests", () => {
 
     describe("Change Hat 1.1 max supply", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.changeHatMaxSupply({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-          newMaxSupply: 10,
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.changeHatMaxSupply({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+            newMaxSupply: 10,
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test Hat 1.1 new max supply", async () => {
@@ -474,14 +501,16 @@ describe("Client tests", () => {
 
     describe("Make Hat 1.1 immutable", () => {
       beforeAll(async () => {
-        const txHash = await hatsClient.makeHatImmutable({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          await hatsClient.makeHatImmutable({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
 
       test("Test Hat 1.1 immutable", async () => {
@@ -501,27 +530,44 @@ describe("Client tests", () => {
     });
 
     describe("Batch Create Hats 1.2 and 1.3", () => {
+      let res: BatchCreateHatsResult;
       beforeAll(async () => {
-        const txHash = await hatsClient.batchCreateHats({
-          admins: [
-            BigInt(
-              "0x0000000100000000000000000000000000000000000000000000000000000000"
-            ),
-            BigInt(
-              "0x0000000100000000000000000000000000000000000000000000000000000000"
-            ),
-          ],
-          maxSupplies: [3, 5],
-          eligibilityModules: [address1, address1],
-          toggleModules: [address1, address1],
-          mutables: [true, false],
-          details: ["1.2 details", "1.3 details"],
-          imageURIs: ["1.2 URI", "1.3 URI"],
-          account: account1,
-        });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+        try {
+          res = await hatsClient.batchCreateHats({
+            admins: [
+              BigInt(
+                "0x0000000100000000000000000000000000000000000000000000000000000000"
+              ),
+              BigInt(
+                "0x0000000100000000000000000000000000000000000000000000000000000000"
+              ),
+            ],
+            maxSupplies: [3, 5],
+            eligibilityModules: [address1, address1],
+            toggleModules: [address1, address1],
+            mutables: [true, false],
+            details: ["1.2 details", "1.3 details"],
+            imageURIs: ["1.2 URI", "1.3 URI"],
+            account: account1,
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
+
+      test("Test batchCreateHats result value", () => {
+        expect(res.hatIds[0]).toBe(
+          BigInt(
+            "0x0000000100020000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res.hatIds[1]).toBe(
+          BigInt(
+            "0x0000000100030000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res.status).toBe("success");
+      });
 
       test("Test hat 1.2 is created", async () => {
         const res = await publicClient.readContract({
@@ -571,8 +617,10 @@ describe("Client tests", () => {
     });
 
     describe("Batch mint hats 1.2 and 1.3", () => {
+      let res: BatchMintHatsResult;
+
       beforeAll(async () => {
-        const txHash = await hatsClient.batchMintHats({
+        res = await hatsClient.batchMintHats({
           account: account1,
           hatIds: [
             BigInt(
@@ -584,9 +632,11 @@ describe("Client tests", () => {
           ],
           wearers: [address1, address2],
         });
-
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
       }, 30000);
+
+      test("Test batchMintHats result value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.2 is minted", async () => {
         const res = await publicClient.readContract({
@@ -622,17 +672,25 @@ describe("Client tests", () => {
     });
 
     describe("Hat 1.3 becomes inactive", () => {
-      beforeAll(async () => {
-        const txHash = await hatsClient.setHatStatus({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100030000000000000000000000000000000000000000000000000000"
-          ),
-          newStatus: false,
-        });
+      let res: SetHatStatusResult;
 
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.setHatStatus({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100030000000000000000000000000000000000000000000000000000"
+            ),
+            newStatus: false,
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
+
+      test("Test setHatStatus result value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test hat 1.3 is inactive", async () => {
         const res = await publicClient.readContract({
@@ -651,18 +709,26 @@ describe("Client tests", () => {
     });
 
     describe("Transfer hat 1.2", () => {
-      beforeAll(async () => {
-        const txHash = await hatsClient.transferHat({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100020000000000000000000000000000000000000000000000000000"
-          ),
-          from: address1,
-          to: address2,
-        });
+      let res: TransferHatResult;
 
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.transferHat({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100020000000000000000000000000000000000000000000000000000"
+            ),
+            from: address1,
+            to: address2,
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
+
+      test("Test transferHat result value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.2 was transfered", async () => {
         const res1 = await publicClient.readContract({
@@ -695,19 +761,27 @@ describe("Client tests", () => {
     });
 
     describe("Wearer becomes non eligible for hat 1.2", () => {
-      beforeAll(async () => {
-        const txHash = await hatsClient.setHatWearerStatus({
-          account: account1,
-          hatId: BigInt(
-            "0x0000000100020000000000000000000000000000000000000000000000000000"
-          ),
-          wearer: address2,
-          eligible: false,
-          standing: true,
-        });
+      let res: SetHatWearerStatusResult;
 
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.setHatWearerStatus({
+            account: account1,
+            hatId: BigInt(
+              "0x0000000100020000000000000000000000000000000000000000000000000000"
+            ),
+            wearer: address2,
+            eligible: false,
+            standing: true,
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }, 30000);
+
+      test("Test setHatWearerStatus result value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test hat 1.2 burned", async () => {
         const res = await publicClient.readContract({
@@ -725,6 +799,5 @@ describe("Client tests", () => {
         expect(res).toBe(false);
       });
     });
-    */
   });
 });
