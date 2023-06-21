@@ -2,7 +2,7 @@ import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
 import type { GqlHat } from "../subgraph/types";
 import type { PublicClient, WalletClient, Account, Address, Hash } from "viem";
-import { decodeEventLog, parseAbiItem } from "viem";
+import { decodeEventLog, parseAbiItem, encodeEventTopics } from "viem";
 import { GET_HAT } from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
 import type {
@@ -21,6 +21,8 @@ import type {
   SetHatStatusResult,
   TransferHatResult,
   SetHatWearerStatusResult,
+  CheckHatStatusResult,
+  CheckHatWearerStatusResult,
 } from "../types";
 
 export class HatsClient {
@@ -262,11 +264,8 @@ export class HatsClient {
       });
 
       const event = decodeEventLog({
-        abi: [
-          parseAbiItem(
-            "event HatCreated(uint256,string,uint32,address,address,bool,string)"
-          ),
-        ],
+        abi: HATS_ABI,
+        eventName: "HatCreated",
         data: receipt.logs[0].data,
         topics: receipt.logs[0].topics,
       });
@@ -274,7 +273,7 @@ export class HatsClient {
       return {
         status: receipt.status,
         transactionHash: receipt.transactionHash,
-        hatId: event.args[0],
+        hatId: event.args.id,
       };
     } catch (err) {
       throw new Error("Transaction reverted");
@@ -327,11 +326,8 @@ export class HatsClient {
       });
 
       const event = decodeEventLog({
-        abi: [
-          parseAbiItem(
-            "event HatCreated(uint256,string,uint32,address,address,bool,string)"
-          ),
-        ],
+        abi: HATS_ABI,
+        eventName: "HatCreated",
         data: receipt.logs[0].data,
         topics: receipt.logs[0].topics,
       });
@@ -339,7 +335,7 @@ export class HatsClient {
       return {
         status: receipt.status,
         transactionHash: receipt.transactionHash,
-        hatId: event.args[0],
+        hatId: event.args.id,
       };
     } catch (err) {
       throw new Error("Transaction reverted");
@@ -395,16 +391,13 @@ export class HatsClient {
 
       for (let i = 0; i < admins.length; i++) {
         const event = decodeEventLog({
-          abi: [
-            parseAbiItem(
-              "event HatCreated(uint256,string,uint32,address,address,bool,string)"
-            ),
-          ],
+          abi: HATS_ABI,
+          eventName: "HatCreated",
           data: receipt.logs[i].data,
           topics: receipt.logs[i].topics,
         });
 
-        newHatIds.push(event.args[0]);
+        newHatIds.push(event.args.id);
       }
 
       return {
@@ -531,21 +524,48 @@ export class HatsClient {
   }: {
     account: Account | Address;
     hatId: bigint;
-  }): Promise<Hash> {
+  }): Promise<CheckHatStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "checkHatStatus",
-      args: [hatId],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "checkHatStatus",
+        args: [hatId],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      if (receipt.logs.length === 0) {
+        return {
+          status: receipt.status,
+          transactionHash: receipt.transactionHash,
+          toggled: false,
+        };
+      } else {
+        const event = decodeEventLog({
+          abi: HATS_ABI,
+          eventName: "HatStatusChanged",
+          data: receipt.logs[0].data,
+          topics: receipt.logs[0].topics,
+        });
+        return {
+          status: receipt.status,
+          transactionHash: receipt.transactionHash,
+          toggled: true,
+          newStatus: event.args.newStatus ? "active" : "inactive",
+        };
+      }
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async setHatWearerStatus({
@@ -596,21 +616,89 @@ export class HatsClient {
     account: Account | Address;
     hatId: bigint;
     wearer: Address;
-  }): Promise<Hash> {
+  }): Promise<CheckHatWearerStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "checkHatWearerStatus",
-      args: [hatId, wearer],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "checkHatWearerStatus",
+        args: [hatId, wearer],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      if (receipt.logs.length === 0) {
+        return {
+          status: receipt.status,
+          transactionHash: receipt.transactionHash,
+          wearerStandingUpdated: false,
+          hatBurned: false,
+        };
+      } else if (receipt.logs.length === 1) {
+        const burnEventTopic = encodeEventTopics({
+          abi: HATS_ABI,
+          eventName: "TransferSingle",
+        });
+        const wearerStandingChangedTopic = encodeEventTopics({
+          abi: HATS_ABI,
+          eventName: "WearerStandingChanged",
+        });
+
+        if (receipt.logs[0].topics[0] === burnEventTopic[0]) {
+          return {
+            status: receipt.status,
+            transactionHash: receipt.transactionHash,
+            wearerStandingUpdated: false,
+            hatBurned: true,
+          };
+        } else if (
+          receipt.logs[0].topics[0] === wearerStandingChangedTopic[0]
+        ) {
+          const event = decodeEventLog({
+            abi: HATS_ABI,
+            eventName: "WearerStandingChanged",
+            data: receipt.logs[0].data,
+            topics: receipt.logs[0].topics,
+          });
+          return {
+            status: receipt.status,
+            transactionHash: receipt.transactionHash,
+            wearerStandingUpdated: true,
+            hatBurned: false,
+            newWearerStanding: event.args.wearerStanding ? "good" : "bad",
+          };
+        } else {
+          throw new Error("Unexpected error");
+        }
+      } else {
+        const wearerStandingChangedEvent = decodeEventLog({
+          abi: HATS_ABI,
+          eventName: "WearerStandingChanged",
+          data: receipt.logs[1].data,
+          topics: receipt.logs[1].topics,
+        });
+
+        return {
+          status: receipt.status,
+          transactionHash: receipt.transactionHash,
+          wearerStandingUpdated: true,
+          hatBurned: true,
+          newWearerStanding: wearerStandingChangedEvent.args.wearerStanding
+            ? "good"
+            : "bad",
+        };
+      }
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async renounceHat({

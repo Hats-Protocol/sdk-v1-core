@@ -50,3 +50,14 @@ export interface SetHatStatusResult extends TransactionResult {}
 export interface TransferHatResult extends TransactionResult {}
 
 export interface SetHatWearerStatusResult extends TransactionResult {}
+
+export interface CheckHatStatusResult extends TransactionResult {
+  toggled: boolean;
+  newStatus?: "active" | "inactive";
+}
+
+export interface CheckHatWearerStatusResult extends TransactionResult {
+  wearerStandingUpdated: boolean;
+  hatBurned: boolean;
+  newWearerStanding?: "good" | "bad";
+}
