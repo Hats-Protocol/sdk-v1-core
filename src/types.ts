@@ -61,3 +61,11 @@ export interface CheckHatWearerStatusResult extends TransactionResult {
   hatBurned: boolean;
   newWearerStanding?: "good" | "bad";
 }
+
+export interface RequestLinkTopHatToTreeResult extends TransactionResult {}
+
+export interface ApproveLinkTopHatToTreeResult extends TransactionResult {}
+
+export interface UnlinkTopHatFromTreeResult extends TransactionResult {}
+
+export interface RelinkTopHatWithinTreeResult extends TransactionResult {}

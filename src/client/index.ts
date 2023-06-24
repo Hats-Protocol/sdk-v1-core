@@ -23,6 +23,10 @@ import type {
   SetHatWearerStatusResult,
   CheckHatStatusResult,
   CheckHatWearerStatusResult,
+  RequestLinkTopHatToTreeResult,
+  ApproveLinkTopHatToTreeResult,
+  UnlinkTopHatFromTreeResult,
+  RelinkTopHatWithinTreeResult,
 } from "../types";
 
 export class HatsClient {
@@ -995,21 +999,32 @@ export class HatsClient {
     account: Account | Address;
     topHatDomain: number;
     requestedAdminHat: bigint;
-  }): Promise<Hash> {
+  }): Promise<RequestLinkTopHatToTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "requestLinkTopHatToTree",
-      args: [topHatDomain, requestedAdminHat],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "requestLinkTopHatToTree",
+        args: [topHatDomain, requestedAdminHat],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async approveLinkTopHatToTree({
@@ -1024,32 +1039,47 @@ export class HatsClient {
     account: Account | Address;
     topHatDomain: number;
     newAdminHat: bigint;
-    newEligibility: Address;
-    newToggle: Address;
-    newDetails: string;
-    newImageURI: string;
-  }): Promise<Hash> {
+    newEligibility?: Address;
+    newToggle?: Address;
+    newDetails?: string;
+    newImageURI?: string;
+  }): Promise<ApproveLinkTopHatToTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "approveLinkTopHatToTree",
-      args: [
-        topHatDomain,
-        newAdminHat,
-        newEligibility,
-        newToggle,
-        newDetails,
-        newImageURI,
-      ],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "approveLinkTopHatToTree",
+        args: [
+          topHatDomain,
+          newAdminHat,
+          newEligibility === undefined
+            ? "0x0000000000000000000000000000000000000000"
+            : newEligibility,
+          newToggle === undefined
+            ? "0x0000000000000000000000000000000000000000"
+            : newToggle,
+          newDetails === undefined ? "" : newDetails,
+          newImageURI === undefined ? "" : newImageURI,
+        ],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async unlinkTopHatFromTree({
@@ -1060,21 +1090,32 @@ export class HatsClient {
     account: Account | Address;
     topHatDomain: number;
     wearer: Address;
-  }): Promise<Hash> {
+  }): Promise<UnlinkTopHatFromTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "unlinkTopHatFromTree",
-      args: [topHatDomain, wearer],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "unlinkTopHatFromTree",
+        args: [topHatDomain, wearer],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 
   async relinkTopHatWithinTree({
@@ -1093,27 +1134,38 @@ export class HatsClient {
     newToggle: Address;
     newDetails: string;
     newImageURI: string;
-  }): Promise<Hash> {
+  }): Promise<RelinkTopHatWithinTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error();
+      throw new Error("Missing wallet client");
     }
 
-    const res = await this._walletClient.writeContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
-      abi: HATS_ABI,
-      functionName: "relinkTopHatWithinTree",
-      args: [
-        topHatDomain,
-        newAdminHat,
-        newEligibility,
-        newToggle,
-        newDetails,
-        newImageURI,
-      ],
-      account,
-      chain: this._walletClient.chain,
-    });
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        abi: HATS_ABI,
+        functionName: "relinkTopHatWithinTree",
+        args: [
+          topHatDomain,
+          newAdminHat,
+          newEligibility,
+          newToggle,
+          newDetails,
+          newImageURI,
+        ],
+        account,
+        chain: this._walletClient.chain,
+      });
 
-    return res;
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      throw new Error("Transaction reverted");
+    }
   }
 }

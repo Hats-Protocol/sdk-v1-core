@@ -19,6 +19,9 @@ import type {
   SetHatStatusResult,
   TransferHatResult,
   SetHatWearerStatusResult,
+  RequestLinkTopHatToTreeResult,
+  ApproveLinkTopHatToTreeResult,
+  UnlinkTopHatFromTreeResult,
 } from "./types";
 
 describe("Client tests", () => {
@@ -797,6 +800,193 @@ describe("Client tests", () => {
         });
 
         expect(res).toBe(false);
+      });
+    });
+
+    describe("Tree 2 is created", () => {
+      let res: MintTopHatResult;
+
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.mintTopHat({
+            target: address2,
+            details: "Tophat 2",
+            imageURI: "Tophat 2 URI",
+            account: account2,
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      }, 30000);
+
+      test("Test mintTopHat return value", () => {
+        expect(res.status).toBe("success");
+        expect(res.hatId).toBe(
+          BigInt(
+            "0x0000000200000000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+
+      test("Test top-hat is created", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "viewHat",
+          args: [
+            BigInt(
+              "0x0000000200000000000000000000000000000000000000000000000000000000"
+            ),
+          ],
+        });
+
+        expect(res[0]).toBe("Tophat 2");
+        expect(res[5]).toBe("Tophat 2 URI");
+      });
+    });
+
+    describe("Tree 2 requests to link to Tree 1, hat 1.1", () => {
+      let res: RequestLinkTopHatToTreeResult;
+
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.requestLinkTopHatToTree({
+            account: account2,
+            topHatDomain: 2,
+            requestedAdminHat: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      }, 30000);
+
+      test("Test requestLinkTopHatToTree return value", () => {
+        expect(res.status).toBe("success");
+      });
+
+      test("Test link request", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "linkedTreeRequests",
+          args: [2],
+        });
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+    });
+
+    describe("Tree 1 accepts linkage", () => {
+      let res: ApproveLinkTopHatToTreeResult;
+
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.approveLinkTopHatToTree({
+            account: account1,
+            topHatDomain: 2,
+            newAdminHat: BigInt(
+              "0x0000000100010000000000000000000000000000000000000000000000000000"
+            ),
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      }, 30000);
+
+      test("Test approveLinkTopHatToTree return value", () => {
+        expect(res.status).toBe("success");
+      });
+
+      test("Test tree linked", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "linkedTreeAdmins",
+          args: [2],
+        });
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+
+      test("Test linked top-hat values", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "viewHat",
+          args: [
+            BigInt(
+              "0x0000000200000000000000000000000000000000000000000000000000000000"
+            ),
+          ],
+        });
+
+        expect(res[0]).toBe("Tophat 2");
+        expect(res[5]).toBe("Tophat 2 URI");
+        expect(res[3]).toBe("0x0000000000000000000000000000000000000000");
+        expect(res[4]).toBe("0x0000000000000000000000000000000000000000");
+      });
+    });
+
+    describe("Tree 1 unlinks tree 2", () => {
+      let res: UnlinkTopHatFromTreeResult;
+
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.unlinkTopHatFromTree({
+            account: account1,
+            topHatDomain: 2,
+            wearer: address2,
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      }, 30000);
+
+      test("Test approveLinkTopHatToTree return value", () => {
+        expect(res.status).toBe("success");
+      });
+
+      test("Test tree 2 ulinked", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "linkedTreeAdmins",
+          args: [2],
+        });
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000000000000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+
+      test("Test unlinked top-hat values", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "viewHat",
+          args: [
+            BigInt(
+              "0x0000000200000000000000000000000000000000000000000000000000000000"
+            ),
+          ],
+        });
+
+        expect(res[0]).toBe("Tophat 2");
+        expect(res[5]).toBe("Tophat 2 URI");
+        expect(res[3]).toBe("0x0000000000000000000000000000000000000000");
+        expect(res[4]).toBe("0x0000000000000000000000000000000000000000");
       });
     });
   });
