@@ -22,6 +22,7 @@ import type {
   RequestLinkTopHatToTreeResult,
   ApproveLinkTopHatToTreeResult,
   UnlinkTopHatFromTreeResult,
+  RelinkTopHatWithinTreeResult,
 } from "./types";
 
 describe("Client tests", () => {
@@ -937,6 +938,65 @@ describe("Client tests", () => {
       });
     });
 
+    describe("Tree 1 relinks tree 2", () => {
+      let res: RelinkTopHatWithinTreeResult;
+
+      beforeAll(async () => {
+        try {
+          res = await hatsClient.relinkTopHatWithinTree({
+            account: account1,
+            topHatDomain: 2,
+            newAdminHat: BigInt(
+              "0x0000000100020000000000000000000000000000000000000000000000000000"
+            ),
+            newDetails: "Tophat 2 details relinked",
+            newImageURI: "Tophat 2 URI relinked",
+            newEligibility: address1,
+            newToggle: address1,
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      }, 30000);
+
+      test("Test relinkTopHatWithinTree return value", () => {
+        expect(res.status).toBe("success");
+      });
+
+      test("Test tree relinked", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "linkedTreeAdmins",
+          args: [2],
+        });
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000100020000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+
+      test("Test relinked top-hat values", async () => {
+        const res = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "viewHat",
+          args: [
+            BigInt(
+              "0x0000000200000000000000000000000000000000000000000000000000000000"
+            ),
+          ],
+        });
+
+        expect(res[0]).toBe("Tophat 2 details relinked");
+        expect(res[5]).toBe("Tophat 2 URI relinked");
+        expect(res[3]).toBe(address1);
+        expect(res[4]).toBe(address1);
+      });
+    });
+
     describe("Tree 1 unlinks tree 2", () => {
       let res: UnlinkTopHatFromTreeResult;
 
@@ -983,8 +1043,8 @@ describe("Client tests", () => {
           ],
         });
 
-        expect(res[0]).toBe("Tophat 2");
-        expect(res[5]).toBe("Tophat 2 URI");
+        expect(res[0]).toBe("Tophat 2 details relinked");
+        expect(res[5]).toBe("Tophat 2 URI relinked");
         expect(res[3]).toBe("0x0000000000000000000000000000000000000000");
         expect(res[4]).toBe("0x0000000000000000000000000000000000000000");
       });
