@@ -307,6 +307,39 @@ export class HatsClient {
     return res;
   }
 
+  async getAdmin(hatId: bigint): Promise<bigint> {
+    const hatLevel = await this.getHatLevel(hatId);
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "getAdminAtLevel",
+      args: [hatId, hatLevel - 1],
+    });
+
+    return res;
+  }
+
+  async getChildrenHats(hatId: bigint): Promise<bigint[]> {
+    let res: bigint[] = [];
+    const hat = await this.viewHat(hatId);
+
+    if (hat.numChildren === 0) {
+      return res;
+    }
+
+    for (let i = 0; i < hat.numChildren; i++) {
+      const childHatId = await this._publicClient.readContract({
+        address: HATS_V1,
+        abi: HATS_ABI,
+        functionName: "buildHatId",
+        args: [hatId, i + 1],
+      });
+      res.push(childHatId);
+    }
+
+    return res;
+  }
+
   /*//////////////////////////////////////////////////////////////
                       Write Functions
     //////////////////////////////////////////////////////////////*/

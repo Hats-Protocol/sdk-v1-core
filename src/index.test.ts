@@ -233,6 +233,20 @@ describe("Client tests", () => {
         expect(res.active).toBe(true);
       });
 
+      test("Test getAdmin result", async () => {
+        const res = await hatsClient.getAdmin(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000100000000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+
       test("test isWearerOfHat SDK function", async () => {
         const resTopHat = await hatsClient.isWearerOfHat({
           hatId: BigInt(
@@ -705,6 +719,30 @@ describe("Client tests", () => {
         expect(res[7]).toBe(false);
         expect(res[8]).toBe(true);
       });
+
+      test("Test getChildrenHats", async () => {
+        const res = await hatsClient.getChildrenHats(
+          BigInt(
+            "0x0000000100000000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res[0]).toBe(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res[1]).toBe(
+          BigInt(
+            "0x0000000100020000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res[2]).toBe(
+          BigInt(
+            "0x0000000100030000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
     });
 
     describe("Batch mint hats 1.2 and 1.3", () => {
@@ -1040,6 +1078,20 @@ describe("Client tests", () => {
         const res = await hatsClient.getTippyTopHatDomain(2);
 
         expect(res).toBe(1);
+      });
+
+      test("Test getAdmin result", async () => {
+        const res = await hatsClient.getAdmin(
+          BigInt(
+            "0x0000000200000000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
       });
 
       test("Test linked top-hat values", async () => {
