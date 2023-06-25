@@ -164,16 +164,22 @@ import { gql } from "graphql-request";
 //  ${HAT_DETAILS_FRAGMENT}
 //`;
 
-export const GET_HAT = gql`
-  query getHat($id: ID!) {
-    hat(id: $id) {
-      id
-      status
-      details
-      maxSupply
-      eligibility
-      toggle
-      mutable
+export const GET_WEARER_HATS = gql`
+  query getWearerHats($id: ID!) {
+    wearer(id: $id) {
+      currentHats {
+        id
+      }
+    }
+  }
+`;
+
+export const GET_TREE_HATS = gql`
+  query getTree($id: ID!) {
+    tree(id: $id) {
+      hats {
+        id
+      }
     }
   }
 `;

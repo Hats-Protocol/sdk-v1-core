@@ -9,4 +9,6 @@ type GqlHat = {
   mutable: boolean;
 };
 
-export type { GqlHat };
+type GqlTreeHats = bigint[];
+
+export type { GqlHat, GqlTreeHats };

@@ -1,9 +1,9 @@
 import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
 import type { GqlHat } from "../subgraph/types";
-import type { PublicClient, WalletClient, Account, Address, Hash } from "viem";
+import type { PublicClient, WalletClient, Account, Address } from "viem";
 import { decodeEventLog, encodeEventTopics } from "viem";
-import { GET_HAT } from "../subgraph/queries";
+import { GET_WEARER_HATS, GET_TREE_HATS } from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
 import type {
   CreateHatResult,
@@ -29,6 +29,7 @@ import type {
   RelinkTopHatWithinTreeResult,
 } from "../types";
 import { HATS_V1 } from "../config";
+import { hatIdToHex, treeIdToHex } from "./utils";
 
 export class HatsClient {
   readonly chainId: number;
@@ -43,7 +44,7 @@ export class HatsClient {
   }: {
     chainId: number;
     publicClient: PublicClient;
-    walletClient: WalletClient | undefined;
+    walletClient?: WalletClient;
   }) {
     if (publicClient === undefined) {
       throw new Error("Public client is required");
@@ -75,15 +76,34 @@ export class HatsClient {
                       Subgraph Read Functions
     //////////////////////////////////////////////////////////////*/
 
-  async getHat({ hatId }: { hatId: string }): Promise<GqlHat> {
-    const respone = await this._makeGqlRequest<{ hat: GqlHat }>(GET_HAT, {
-      id: hatId,
+  async getTreeHats(treeId: number): Promise<bigint[]> {
+    const treeIdHex = treeIdToHex(treeId);
+
+    const respone = await this._makeGqlRequest<{
+      tree: { hats: { id: string }[] };
+    }>(GET_TREE_HATS, {
+      id: treeIdHex,
     });
-    if (!respone.hat) {
-      throw new Error();
+
+    if (!respone.tree) {
+      throw new Error("Tree does not exist on the subgraph");
     }
 
-    return respone.hat;
+    return respone.tree.hats.map((hatObj) => BigInt(hatObj.id));
+  }
+
+  async getWearerHats(wearer: Address): Promise<bigint[]> {
+    const respone = await this._makeGqlRequest<{
+      wearer: { currentHats: { id: string }[] };
+    }>(GET_WEARER_HATS, {
+      id: wearer.toLowerCase(),
+    });
+
+    if (!respone.wearer) {
+      throw new Error("Wearer does not exist on the subgraph");
+    }
+
+    return respone.wearer.currentHats.map((hatObj) => BigInt(hatObj.id));
   }
 
   /*//////////////////////////////////////////////////////////////
