@@ -1,6 +1,5 @@
 import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
-import type { GqlHat } from "../subgraph/types";
 import type { PublicClient, WalletClient, Account, Address } from "viem";
 import { decodeEventLog, encodeEventTopics } from "viem";
 import { GET_WEARER_HATS, GET_TREE_HATS } from "../subgraph/queries";

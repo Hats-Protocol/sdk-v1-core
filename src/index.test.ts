@@ -419,9 +419,11 @@ describe("Client tests", () => {
     });
 
     describe("Hat 1.1 is renounced", () => {
+      let res: RenounceHatResult;
+
       beforeAll(async () => {
         try {
-          await hatsClient.renounceHat({
+          res = await hatsClient.renounceHat({
             account: account1,
             hatId: BigInt(
               "0x0000000100010000000000000000000000000000000000000000000000000000"
@@ -431,6 +433,10 @@ describe("Client tests", () => {
           console.log(err);
         }
       }, 30000);
+
+      test("Test renounceHat result value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test hat 1.1 is renounced", async () => {
         const res = await publicClient.readContract({
@@ -450,9 +456,11 @@ describe("Client tests", () => {
     });
 
     describe("Change Hat 1.1 details", () => {
+      let res: ChangeHatDetailsResult;
+
       beforeAll(async () => {
         try {
-          await hatsClient.changeHatDetails({
+          res = await hatsClient.changeHatDetails({
             account: account1,
             hatId: BigInt(
               "0x0000000100010000000000000000000000000000000000000000000000000000"
@@ -463,6 +471,10 @@ describe("Client tests", () => {
           console.log(err);
         }
       }, 30000);
+
+      test("Test changeHatDetails return value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.1 new details", async () => {
         const res = await publicClient.readContract({
@@ -481,9 +493,11 @@ describe("Client tests", () => {
     });
 
     describe("Change Hat 1.1 eligibility", () => {
+      let res: ChangeHatEligibilityResult;
+
       beforeAll(async () => {
         try {
-          await hatsClient.changeHatEligibility({
+          res = await hatsClient.changeHatEligibility({
             account: account1,
             hatId: BigInt(
               "0x0000000100010000000000000000000000000000000000000000000000000000"
@@ -494,6 +508,10 @@ describe("Client tests", () => {
           console.log(err);
         }
       }, 30000);
+
+      test("Test changeHatEligibility return value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.1 new eligibility", async () => {
         const res = await publicClient.readContract({
@@ -512,9 +530,11 @@ describe("Client tests", () => {
     });
 
     describe("Change Hat 1.1 toggle", () => {
+      let res: ChangeHatToggleResult;
+
       beforeAll(async () => {
         try {
-          await hatsClient.changeHatToggle({
+          res = await hatsClient.changeHatToggle({
             account: account1,
             hatId: BigInt(
               "0x0000000100010000000000000000000000000000000000000000000000000000"
@@ -525,6 +545,10 @@ describe("Client tests", () => {
           console.log(err);
         }
       }, 30000);
+
+      test("Test changeHatToggle return value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.1 new toggle", async () => {
         const res = await publicClient.readContract({
@@ -543,9 +567,11 @@ describe("Client tests", () => {
     });
 
     describe("Change Hat 1.1 image URI", () => {
+      let res: ChangeHatImageURIResult;
+
       beforeAll(async () => {
         try {
-          await hatsClient.changeHatImageURI({
+          res = await hatsClient.changeHatImageURI({
             account: account1,
             hatId: BigInt(
               "0x0000000100010000000000000000000000000000000000000000000000000000"
@@ -556,6 +582,10 @@ describe("Client tests", () => {
           console.log(err);
         }
       }, 30000);
+
+      test("Test changeHatImageURI return value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.1 new image URI", async () => {
         const res = await publicClient.readContract({
@@ -574,9 +604,11 @@ describe("Client tests", () => {
     });
 
     describe("Change Hat 1.1 max supply", () => {
+      let res: ChangeHatMaxSupplyResult;
+
       beforeAll(async () => {
         try {
-          await hatsClient.changeHatMaxSupply({
+          res = await hatsClient.changeHatMaxSupply({
             account: account1,
             hatId: BigInt(
               "0x0000000100010000000000000000000000000000000000000000000000000000"
@@ -587,6 +619,10 @@ describe("Client tests", () => {
           console.log(err);
         }
       }, 30000);
+
+      test("Test changeHatMaxSupply return value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.1 new max supply", async () => {
         const res = await publicClient.readContract({
@@ -605,9 +641,11 @@ describe("Client tests", () => {
     });
 
     describe("Make Hat 1.1 immutable", () => {
+      let res: MakeHatImmutableResult;
+
       beforeAll(async () => {
         try {
-          await hatsClient.makeHatImmutable({
+          res = await hatsClient.makeHatImmutable({
             account: account1,
             hatId: BigInt(
               "0x0000000100010000000000000000000000000000000000000000000000000000"
@@ -617,6 +655,10 @@ describe("Client tests", () => {
           console.log(err);
         }
       }, 30000);
+
+      test("Test makeHatImmutable return value", () => {
+        expect(res.status).toBe("success");
+      });
 
       test("Test Hat 1.1 immutable", async () => {
         const res = await publicClient.readContract({
