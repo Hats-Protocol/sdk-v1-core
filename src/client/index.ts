@@ -2,7 +2,7 @@ import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
 import type { GqlHat } from "../subgraph/types";
 import type { PublicClient, WalletClient, Account, Address, Hash } from "viem";
-import { decodeEventLog, parseAbiItem, encodeEventTopics } from "viem";
+import { decodeEventLog, encodeEventTopics } from "viem";
 import { GET_HAT } from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
 import type {
@@ -28,6 +28,7 @@ import type {
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
 } from "../types";
+import { HATS_V1 } from "../config";
 
 export class HatsClient {
   readonly chainId: number;
@@ -44,6 +45,10 @@ export class HatsClient {
     publicClient: PublicClient;
     walletClient: WalletClient | undefined;
   }) {
+    if (publicClient === undefined) {
+      throw new Error("Public client is required");
+    }
+
     this.chainId = chainId;
     this._graphqlClient = getGraphqlClient(chainId);
     this._publicClient = publicClient;
@@ -96,12 +101,8 @@ export class HatsClient {
     mutable: boolean;
     active: boolean;
   }> {
-    if (this._publicClient === undefined) {
-      throw new Error();
-    }
-
     const result = await this._publicClient.readContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      address: HATS_V1,
       abi: HATS_ABI,
       functionName: "viewHat",
       args: [BigInt(hatId)],
@@ -127,12 +128,8 @@ export class HatsClient {
     wearer: Address;
     hatId: bigint;
   }): Promise<boolean> {
-    if (this._publicClient === undefined) {
-      throw new Error();
-    }
-
     const res = await this._publicClient.readContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      address: HATS_V1,
       abi: HATS_ABI,
       functionName: "isWearerOfHat",
       args: [wearer, hatId],
@@ -148,12 +145,8 @@ export class HatsClient {
     user: Address;
     hatId: bigint;
   }): Promise<boolean> {
-    if (this._publicClient === undefined) {
-      throw new Error();
-    }
-
     const res = await this._publicClient.readContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      address: HATS_V1,
       abi: HATS_ABI,
       functionName: "isAdminOfHat",
       args: [user, hatId],
@@ -163,12 +156,8 @@ export class HatsClient {
   }
 
   async isActive(hatId: bigint): Promise<boolean> {
-    if (this._publicClient === undefined) {
-      throw new Error();
-    }
-
     const res = await this._publicClient.readContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      address: HATS_V1,
       abi: HATS_ABI,
       functionName: "isActive",
       args: [hatId],
@@ -184,12 +173,8 @@ export class HatsClient {
     wearer: Address;
     hatId: bigint;
   }): Promise<boolean> {
-    if (this._publicClient === undefined) {
-      throw new Error();
-    }
-
     const res = await this._publicClient.readContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      address: HATS_V1,
       abi: HATS_ABI,
       functionName: "isInGoodStanding",
       args: [wearer, hatId],
@@ -205,12 +190,8 @@ export class HatsClient {
     wearer: Address;
     hatId: bigint;
   }): Promise<boolean> {
-    if (this._publicClient === undefined) {
-      throw new Error();
-    }
-
     const res = await this._publicClient.readContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      address: HATS_V1,
       abi: HATS_ABI,
       functionName: "isEligible",
       args: [wearer, hatId],
@@ -220,12 +201,8 @@ export class HatsClient {
   }
 
   async predictHatId(admin: bigint): Promise<bigint> {
-    if (this._publicClient === undefined) {
-      throw new Error();
-    }
-
     const res = await this._publicClient.readContract({
-      address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+      address: HATS_V1,
       abi: HATS_ABI,
       functionName: "getNextId",
       args: [admin],
@@ -250,12 +227,12 @@ export class HatsClient {
     imageURI: string;
   }): Promise<MintTopHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "mintTopHat",
         args: [target, details, imageURI],
@@ -304,12 +281,12 @@ export class HatsClient {
     imageURI: string;
   }): Promise<CreateHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "createHat",
         args: [
@@ -366,12 +343,12 @@ export class HatsClient {
     imageURIs: string[];
   }): Promise<BatchCreateHatsResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "batchCreateHats",
         args: [
@@ -424,12 +401,12 @@ export class HatsClient {
     wearer: Address;
   }): Promise<MintHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "mintHat",
         args: [hatId, wearer],
@@ -460,12 +437,12 @@ export class HatsClient {
     wearers: Address[];
   }): Promise<BatchMintHatsResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "batchMintHats",
         args: [hatIds, wearers],
@@ -496,12 +473,12 @@ export class HatsClient {
     newStatus: boolean;
   }): Promise<SetHatStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "setHatStatus",
         args: [hatId, newStatus],
@@ -530,12 +507,12 @@ export class HatsClient {
     hatId: bigint;
   }): Promise<CheckHatStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "checkHatStatus",
         args: [hatId],
@@ -586,12 +563,12 @@ export class HatsClient {
     standing: boolean;
   }): Promise<SetHatWearerStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "setHatWearerStatus",
         args: [hatId, wearer, eligible, standing],
@@ -622,12 +599,12 @@ export class HatsClient {
     wearer: Address;
   }): Promise<CheckHatWearerStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "checkHatWearerStatus",
         args: [hatId, wearer],
@@ -713,12 +690,12 @@ export class HatsClient {
     hatId: bigint;
   }): Promise<RenounceHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "renounceHat",
         args: [hatId],
@@ -751,12 +728,12 @@ export class HatsClient {
     to: Address;
   }): Promise<TransferHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "transferHat",
         args: [hatId, from, to],
@@ -785,12 +762,12 @@ export class HatsClient {
     hatId: bigint;
   }): Promise<MakeHatImmutableResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "makeHatImmutable",
         args: [hatId],
@@ -821,12 +798,12 @@ export class HatsClient {
     newDetails: string;
   }): Promise<ChangeHatDetailsResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatDetails",
         args: [hatId, newDetails],
@@ -857,12 +834,12 @@ export class HatsClient {
     newEligibility: Address;
   }): Promise<ChangeHatEligibilityResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatEligibility",
         args: [hatId, newEligibility],
@@ -893,12 +870,12 @@ export class HatsClient {
     newToggle: Address;
   }): Promise<ChangeHatToggleResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatToggle",
         args: [hatId, newToggle],
@@ -929,12 +906,12 @@ export class HatsClient {
     newImageURI: string;
   }): Promise<ChangeHatImageURIResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatImageURI",
         args: [hatId, newImageURI],
@@ -965,12 +942,12 @@ export class HatsClient {
     newMaxSupply: number;
   }): Promise<ChangeHatMaxSupplyResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatMaxSupply",
         args: [hatId, newMaxSupply],
@@ -1001,12 +978,12 @@ export class HatsClient {
     requestedAdminHat: bigint;
   }): Promise<RequestLinkTopHatToTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "requestLinkTopHatToTree",
         args: [topHatDomain, requestedAdminHat],
@@ -1045,12 +1022,12 @@ export class HatsClient {
     newImageURI?: string;
   }): Promise<ApproveLinkTopHatToTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "approveLinkTopHatToTree",
         args: [
@@ -1092,12 +1069,12 @@ export class HatsClient {
     wearer: Address;
   }): Promise<UnlinkTopHatFromTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "unlinkTopHatFromTree",
         args: [topHatDomain, wearer],
@@ -1136,12 +1113,12 @@ export class HatsClient {
     newImageURI: string;
   }): Promise<RelinkTopHatWithinTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Missing wallet client");
+      throw new Error("Wallet client is required to perform this action");
     }
 
     try {
       const hash = await this._walletClient.writeContract({
-        address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+        address: HATS_V1,
         abi: HATS_ABI,
         functionName: "relinkTopHatWithinTree",
         args: [
