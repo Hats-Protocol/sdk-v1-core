@@ -231,6 +231,82 @@ export class HatsClient {
     return res;
   }
 
+  async getTreesCount(): Promise<number> {
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "lastTopHatId",
+    });
+
+    return res;
+  }
+
+  async getLinkageRequest(topHatDomain: number): Promise<bigint> {
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "linkedTreeRequests",
+      args: [topHatDomain],
+    });
+
+    return res;
+  }
+
+  async getLinkedTreeAdmin(topHatDomain: number): Promise<bigint> {
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "linkedTreeAdmins",
+      args: [topHatDomain],
+    });
+
+    return res;
+  }
+
+  async getHatLevel(hatId: bigint): Promise<number> {
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "getHatLevel",
+      args: [hatId],
+    });
+
+    return res;
+  }
+
+  async getLocalHatLevel(hatId: bigint): Promise<number> {
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "getLocalHatLevel",
+      args: [hatId],
+    });
+
+    return res;
+  }
+
+  async getTopHatDomain(hatId: bigint): Promise<number> {
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "getTopHatDomain",
+      args: [hatId],
+    });
+
+    return res;
+  }
+
+  async getTippyTopHatDomain(topHatDomain: number): Promise<number> {
+    const res = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "getTippyTopHatDomain",
+      args: [topHatDomain],
+    });
+
+    return res;
+  }
+
   /*//////////////////////////////////////////////////////////////
                       Write Functions
     //////////////////////////////////////////////////////////////*/

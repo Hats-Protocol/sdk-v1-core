@@ -340,6 +340,36 @@ describe("Client tests", () => {
           )
         );
       });
+
+      test("test getHatLevel SDK function", async () => {
+        const res = await hatsClient.getHatLevel(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res).toBe(1);
+      });
+
+      test("test getLocalHatLevel SDK function", async () => {
+        const res = await hatsClient.getLocalHatLevel(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res).toBe(1);
+      });
+
+      test("test getTopHatDomain SDK function", async () => {
+        const res = await hatsClient.getTopHatDomain(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res).toBe(1);
+      });
     });
 
     describe("Hat 1.1 is minted", () => {
@@ -938,6 +968,16 @@ describe("Client tests", () => {
           )
         );
       });
+
+      test("Test getLinkageRequest request", async () => {
+        const res = await hatsClient.getLinkageRequest(2);
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
     });
 
     describe("Tree 1 accepts linkage", () => {
@@ -974,6 +1014,32 @@ describe("Client tests", () => {
             "0x0000000100010000000000000000000000000000000000000000000000000000"
           )
         );
+      });
+
+      test("Test getLinkedTreeAdmin result", async () => {
+        const res = await hatsClient.getLinkedTreeAdmin(2);
+
+        expect(res).toBe(
+          BigInt(
+            "0x0000000100010000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+
+      test("Test getHatLevel result", async () => {
+        const res = await hatsClient.getHatLevel(
+          BigInt(
+            "0x0000000200000000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res).toBe(2);
+      });
+
+      test("Test getTippyTopHatDomain result", async () => {
+        const res = await hatsClient.getTippyTopHatDomain(2);
+
+        expect(res).toBe(1);
       });
 
       test("Test linked top-hat values", async () => {
@@ -1104,6 +1170,18 @@ describe("Client tests", () => {
         expect(res[5]).toBe("Tophat 2 URI relinked");
         expect(res[3]).toBe("0x0000000000000000000000000000000000000000");
         expect(res[4]).toBe("0x0000000000000000000000000000000000000000");
+      });
+    });
+
+    describe("Get number of trees", () => {
+      let res: number;
+
+      beforeAll(async () => {
+        res = await hatsClient.getTreesCount();
+      });
+
+      test("Test getTreesCount result", () => {
+        expect(res).toBe(2);
       });
     });
   });
