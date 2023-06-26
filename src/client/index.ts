@@ -936,6 +936,8 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
+    await this._validateHatEdit({ account, hatId });
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -970,6 +972,12 @@ export class HatsClient {
   }): Promise<ChangeHatDetailsResult> {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
+    }
+
+    await this._validateHatEditOrTophat({ account, hatId });
+
+    if (newDetails.length > 7000) {
+      throw new Error("Details field max length is 7000");
     }
 
     try {
@@ -1008,6 +1016,12 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
+    await this._validateHatEdit({ account, hatId });
+
+    if (newEligibility == "0x0000000000000000000000000000000000000000") {
+      throw new Error("Zero eligibility address not valid");
+    }
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -1042,6 +1056,12 @@ export class HatsClient {
   }): Promise<ChangeHatToggleResult> {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
+    }
+
+    await this._validateHatEdit({ account, hatId });
+
+    if (newToggle == "0x0000000000000000000000000000000000000000") {
+      throw new Error("Zero toggle address not valid");
     }
 
     try {
@@ -1080,6 +1100,12 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
+    await this._validateHatEditOrTophat({ account, hatId });
+
+    if (newImageURI.length > 7000) {
+      throw new Error("Image URI field max length is 7000");
+    }
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -1116,6 +1142,8 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
+    await this._validateMaxSupplyEdit({ account, hatId, newMaxSupply });
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -1151,6 +1179,8 @@ export class HatsClient {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
     }
+
+    await this._validateTopHatDomainAdmin({ account, topHatDomain });
 
     try {
       const hash = await this._walletClient.writeContract({
@@ -1195,6 +1225,19 @@ export class HatsClient {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
     }
+
+    const linkageRequestToHat = await this.getLinkageRequest(topHatDomain);
+    if (linkageRequestToHat !== newAdminHat) {
+      throw new Error("Linkage has not been requested to the admin hat");
+    }
+
+    await this._validateLinkage({
+      account,
+      topHatDomain,
+      newAdminHat,
+      newDetails,
+      newImageURI,
+    });
 
     try {
       const hash = await this._walletClient.writeContract({
@@ -1243,6 +1286,14 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
+    await this._validateTopHatDomainAdmin({ account, topHatDomain });
+
+    const topHatId: bigint = BigInt(treeIdToHex(topHatDomain).padEnd(66, "0"));
+    const isWearer = await this.isWearerOfHat({ wearer, hatId: topHatId });
+    if (wearer === "0x0000000000000000000000000000000000000000" || !isWearer) {
+      throw new Error("Wearer is not wearing the tophat");
+    }
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -1286,6 +1337,16 @@ export class HatsClient {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
     }
+
+    await this._validateTopHatDomainAdmin({ account, topHatDomain });
+
+    await this._validateLinkage({
+      account,
+      topHatDomain,
+      newAdminHat,
+      newDetails,
+      newImageURI,
+    });
 
     try {
       const hash = await this._walletClient.writeContract({
@@ -1479,6 +1540,234 @@ export class HatsClient {
     const isCurrentWearer = await this.isWearerOfHat({ wearer: from, hatId });
     if (isCurrentWearerEligible && !isCurrentWearer) {
       throw new Error("From address is not a wearer of the hat");
+    }
+  }
+
+  protected async _validateHatEdit({
+    account,
+    hatId,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+  }) {
+    const hat = await this.viewHat(hatId);
+    if (!hat.mutable) {
+      throw new Error("Hat is immutable, editing is not allowed");
+    }
+
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId,
+    });
+    if (!isAdmin) {
+      throw new Error("Not Admin");
+    }
+  }
+
+  protected async _validateHatEditOrTophat({
+    account,
+    hatId,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+  }) {
+    const hat = await this.viewHat(hatId);
+    const isTopHat = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "isTopHat",
+      args: [hatId],
+    });
+    if (!isTopHat && !hat.mutable) {
+      throw new Error("Hat is immutable, edit is not allowed");
+    }
+
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId,
+    });
+    if (!isAdmin) {
+      throw new Error("Not Admin");
+    }
+  }
+
+  protected async _validateMaxSupplyEdit({
+    account,
+    hatId,
+    newMaxSupply,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    newMaxSupply: number;
+  }) {
+    const hat = await this.viewHat(hatId);
+    if (!hat.mutable) {
+      throw new Error("Hat is immutable, editing is not allowed");
+    }
+
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId,
+    });
+    if (!isAdmin) {
+      throw new Error("Not Admin");
+    }
+
+    if (newMaxSupply < hat.supply) {
+      throw new Error(
+        "New max supply cannot be lower than the current aupply of minted hats"
+      );
+    }
+  }
+
+  protected async _validateTopHatDomainAdmin({
+    account,
+    topHatDomain,
+  }: {
+    account: Account | Address;
+    topHatDomain: number;
+  }) {
+    const topHatId: bigint = BigInt(treeIdToHex(topHatDomain).padEnd(66, "0"));
+
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId: topHatId,
+    });
+    if (!isAdmin) {
+      throw new Error("Not Admin");
+    }
+  }
+
+  protected async _validateLinkage({
+    account,
+    topHatDomain,
+    newAdminHat,
+    newDetails,
+    newImageURI,
+  }: {
+    account: Account | Address;
+    topHatDomain: number;
+    newAdminHat: bigint;
+
+    newDetails?: string;
+    newImageURI?: string;
+  }) {
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId: newAdminHat,
+    });
+    const isWearer = await this.isWearerOfHat({
+      wearer: accountAddress,
+      hatId: newAdminHat,
+    });
+    if (!isAdmin && !isWearer) {
+      throw new Error("Not admin or wearer");
+    }
+
+    const noCircularLinkage = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "noCircularLinkage",
+      args: [topHatDomain, newAdminHat],
+    });
+    if (!noCircularLinkage) {
+      throw new Error("Circular linkage not allowed");
+    }
+
+    const linkedAdmin = await this.getLinkedTreeAdmin(topHatDomain);
+    if (linkedAdmin > 0) {
+      const tippyTopHatDomain = await this.getTippyTopHatDomain(topHatDomain);
+      const tippyTopHatId = BigInt(
+        treeIdToHex(tippyTopHatDomain).padEnd(66, "0")
+      );
+      const isWearerTippy = this.isWearerOfHat({
+        wearer: accountAddress,
+        hatId: tippyTopHatId,
+      });
+      if (!isWearerTippy) {
+        const destLocalTopHatDomain = await this._publicClient.readContract({
+          address: HATS_V1,
+          abi: HATS_ABI,
+          functionName: "getTopHatDomain",
+          args: [newAdminHat],
+        });
+        const destLocalTopHatId = BigInt(
+          treeIdToHex(destLocalTopHatDomain).padEnd(66, "0")
+        );
+
+        const originalLocalTopHatDomain = await this._publicClient.readContract(
+          {
+            address: HATS_V1,
+            abi: HATS_ABI,
+            functionName: "getTopHatDomain",
+            args: [linkedAdmin],
+          }
+        );
+        const originalLocalTopHatId = BigInt(
+          treeIdToHex(originalLocalTopHatDomain).padEnd(66, "0")
+        );
+
+        if (
+          destLocalTopHatId !== originalLocalTopHatId &&
+          destLocalTopHatId !== tippyTopHatId
+        ) {
+          throw new Error("Cross tree linkage not allowed");
+        }
+      } else {
+        const sameTippyTophat = this._publicClient.readContract({
+          address: HATS_V1,
+          abi: HATS_ABI,
+          functionName: "sameTippyTopHatDomain",
+          args: [topHatDomain, newAdminHat],
+        });
+
+        if (!sameTippyTophat) {
+          throw new Error("Cross tree linkage not allowed");
+        }
+      }
+    }
+
+    if (newDetails !== undefined && newDetails.length > 7000) {
+      throw new Error("Details field max length is 7000");
+    }
+
+    if (newImageURI !== undefined && newImageURI.length > 7000) {
+      throw new Error("Image URI field max length is 7000");
     }
   }
 }
