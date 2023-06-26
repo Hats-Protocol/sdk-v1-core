@@ -411,6 +411,7 @@ export class HatsClient {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
     }
+    await this._validateHatCreation({ account, admin, eligibility, toggle });
 
     try {
       const hash = await this._walletClient.writeContract({
@@ -474,6 +475,15 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
+    for (let i = 0; i < admins.length; i++) {
+      await this._validateHatCreation({
+        account,
+        admin: admins[i],
+        eligibility: eligibilityModules[i],
+        toggle: toggleModules[i],
+      });
+    }
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -531,6 +541,7 @@ export class HatsClient {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
     }
+    await this._validateHatMinting({ account, hatId, wearer });
 
     try {
       const hash = await this._walletClient.writeContract({
@@ -568,6 +579,14 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
+    for (let i = 0; i < hatIds.length; i++) {
+      await this._validateHatMinting({
+        account,
+        hatId: hatIds[i],
+        wearer: wearers[i],
+      });
+    }
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -602,6 +621,17 @@ export class HatsClient {
   }): Promise<SetHatStatusResult> {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = await this.viewHat(hatId);
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+    if (hat.toggle !== accountAddress) {
+      throw new Error("The calling account is not the hat toggle");
     }
 
     try {
@@ -692,6 +722,17 @@ export class HatsClient {
   }): Promise<SetHatWearerStatusResult> {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = await this.viewHat(hatId);
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+    if (hat.eligibility !== accountAddress) {
+      throw new Error("The calling account is not the hat toggle");
     }
 
     try {
@@ -858,6 +899,8 @@ export class HatsClient {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
     }
+
+    await this._validateHatTransfer({ account, hatId, from, to });
 
     try {
       const hash = await this._walletClient.writeContract({
@@ -1271,6 +1314,171 @@ export class HatsClient {
       };
     } catch (err) {
       throw new Error("Transaction reverted");
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                      Validation Functions
+    //////////////////////////////////////////////////////////////*/
+
+  protected async _validateHatCreation({
+    account,
+    admin,
+    eligibility,
+    toggle,
+  }: {
+    account: Account | Address;
+    admin: bigint;
+    eligibility: Address;
+    toggle: Address;
+  }) {
+    if (eligibility === "0x0000000000000000000000000000000000000000") {
+      throw new Error("Zero eligibility address not valid");
+    }
+    if (toggle === "0x0000000000000000000000000000000000000000") {
+      throw new Error("Zero toggle address not valid");
+    }
+
+    const validHatId = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "isValidHatId",
+      args: [admin],
+    });
+    if (!validHatId) {
+      throw new Error("Invalid admin ID");
+    }
+
+    const nextHatId = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "getNextId",
+      args: [admin],
+    });
+
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId: nextHatId,
+    });
+    if (!isAdmin) {
+      throw new Error("Not Admin");
+    }
+  }
+
+  protected async _validateHatMinting({
+    account,
+    hatId,
+    wearer,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearer: Address;
+  }) {
+    const hat = await this.viewHat(hatId);
+    if (hat.maxSupply === 0) {
+      throw new Error("Hat does not exist");
+    }
+    if (hat.supply >= hat.maxSupply) {
+      throw new Error("All hats are worn");
+    }
+
+    const isWearerEligible = await this.isEligible({ wearer, hatId });
+    if (!isWearerEligible) {
+      throw new Error("Wearer is not eligible");
+    }
+
+    const isHatActive = await this.isActive(hatId);
+    if (!isHatActive) {
+      throw new Error("Hat is not active");
+    }
+
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId,
+    });
+    if (!isAdmin) {
+      throw new Error("Not Admin");
+    }
+
+    const isAlreadyWearing = await this.isWearerOfHat({ wearer, hatId });
+    if (isAlreadyWearing) {
+      throw new Error("Already wearing the hat");
+    }
+  }
+
+  protected async _validateHatTransfer({
+    account,
+    hatId,
+    from,
+    to,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    from: Address;
+    to: Address;
+  }) {
+    const hat = await this.viewHat(hatId);
+    const isTopHat = await this._publicClient.readContract({
+      address: HATS_V1,
+      abi: HATS_ABI,
+      functionName: "isTopHat",
+      args: [hatId],
+    });
+    if (!isTopHat && !hat.mutable) {
+      throw new Error("Hat is immutable, transfer is not allowed");
+    }
+
+    let accountAddress: Address;
+    if (typeof account === "object") {
+      accountAddress = account.address;
+    } else {
+      accountAddress = account;
+    }
+
+    const isAdmin = await this.isAdminOfHat({
+      user: accountAddress,
+      hatId,
+    });
+    if (!isAdmin) {
+      throw new Error("Not Admin");
+    }
+
+    const isNewWearerEligible = await this.isEligible({ wearer: to, hatId });
+    if (!isNewWearerEligible) {
+      throw new Error("New wearer is not eligible for the hat");
+    }
+
+    const isHatActive = await this.isActive(hatId);
+    if (!isHatActive) {
+      throw new Error("Hat is not active");
+    }
+
+    const isAlreadyWearing = await this.isWearerOfHat({ wearer: to, hatId });
+    if (isAlreadyWearing) {
+      throw new Error("New wearer is already wearing the hat");
+    }
+
+    const isCurrentWearerEligible = await this.isEligible({
+      wearer: from,
+      hatId,
+    });
+    const isCurrentWearer = await this.isWearerOfHat({ wearer: from, hatId });
+    if (isCurrentWearerEligible && !isCurrentWearer) {
+      throw new Error("From address is not a wearer of the hat");
     }
   }
 }
