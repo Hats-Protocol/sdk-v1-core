@@ -1,29 +1,10 @@
 import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { mainnet, goerli } from "viem/chains";
+import { mainnet } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
-import type {
-  CreateHatResult,
-  MintTopHatResult,
-  BatchCreateHatsResult,
-  BatchMintHatsResult,
-  RenounceHatResult,
-  ChangeHatDetailsResult,
-  ChangeHatEligibilityResult,
-  ChangeHatToggleResult,
-  ChangeHatImageURIResult,
-  ChangeHatMaxSupplyResult,
-  MakeHatImmutableResult,
-  SetHatStatusResult,
-  TransferHatResult,
-  SetHatWearerStatusResult,
-  RequestLinkTopHatToTreeResult,
-  ApproveLinkTopHatToTreeResult,
-  UnlinkTopHatFromTreeResult,
-  RelinkTopHatWithinTreeResult,
-} from "../src/types";
+import type { CreateHatResult, MintTopHatResult } from "../src/types";
 
 describe("createHat tests", () => {
   let publicClient: PublicClient;
@@ -33,9 +14,6 @@ describe("createHat tests", () => {
   let address2: Address;
   let account1: PrivateKeyAccount;
   let account2: PrivateKeyAccount;
-
-  let publicClientGoerli: PublicClient;
-  let hatsClientGoerli: HatsClient;
 
   let topHatId: bigint;
 
@@ -65,21 +43,9 @@ describe("createHat tests", () => {
         publicClient: publicClient,
         walletClient: walletClient,
       });
-
-      publicClientGoerli = createPublicClient({
-        chain: goerli,
-        transport: http(
-          "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9"
-        ),
-      });
-
-      hatsClientGoerli = new HatsClient({
-        chainId: goerli.id,
-        publicClient: publicClientGoerli,
-      });
     }, 30000);
 
-    describe("Tree 1 is created", () => {
+    describe("Tree is created", () => {
       let res: MintTopHatResult;
 
       beforeAll(async () => {
