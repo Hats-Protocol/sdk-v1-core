@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "test": "jest test/client.test.ts && jest test/clientConstructor.test.ts && jest test/createHat.test.ts  && jest test/mintHat.test.ts && jest test/setHatAndWearerStatus.test.ts",
+    "test": "jest test/client.test.ts && jest test/clientConstructor.test.ts && jest test/createHat.test.ts  && jest test/mintHat.test.ts && jest test/setHatAndWearerStatus.test.ts && jest test/transferHat.test.ts",
     "build": "rm -rf dist && tsc",
     "eslint": "eslint . --ext '.ts,.tsx'",
     "eslint:fix": "eslint . --ext '.ts,.tsx' --fix",
