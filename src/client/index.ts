@@ -28,7 +28,7 @@ import type {
   RelinkTopHatWithinTreeResult,
 } from "../types";
 import { HATS_V1 } from "../config";
-import { hatIdToHex, treeIdToHex } from "./utils";
+import { treeIdDecimalToHex } from "./utils";
 
 export class HatsClient {
   readonly chainId: number;
@@ -47,6 +47,18 @@ export class HatsClient {
   }) {
     if (publicClient === undefined) {
       throw new Error("Public client is required");
+    }
+
+    if (publicClient.chain?.id !== chainId) {
+      throw new Error(
+        "Provided chain id should match the public client chain id"
+      );
+    }
+
+    if (walletClient !== undefined && walletClient.chain?.id !== chainId) {
+      throw new Error(
+        "Provided chain id should match the wallet client chain id"
+      );
     }
 
     this.chainId = chainId;
@@ -76,7 +88,7 @@ export class HatsClient {
     //////////////////////////////////////////////////////////////*/
 
   async getTreeHats(treeId: number): Promise<bigint[]> {
-    const treeIdHex = treeIdToHex(treeId);
+    const treeIdHex = treeIdDecimalToHex(treeId);
 
     const respone = await this._makeGqlRequest<{
       tree: { hats: { id: string }[] };
@@ -1288,7 +1300,9 @@ export class HatsClient {
 
     await this._validateTopHatDomainAdmin({ account, topHatDomain });
 
-    const topHatId: bigint = BigInt(treeIdToHex(topHatDomain).padEnd(66, "0"));
+    const topHatId: bigint = BigInt(
+      treeIdDecimalToHex(topHatDomain).padEnd(66, "0")
+    );
     const isWearer = await this.isWearerOfHat({ wearer, hatId: topHatId });
     if (wearer === "0x0000000000000000000000000000000000000000" || !isWearer) {
       throw new Error("Wearer is not wearing the tophat");
@@ -1648,7 +1662,9 @@ export class HatsClient {
     account: Account | Address;
     topHatDomain: number;
   }) {
-    const topHatId: bigint = BigInt(treeIdToHex(topHatDomain).padEnd(66, "0"));
+    const topHatId: bigint = BigInt(
+      treeIdDecimalToHex(topHatDomain).padEnd(66, "0")
+    );
 
     let accountAddress: Address;
     if (typeof account === "object") {
@@ -1713,7 +1729,7 @@ export class HatsClient {
     if (linkedAdmin > 0) {
       const tippyTopHatDomain = await this.getTippyTopHatDomain(topHatDomain);
       const tippyTopHatId = BigInt(
-        treeIdToHex(tippyTopHatDomain).padEnd(66, "0")
+        treeIdDecimalToHex(tippyTopHatDomain).padEnd(66, "0")
       );
       const isWearerTippy = this.isWearerOfHat({
         wearer: accountAddress,
@@ -1727,7 +1743,7 @@ export class HatsClient {
           args: [newAdminHat],
         });
         const destLocalTopHatId = BigInt(
-          treeIdToHex(destLocalTopHatDomain).padEnd(66, "0")
+          treeIdDecimalToHex(destLocalTopHatDomain).padEnd(66, "0")
         );
 
         const originalLocalTopHatDomain = await this._publicClient.readContract(
@@ -1739,7 +1755,7 @@ export class HatsClient {
           }
         );
         const originalLocalTopHatId = BigInt(
-          treeIdToHex(originalLocalTopHatDomain).padEnd(66, "0")
+          treeIdDecimalToHex(originalLocalTopHatDomain).padEnd(66, "0")
         );
 
         if (
