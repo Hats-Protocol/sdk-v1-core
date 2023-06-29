@@ -3,6 +3,7 @@ import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet, goerli } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
+import { treeIdDecimalToHex } from "../src/client/utils";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type {
   CreateHatResult,
@@ -36,6 +37,14 @@ describe("Basic tests", () => {
 
   let publicClientGoerli: PublicClient;
   let hatsClientGoerli: HatsClient;
+
+  let topHatId_1: bigint;
+  let topHatId_2: bigint;
+  let topHatDomain_1: number;
+  let topHatDomain_2: number;
+  let hatId_1_1: bigint;
+  let hatId_1_2: bigint;
+  let hatId_1_3: bigint;
 
   describe("Hats client is initialized", () => {
     beforeAll(() => {
@@ -119,17 +128,31 @@ describe("Basic tests", () => {
       });
     });
 
-    describe("Tree 1 is created", () => {
+    describe("Tree is created", () => {
       let res: MintTopHatResult;
+      let expectedTopHatId: bigint;
 
       beforeAll(async () => {
         try {
+          let expectedTopHatDomain = await publicClient.readContract({
+            address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+            abi: HATS_ABI,
+            functionName: "lastTopHatId",
+          });
+          expectedTopHatDomain += 1;
+          expectedTopHatId = BigInt(
+            treeIdDecimalToHex(expectedTopHatDomain).padEnd(66, "0")
+          );
+
           res = await hatsClient.mintTopHat({
             target: address1,
             details: "Tophat SDK",
             imageURI: "Tophat URI",
             account: account1,
           });
+
+          topHatId_1 = res.hatId;
+          topHatDomain_1 = await hatsClient.getTopHatDomain(topHatId_1);
         } catch (err) {
           console.log(err);
         }
@@ -137,11 +160,7 @@ describe("Basic tests", () => {
 
       test("Test mintTopHat return value", () => {
         expect(res.status).toBe("success");
-        expect(res.hatId).toBe(
-          BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res.hatId).toEqual(expectedTopHatId);
       });
 
       test("Test top-hat is created", async () => {
@@ -149,11 +168,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100000000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [topHatId_1],
         });
 
         expect(res[0]).toBe("Tophat SDK");
@@ -163,13 +178,19 @@ describe("Basic tests", () => {
 
     describe("Hat 1.1 is created", () => {
       let res: CreateHatResult;
+      let expectedHatId: bigint;
 
       beforeAll(async () => {
         try {
+          expectedHatId = await publicClient.readContract({
+            address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+            abi: HATS_ABI,
+            functionName: "getNextId",
+            args: [topHatId_1],
+          });
+
           res = await hatsClient.createHat({
-            admin: BigInt(
-              "0x0000000100000000000000000000000000000000000000000000000000000000"
-            ),
+            admin: topHatId_1,
             maxSupply: 3,
             eligibility: address1,
             toggle: address1,
@@ -178,18 +199,16 @@ describe("Basic tests", () => {
             imageURI: "1.1 URI",
             account: account1,
           });
+
+          hatId_1_1 = res.hatId;
         } catch (err) {
           console.log("err", err);
         }
       }, 30000);
 
-      test("Test createHat return value", () => {
+      test("Test createHat return value", async () => {
         expect(res.status).toBe("success");
-        expect(res.hatId).toBe(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res.hatId).toBe(expectedHatId);
       });
 
       test("Test hat is created", async () => {
@@ -197,11 +216,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_1],
         });
 
         expect(res[0]).toBe("1.1 details");
@@ -216,11 +231,7 @@ describe("Basic tests", () => {
       });
 
       test("test viewHat SDK function", async () => {
-        const res = await hatsClient.viewHat(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const res = await hatsClient.viewHat(hatId_1_1);
 
         expect(res.details).toBe("1.1 details");
         expect(res.maxSupply).toBe(3);
@@ -234,31 +245,19 @@ describe("Basic tests", () => {
       });
 
       test("Test getAdmin result", async () => {
-        const res = await hatsClient.getAdmin(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const res = await hatsClient.getAdmin(hatId_1_1);
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(topHatId_1);
       });
 
       test("test isWearerOfHat SDK function", async () => {
         const resTopHat = await hatsClient.isWearerOfHat({
-          hatId: BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: topHatId_1,
           wearer: address1,
         });
 
         const resChildHat = await hatsClient.isWearerOfHat({
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: hatId_1_1,
           wearer: address1,
         });
 
@@ -268,23 +267,27 @@ describe("Basic tests", () => {
 
       test("test isAdminOfHat SDK function", async () => {
         const resTopHat = await hatsClient.isAdminOfHat({
-          hatId: BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: topHatId_1,
           user: address1,
         });
 
         const resChildHat = await hatsClient.isAdminOfHat({
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: hatId_1_1,
           user: address1,
         });
 
+        let nextTopHatDomain = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "lastTopHatId",
+        });
+        nextTopHatDomain += 1;
+        const nextTopHatId = BigInt(
+          treeIdDecimalToHex(nextTopHatDomain).padEnd(66, "0")
+        );
+
         const resOtherTreeHat = await hatsClient.isAdminOfHat({
-          hatId: BigInt(
-            "0x0000000200000000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: nextTopHatId,
           user: address1,
         });
 
@@ -294,27 +297,19 @@ describe("Basic tests", () => {
       });
 
       test("test isActive SDK function", async () => {
-        const res = await hatsClient.isActive(
-          BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const res = await hatsClient.isActive(topHatId_1);
 
         expect(res).toBe(true);
       });
 
       test("test isInGoodStanding SDK function", async () => {
         const resTopHatWearer = await hatsClient.isInGoodStanding({
-          hatId: BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: topHatId_1,
           wearer: address1,
         });
 
         const resChildHatWearer = await hatsClient.isInGoodStanding({
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: hatId_1_1,
           wearer: address1,
         });
 
@@ -324,16 +319,12 @@ describe("Basic tests", () => {
 
       test("test isEligible SDK function", async () => {
         const resTopHatWearer = await hatsClient.isEligible({
-          hatId: BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: topHatId_1,
           wearer: address1,
         });
 
         const resChildHatWearer = await hatsClient.isEligible({
-          hatId: BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          ),
+          hatId: hatId_1_1,
           wearer: address1,
         });
 
@@ -342,47 +333,38 @@ describe("Basic tests", () => {
       });
 
       test("test predictHatId SDK function", async () => {
-        const res = await hatsClient.predictHatId(
-          BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const predicedHatNextHatId = await publicClient.readContract({
+          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          abi: HATS_ABI,
+          functionName: "getNextId",
+          args: [topHatId_1],
+        });
+        const res = await hatsClient.predictHatId(topHatId_1);
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100020000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(predicedHatNextHatId);
       });
 
       test("test getHatLevel SDK function", async () => {
-        const res = await hatsClient.getHatLevel(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const res = await hatsClient.getHatLevel(hatId_1_1);
 
         expect(res).toBe(1);
       });
 
       test("test getLocalHatLevel SDK function", async () => {
-        const res = await hatsClient.getLocalHatLevel(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const res = await hatsClient.getLocalHatLevel(hatId_1_1);
 
         expect(res).toBe(1);
       });
 
       test("test getTopHatDomain SDK function", async () => {
-        const res = await hatsClient.getTopHatDomain(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
+        const res = await hatsClient.getTopHatDomain(hatId_1_1);
+
+        expect(res).toBe(
+          parseInt(
+            topHatId_1.toString(16).padStart(64, "0").substring(0, 8),
+            16
           )
         );
-
-        expect(res).toBe(1);
       });
     });
 
@@ -391,9 +373,7 @@ describe("Basic tests", () => {
         try {
           await hatsClient.mintHat({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
             wearer: address1,
           });
         } catch (err) {
@@ -406,12 +386,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
-          args: [
-            address1,
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [address1, hatId_1_1],
         });
 
         expect(res).toBe(true);
@@ -425,9 +400,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.renounceHat({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
           });
         } catch (err) {
           console.log(err);
@@ -443,12 +416,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
-          args: [
-            address1,
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [address1, hatId_1_1],
         });
 
         expect(res).toBe(false);
@@ -462,9 +430,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.changeHatDetails({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
             newDetails: "Hat 1.1 new details",
           });
         } catch (err) {
@@ -481,11 +447,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_1],
         });
 
         expect(res[0]).toBe("Hat 1.1 new details");
@@ -499,9 +461,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.changeHatEligibility({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
             newEligibility: "0x0000000000000000000000000000000000000001",
           });
         } catch (err) {
@@ -518,11 +478,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_1],
         });
 
         expect(res[3]).toBe("0x0000000000000000000000000000000000000001");
@@ -536,9 +492,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.changeHatToggle({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
             newToggle: "0x0000000000000000000000000000000000000001",
           });
         } catch (err) {
@@ -555,11 +509,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_1],
         });
 
         expect(res[4]).toBe("0x0000000000000000000000000000000000000001");
@@ -573,9 +523,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.changeHatImageURI({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
             newImageURI: "Hat 1.1 new image URI",
           });
         } catch (err) {
@@ -592,11 +540,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_1],
         });
 
         expect(res[5]).toBe("Hat 1.1 new image URI");
@@ -610,9 +554,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.changeHatMaxSupply({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
             newMaxSupply: 10,
           });
         } catch (err) {
@@ -629,11 +571,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_1],
         });
 
         expect(res[1]).toBe(10);
@@ -647,9 +585,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.makeHatImmutable({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_1,
           });
         } catch (err) {
           console.log(err);
@@ -665,11 +601,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_1],
         });
 
         expect(res[7]).toBe(false);
@@ -681,14 +613,7 @@ describe("Basic tests", () => {
       beforeAll(async () => {
         try {
           res = await hatsClient.batchCreateHats({
-            admins: [
-              BigInt(
-                "0x0000000100000000000000000000000000000000000000000000000000000000"
-              ),
-              BigInt(
-                "0x0000000100000000000000000000000000000000000000000000000000000000"
-              ),
-            ],
+            admins: [topHatId_1, topHatId_1],
             maxSupplies: [3, 5],
             eligibilityModules: [address1, address1],
             toggleModules: [address1, address1],
@@ -697,22 +622,15 @@ describe("Basic tests", () => {
             imageURIs: ["1.2 URI", "1.3 URI"],
             account: account1,
           });
+
+          hatId_1_2 = res.hatIds[0];
+          hatId_1_3 = res.hatIds[1];
         } catch (err) {
           console.log(err);
         }
       }, 30000);
 
       test("Test batchCreateHats result value", () => {
-        expect(res.hatIds[0]).toBe(
-          BigInt(
-            "0x0000000100020000000000000000000000000000000000000000000000000000"
-          )
-        );
-        expect(res.hatIds[1]).toBe(
-          BigInt(
-            "0x0000000100030000000000000000000000000000000000000000000000000000"
-          )
-        );
         expect(res.status).toBe("success");
       });
 
@@ -721,11 +639,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_2],
         });
 
         expect(res[0]).toBe("1.2 details");
@@ -744,11 +658,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000100030000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_3],
         });
 
         expect(res[0]).toBe("1.3 details");
@@ -763,27 +673,11 @@ describe("Basic tests", () => {
       });
 
       test("Test getChildrenHats", async () => {
-        const res = await hatsClient.getChildrenHats(
-          BigInt(
-            "0x0000000100000000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const res = await hatsClient.getChildrenHats(topHatId_1);
 
-        expect(res[0]).toBe(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
-        expect(res[1]).toBe(
-          BigInt(
-            "0x0000000100020000000000000000000000000000000000000000000000000000"
-          )
-        );
-        expect(res[2]).toBe(
-          BigInt(
-            "0x0000000100030000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res[0]).toBe(hatId_1_1);
+        expect(res[1]).toBe(hatId_1_2);
+        expect(res[2]).toBe(hatId_1_3);
       });
     });
 
@@ -793,14 +687,7 @@ describe("Basic tests", () => {
       beforeAll(async () => {
         res = await hatsClient.batchMintHats({
           account: account1,
-          hatIds: [
-            BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
-            BigInt(
-              "0x0000000100030000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          hatIds: [hatId_1_2, hatId_1_3],
           wearers: [address1, address2],
         });
       }, 30000);
@@ -814,12 +701,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
-          args: [
-            address1,
-            BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [address1, hatId_1_2],
         });
 
         expect(res).toBe(true);
@@ -830,12 +712,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
-          args: [
-            address2,
-            BigInt(
-              "0x0000000100030000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [address2, hatId_1_3],
         });
 
         expect(res).toBe(true);
@@ -849,9 +726,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.setHatStatus({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100030000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_3,
             newStatus: false,
           });
         } catch (err) {
@@ -868,11 +743,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isActive",
-          args: [
-            BigInt(
-              "0x0000000100030000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [hatId_1_3],
         });
 
         expect(res).toBe(false);
@@ -886,9 +757,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.transferHat({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_2,
             from: address1,
             to: address2,
           });
@@ -906,24 +775,14 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
-          args: [
-            address2,
-            BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [address2, hatId_1_2],
         });
 
         const res2 = await publicClient.readContract({
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
-          args: [
-            address1,
-            BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [address1, hatId_1_2],
         });
 
         expect(res1).toBe(true);
@@ -938,9 +797,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.setHatWearerStatus({
             account: account1,
-            hatId: BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
+            hatId: hatId_1_2,
             wearer: address2,
             eligible: false,
             standing: true,
@@ -959,12 +816,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
-          args: [
-            address2,
-            BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [address2, hatId_1_2],
         });
 
         expect(res).toBe(false);
@@ -982,30 +834,20 @@ describe("Basic tests", () => {
             imageURI: "Tophat 2 URI",
             account: account2,
           });
+
+          topHatId_2 = res.hatId;
+          topHatDomain_2 = await hatsClient.getTopHatDomain(topHatId_2);
         } catch (err) {
           console.log(err);
         }
       }, 30000);
-
-      test("Test mintTopHat return value", () => {
-        expect(res.status).toBe("success");
-        expect(res.hatId).toBe(
-          BigInt(
-            "0x0000000200000000000000000000000000000000000000000000000000000000"
-          )
-        );
-      });
 
       test("Test top-hat is created", async () => {
         const res = await publicClient.readContract({
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000200000000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [topHatId_2],
         });
 
         expect(res[0]).toBe("Tophat 2");
@@ -1020,10 +862,8 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.requestLinkTopHatToTree({
             account: account2,
-            topHatDomain: 2,
-            requestedAdminHat: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            topHatDomain: topHatDomain_2,
+            requestedAdminHat: hatId_1_1,
           });
         } catch (err) {
           console.log(err);
@@ -1039,24 +879,16 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "linkedTreeRequests",
-          args: [2],
+          args: [topHatDomain_2],
         });
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(hatId_1_1);
       });
 
       test("Test getLinkageRequest request", async () => {
-        const res = await hatsClient.getLinkageRequest(2);
+        const res = await hatsClient.getLinkageRequest(topHatDomain_2);
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(hatId_1_1);
       });
     });
 
@@ -1067,10 +899,8 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.approveLinkTopHatToTree({
             account: account1,
-            topHatDomain: 2,
-            newAdminHat: BigInt(
-              "0x0000000100010000000000000000000000000000000000000000000000000000"
-            ),
+            topHatDomain: topHatDomain_2,
+            newAdminHat: hatId_1_1,
           });
         } catch (err) {
           console.log(err);
@@ -1086,54 +916,32 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "linkedTreeAdmins",
-          args: [2],
+          args: [topHatDomain_2],
         });
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(hatId_1_1);
       });
 
       test("Test getLinkedTreeAdmin result", async () => {
-        const res = await hatsClient.getLinkedTreeAdmin(2);
+        const res = await hatsClient.getLinkedTreeAdmin(topHatDomain_2);
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(hatId_1_1);
       });
 
       test("Test getHatLevel result", async () => {
-        const res = await hatsClient.getHatLevel(
-          BigInt(
-            "0x0000000200000000000000000000000000000000000000000000000000000000"
-          )
-        );
-
+        const res = await hatsClient.getHatLevel(topHatId_2);
         expect(res).toBe(2);
       });
 
       test("Test getTippyTopHatDomain result", async () => {
-        const res = await hatsClient.getTippyTopHatDomain(2);
-
-        expect(res).toBe(1);
+        const res = await hatsClient.getTippyTopHatDomain(topHatDomain_2);
+        expect(res).toBe(topHatDomain_1);
       });
 
       test("Test getAdmin result", async () => {
-        const res = await hatsClient.getAdmin(
-          BigInt(
-            "0x0000000200000000000000000000000000000000000000000000000000000000"
-          )
-        );
+        const res = await hatsClient.getAdmin(topHatId_2);
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100010000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(hatId_1_1);
       });
 
       test("Test linked top-hat values", async () => {
@@ -1141,11 +949,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000200000000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [topHatId_2],
         });
 
         expect(res[0]).toBe("Tophat 2");
@@ -1162,10 +966,8 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.relinkTopHatWithinTree({
             account: account1,
-            topHatDomain: 2,
-            newAdminHat: BigInt(
-              "0x0000000100020000000000000000000000000000000000000000000000000000"
-            ),
+            topHatDomain: topHatDomain_2,
+            newAdminHat: hatId_1_2,
             newDetails: "Tophat 2 details relinked",
             newImageURI: "Tophat 2 URI relinked",
             newEligibility: address1,
@@ -1185,14 +987,10 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "linkedTreeAdmins",
-          args: [2],
+          args: [topHatDomain_2],
         });
 
-        expect(res).toBe(
-          BigInt(
-            "0x0000000100020000000000000000000000000000000000000000000000000000"
-          )
-        );
+        expect(res).toBe(hatId_1_2);
       });
 
       test("Test relinked top-hat values", async () => {
@@ -1200,11 +998,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000200000000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [topHatId_2],
         });
 
         expect(res[0]).toBe("Tophat 2 details relinked");
@@ -1221,7 +1015,7 @@ describe("Basic tests", () => {
         try {
           res = await hatsClient.unlinkTopHatFromTree({
             account: account1,
-            topHatDomain: 2,
+            topHatDomain: topHatDomain_2,
             wearer: address2,
           });
         } catch (err) {
@@ -1238,7 +1032,7 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "linkedTreeAdmins",
-          args: [2],
+          args: [topHatDomain_2],
         });
 
         expect(res).toBe(
@@ -1253,29 +1047,13 @@ describe("Basic tests", () => {
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "viewHat",
-          args: [
-            BigInt(
-              "0x0000000200000000000000000000000000000000000000000000000000000000"
-            ),
-          ],
+          args: [topHatId_2],
         });
 
         expect(res[0]).toBe("Tophat 2 details relinked");
         expect(res[5]).toBe("Tophat 2 URI relinked");
         expect(res[3]).toBe("0x0000000000000000000000000000000000000000");
         expect(res[4]).toBe("0x0000000000000000000000000000000000000000");
-      });
-    });
-
-    describe("Get number of trees", () => {
-      let res: number;
-
-      beforeAll(async () => {
-        res = await hatsClient.getTreesCount();
-      });
-
-      test("Test getTreesCount result", () => {
-        expect(res).toBe(2);
       });
     });
   });
