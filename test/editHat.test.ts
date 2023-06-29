@@ -281,6 +281,24 @@ describe("mintHat tests", () => {
           "New max supply cannot be lower than the current aupply of minted hats"
         );
       });
+
+      test("Test make hat immutable by non admin", async () => {
+        expect(async () => {
+          await hatsClient.makeHatImmutable({
+            hatId: childHatId1,
+            account: account2,
+          });
+        }).rejects.toThrow("Not Admin");
+      });
+
+      test("Test make hat immutable of already immutable", async () => {
+        expect(async () => {
+          await hatsClient.makeHatImmutable({
+            hatId: childHatId2,
+            account: account1,
+          });
+        }).rejects.toThrow("Hat is immutable, editing is not allowed");
+      });
     });
   });
 });
