@@ -90,7 +90,7 @@ describe("Basic tests", () => {
       let res: bigint[];
       beforeAll(async () => {
         res = await hatsClientGoerli.getTreeHats(179);
-      });
+      }, 100000);
 
       test("Test getTreeHats result", () => {
         expect(res[0]).toBe(
@@ -112,7 +112,7 @@ describe("Basic tests", () => {
 
       beforeAll(async () => {
         res = await hatsClientGoerli.getWearerHats(wearer);
-      });
+      }, 100000);
 
       test("Test getWearerHats result", () => {
         expect(res[0]).toBe(

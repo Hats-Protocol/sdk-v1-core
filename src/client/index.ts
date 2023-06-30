@@ -1343,10 +1343,10 @@ export class HatsClient {
     account: Account | Address;
     topHatDomain: number;
     newAdminHat: bigint;
-    newEligibility: Address;
-    newToggle: Address;
-    newDetails: string;
-    newImageURI: string;
+    newEligibility?: Address;
+    newToggle?: Address;
+    newDetails?: string;
+    newImageURI?: string;
   }): Promise<RelinkTopHatWithinTreeResult> {
     if (this._walletClient === undefined) {
       throw new Error("Wallet client is required to perform this action");
@@ -1370,10 +1370,14 @@ export class HatsClient {
         args: [
           topHatDomain,
           newAdminHat,
-          newEligibility,
-          newToggle,
-          newDetails,
-          newImageURI,
+          newEligibility === undefined
+            ? "0x0000000000000000000000000000000000000000"
+            : newEligibility,
+          newToggle === undefined
+            ? "0x0000000000000000000000000000000000000000"
+            : newToggle,
+          newDetails === undefined ? "" : newDetails,
+          newImageURI === undefined ? "" : newImageURI,
         ],
         account,
         chain: this._walletClient.chain,
@@ -1692,7 +1696,6 @@ export class HatsClient {
     account: Account | Address;
     topHatDomain: number;
     newAdminHat: bigint;
-
     newDetails?: string;
     newImageURI?: string;
   }) {
@@ -1731,7 +1734,8 @@ export class HatsClient {
       const tippyTopHatId = BigInt(
         treeIdDecimalToHex(tippyTopHatDomain).padEnd(66, "0")
       );
-      const isWearerTippy = this.isWearerOfHat({
+
+      const isWearerTippy = await this.isWearerOfHat({
         wearer: accountAddress,
         hatId: tippyTopHatId,
       });
@@ -1765,7 +1769,7 @@ export class HatsClient {
           throw new Error("Cross tree linkage not allowed");
         }
       } else {
-        const sameTippyTophat = this._publicClient.readContract({
+        const sameTippyTophat = await this._publicClient.readContract({
           address: HATS_V1,
           abi: HATS_ABI,
           functionName: "sameTippyTopHatDomain",
