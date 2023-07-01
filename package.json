@@ -10,6 +10,12 @@
   "main": "dist/hats.cjs.js",
   "module": "dist/hats.esm.js",
   "typings": "dist/index.d.ts",
+  "keywords": [
+    "hats-protocol",
+    "hats",
+    "ethereum",
+    "eth"
+  ],
   "scripts": {
     "test": "jest -i",
     "build": "rollup -c",
@@ -38,5 +44,8 @@
     "ts-jest": "^29.1.0",
     "tslib": "^2.6.0",
     "typescript": "^5.1.3"
+  },
+  "peerDependencies": {
+    "viem": "1.2.6"
   }
 }
