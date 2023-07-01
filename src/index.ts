@@ -15,3 +15,27 @@ export {
   treeIdHexToDecimal,
   hatIdDecimalToIp,
 };
+
+export type {
+  CreateHatResult,
+  MintTopHatResult,
+  BatchCreateHatsResult,
+  MintHatResult,
+  RenounceHatResult,
+  ChangeHatDetailsResult,
+  ChangeHatEligibilityResult,
+  ChangeHatToggleResult,
+  ChangeHatImageURIResult,
+  ChangeHatMaxSupplyResult,
+  MakeHatImmutableResult,
+  BatchMintHatsResult,
+  SetHatStatusResult,
+  TransferHatResult,
+  SetHatWearerStatusResult,
+  CheckHatStatusResult,
+  CheckHatWearerStatusResult,
+  RequestLinkTopHatToTreeResult,
+  ApproveLinkTopHatToTreeResult,
+  UnlinkTopHatFromTreeResult,
+  RelinkTopHatWithinTreeResult,
+} from "./types";
