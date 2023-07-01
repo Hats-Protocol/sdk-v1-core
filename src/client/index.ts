@@ -2,7 +2,12 @@ import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
 import type { PublicClient, WalletClient, Account, Address } from "viem";
 import { decodeEventLog, encodeEventTopics } from "viem";
-import { GET_WEARER_HATS, GET_TREE_HATS } from "../subgraph/queries";
+import {
+  GET_WEARER_HATS,
+  GET_TREE_HATS,
+  GET_TREE_WEARERS_PER_HAT,
+  GET_WEARERS_OF_HAT,
+} from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
 import type {
   CreateHatResult,
@@ -28,7 +33,7 @@ import type {
   RelinkTopHatWithinTreeResult,
 } from "../types";
 import { HATS_V1 } from "../config";
-import { treeIdDecimalToHex } from "./utils";
+import { treeIdDecimalToHex, hatIdDecimalToHex } from "./utils";
 
 export class HatsClient {
   readonly chainId: number;
@@ -71,8 +76,8 @@ export class HatsClient {
     query: string,
     variables?: Variables
   ): Promise<ResponseType> {
-    if (!this._graphqlClient) {
-      throw new Error();
+    if (this._graphqlClient === undefined) {
+      throw new Error(`No subgraph support for network id ${this.chainId}`);
     }
 
     const result = (await this._graphqlClient.request(
@@ -87,7 +92,7 @@ export class HatsClient {
                       Subgraph Read Functions
     //////////////////////////////////////////////////////////////*/
 
-  async getTreeHats(treeId: number): Promise<bigint[]> {
+  async gqlGetHatsOfTree(treeId: number): Promise<bigint[]> {
     const treeIdHex = treeIdDecimalToHex(treeId);
 
     const respone = await this._makeGqlRequest<{
@@ -103,7 +108,7 @@ export class HatsClient {
     return respone.tree.hats.map((hatObj) => BigInt(hatObj.id));
   }
 
-  async getWearerHats(wearer: Address): Promise<bigint[]> {
+  async gqlGetHatsOfWearer(wearer: Address): Promise<bigint[]> {
     const respone = await this._makeGqlRequest<{
       wearer: { currentHats: { id: string }[] };
     }>(GET_WEARER_HATS, {
@@ -115,6 +120,86 @@ export class HatsClient {
     }
 
     return respone.wearer.currentHats.map((hatObj) => BigInt(hatObj.id));
+  }
+
+  async gqlGetWearersPerHatInTree(
+    treeId: number
+  ): Promise<{ hatId: bigint; hatWearers: string[] }[]> {
+    const treeIdHex = treeIdDecimalToHex(treeId);
+
+    const respone = await this._makeGqlRequest<{
+      tree: { hats: { id: string; wearers: { id: string }[] }[] };
+    }>(GET_TREE_WEARERS_PER_HAT, {
+      id: treeIdHex,
+    });
+
+    if (!respone.tree) {
+      throw new Error("Tree does not exist on the subgraph");
+    }
+
+    const res = respone.tree.hats.map((hatObj) => {
+      const hatId = BigInt(hatObj.id);
+      const hatWearers = hatObj.wearers.map((wearerObj) => wearerObj.id);
+      return { hatId, hatWearers };
+    });
+
+    return res;
+  }
+
+  async gqlGetWearersOfHat(hatId: bigint): Promise<string[]> {
+    const hatIdHex = hatIdDecimalToHex(hatId);
+
+    const respone = await this._makeGqlRequest<{
+      hat: { wearers: { id: string }[] };
+    }>(GET_WEARERS_OF_HAT, {
+      id: hatIdHex,
+    });
+
+    if (!respone.hat) {
+      throw new Error("Wearer does not exist on the subgraph");
+    }
+
+    if (respone.hat.wearers.length > 0) {
+      return respone.hat.wearers.map((wearerObj) => wearerObj.id);
+    }
+
+    return [];
+  }
+
+  async gqlGetHatsInBranch(rootHatId: bigint): Promise<bigint[]> {
+    const topHatDomain = await this.getTopHatDomain(rootHatId);
+    const treeHats = await this.gqlGetHatsOfTree(topHatDomain);
+    const rootHatLevel = await this.getLocalHatLevel(rootHatId);
+
+    const contractDetails = {
+      address: HATS_V1 as Address,
+      abi: HATS_ABI,
+    };
+
+    const calls = treeHats.map((hat) => {
+      return {
+        ...contractDetails,
+        functionName: "getAdminAtLocalLevel",
+        args: [hat, rootHatLevel],
+      };
+    });
+
+    const allHatsAdmins = await this._publicClient.multicall({
+      contracts: calls,
+    });
+
+    let branchHats = [rootHatId];
+    allHatsAdmins.forEach((resObj, idx) => {
+      if (
+        resObj.result !== undefined &&
+        resObj.result === rootHatId &&
+        treeHats[idx] !== rootHatId
+      ) {
+        branchHats.push(treeHats[idx]);
+      }
+    });
+
+    return branchHats;
   }
 
   /*//////////////////////////////////////////////////////////////

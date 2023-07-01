@@ -86,10 +86,10 @@ describe("Basic tests", () => {
       });
     }, 30000);
 
-    describe("Subgraph getTreeHats", () => {
+    describe("Subgraph gqlGetHatsOfTree", () => {
       let res: bigint[];
       beforeAll(async () => {
-        res = await hatsClientGoerli.getTreeHats(179);
+        res = await hatsClientGoerli.gqlGetHatsOfTree(179);
       }, 100000);
 
       test("Test getTreeHats result", () => {
@@ -103,15 +103,25 @@ describe("Basic tests", () => {
             "0x000000b300010000000000000000000000000000000000000000000000000000"
           )
         );
+        expect(res[2]).toBe(
+          BigInt(
+            "0x000000b300020000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res[3]).toBe(
+          BigInt(
+            "0x000000b300020001000000000000000000000000000000000000000000000000"
+          )
+        );
       });
     });
 
-    describe("Subgraph getWearerHats", () => {
+    describe("Subgraph gqlGetHatsOfWearer", () => {
       let res: bigint[];
       let wearer: Address = "0x20ba9788Ab1aB8e7dc72341A9D219ECCAAE90d8B";
 
       beforeAll(async () => {
-        res = await hatsClientGoerli.getWearerHats(wearer);
+        res = await hatsClientGoerli.gqlGetHatsOfWearer(wearer);
       }, 100000);
 
       test("Test getWearerHats result", () => {
@@ -123,6 +133,137 @@ describe("Basic tests", () => {
         expect(res[1]).toBe(
           BigInt(
             "0x000000b300020000000000000000000000000000000000000000000000000000"
+          )
+        );
+      });
+    });
+
+    describe("Subgraph gqlGetWearersPerHatInTree", () => {
+      let res: { hatId: bigint; hatWearers: string[] }[];
+      let wearer1 = "0x60EdE337dDe466c0839553579c81BFe1e795BFd2";
+      wearer1 = wearer1.toLowerCase();
+      let wearer2 = "0x20ba9788Ab1aB8e7dc72341A9D219ECCAAE90d8B";
+      wearer2 = wearer2.toLowerCase();
+
+      beforeAll(async () => {
+        res = await hatsClientGoerli.gqlGetWearersPerHatInTree(179);
+      }, 100000);
+
+      test("Test gqlGetTreeWearersPerHat result", () => {
+        expect(res[0].hatId).toBe(
+          BigInt(
+            "0x000000b300000000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res[0].hatWearers[0]).toBe(wearer1);
+        expect(res[0].hatWearers.length).toBe(1);
+
+        expect(res[1].hatId).toBe(
+          BigInt(
+            "0x000000b300010000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res[1].hatWearers[0]).toBe(wearer2);
+        expect(res[1].hatWearers.length).toBe(1);
+
+        expect(res[2].hatId).toBe(
+          BigInt(
+            "0x000000b300020000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res[2].hatWearers[0]).toBe(wearer2);
+        expect(res[2].hatWearers.length).toBe(1);
+
+        expect(res[3].hatId).toBe(
+          BigInt(
+            "0x000000b300020001000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res[3].hatWearers).toEqual([]);
+        expect(res[3].hatWearers.length).toBe(0);
+      });
+    });
+
+    describe("Subgraph gqlGetWearersOfHat", () => {
+      let res: { hatId: bigint; hatWearers: string[] }[];
+      let wearer1 = "0x60EdE337dDe466c0839553579c81BFe1e795BFd2";
+      wearer1 = wearer1.toLowerCase();
+      let wearer2 = "0x20ba9788Ab1aB8e7dc72341A9D219ECCAAE90d8B";
+      wearer2 = wearer2.toLowerCase();
+
+      let res1: string[];
+      let res2: string[];
+
+      beforeAll(async () => {
+        res1 = await hatsClientGoerli.gqlGetWearersOfHat(
+          BigInt(
+            "0x000000b300010000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        res2 = await hatsClientGoerli.gqlGetWearersOfHat(
+          BigInt(
+            "0x000000b300020001000000000000000000000000000000000000000000000000"
+          )
+        );
+      }, 100000);
+
+      test("Test gqlGetWearersOfHat result", () => {
+        expect(res1[0]).toBe(wearer2);
+        expect(res1.length).toBe(1);
+        expect(res2).toEqual([]);
+        expect(res2.length).toBe(0);
+      });
+    });
+
+    describe("Subgraph gqlGetHatsInBranch", () => {
+      let res1: bigint[];
+      let res2: bigint[];
+
+      beforeAll(async () => {
+        res1 = await hatsClientGoerli.gqlGetHatsInBranch(
+          BigInt(
+            "0x000000b300000000000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        res2 = await hatsClientGoerli.gqlGetHatsInBranch(
+          BigInt(
+            "0x000000b300020000000000000000000000000000000000000000000000000000"
+          )
+        );
+      }, 100000);
+
+      test("Test gqlGetHatsInBranch result", () => {
+        expect(res1[0]).toBe(
+          BigInt(
+            "0x000000b300000000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res1[1]).toBe(
+          BigInt(
+            "0x000000b300010000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res1[2]).toBe(
+          BigInt(
+            "0x000000b300020000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res1[3]).toBe(
+          BigInt(
+            "0x000000b300020001000000000000000000000000000000000000000000000000"
+          )
+        );
+
+        expect(res2[0]).toBe(
+          BigInt(
+            "0x000000b300020000000000000000000000000000000000000000000000000000"
+          )
+        );
+        expect(res2[1]).toBe(
+          BigInt(
+            "0x000000b300020001000000000000000000000000000000000000000000000000"
           )
         );
       });

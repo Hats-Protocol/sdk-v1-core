@@ -19,3 +19,26 @@ export const GET_TREE_HATS = gql`
     }
   }
 `;
+
+export const GET_TREE_WEARERS_PER_HAT = gql`
+  query getTree($id: ID!) {
+    tree(id: $id) {
+      hats {
+        id
+        wearers {
+          id
+        }
+      }
+    }
+  }
+`;
+
+export const GET_WEARERS_OF_HAT = gql`
+  query getWearerHats($id: ID!) {
+    hat(id: $id) {
+      wearers {
+        id
+      }
+    }
+  }
+`;
