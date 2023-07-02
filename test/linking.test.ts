@@ -2,7 +2,6 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
-import { HATS_ABI } from "../src/abi/Hats";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
 
@@ -24,7 +23,6 @@ describe("mintHat tests", () => {
 
   let topHatDomain1: number;
   let topHatDomain2: number;
-  let topHatDomain3: number;
   let topHatDomain4: number;
 
   let childHatId1: bigint;
@@ -103,7 +101,6 @@ describe("mintHat tests", () => {
           });
 
           topHatId3 = resTopHat3.hatId;
-          topHatDomain3 = await hatsClient.getTopHatDomain(topHatId3);
 
           resTopHat4 = await hatsClient.mintTopHat({
             target: address3,

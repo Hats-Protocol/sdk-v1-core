@@ -1,3 +1,5 @@
+/* eslint @typescript-eslint/no-empty-interface: 0 */
+
 export type Hat = {
   details: string;
   maxSupply: number;

@@ -5,12 +5,12 @@ import { mainnet, goerli } from "viem/chains";
 describe("client Constructor tests", () => {
   describe("Hats client is initialized", () => {
     test("Client non matching chain to public client", () => {
-      let publicClient = createPublicClient({
+      const publicClient = createPublicClient({
         chain: mainnet,
         transport: http("http://127.0.0.1:8545"),
       });
 
-      let walletClient = createWalletClient({
+      const walletClient = createWalletClient({
         chain: mainnet,
         transport: http("http://127.0.0.1:8545"),
       });
@@ -24,12 +24,12 @@ describe("client Constructor tests", () => {
     });
 
     test("Client non matching chain to wallet client", () => {
-      let publicClient = createPublicClient({
+      const publicClient = createPublicClient({
         chain: mainnet,
         transport: http("http://127.0.0.1:8545"),
       });
 
-      let walletClient = createWalletClient({
+      const walletClient = createWalletClient({
         chain: goerli,
         transport: http("http://127.0.0.1:8545"),
       });

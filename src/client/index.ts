@@ -32,6 +32,37 @@ import type {
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
 } from "../types";
+import {
+  ChainIdMismatchError,
+  MissingPublicClientError,
+  SubgraphTreeNotExistError,
+  SubgraphNotUpportedError,
+  SubgraphWearerNotExistError,
+  SubgraphHatNotExistError,
+  MissingWalletClientError,
+  TransactionRevertedError,
+  ZeroToggleError,
+  ZeroEligibilityError,
+  NotAdminError,
+  InvalidAdminError,
+  AlreadyWearingError,
+  NotActiveError,
+  NotEligibleError,
+  AllHatsWornError,
+  HatNotExistError,
+  NotToggleError,
+  NotEligibilityError,
+  NotWearerError,
+  ImmutableHatError,
+  StringTooLongError,
+  InvalidMaxSupplyError,
+  CrossLinkageError,
+  CircularLinkageError,
+  NotAdminOrWearerError,
+  NoLinkageRequestError,
+  BatchParamsError,
+} from "../errors";
+
 import { HATS_V1 } from "../config";
 import { treeIdDecimalToHex, hatIdDecimalToHex } from "./utils";
 
@@ -41,6 +72,20 @@ export class HatsClient {
   private readonly _walletClient: WalletClient | undefined;
   private readonly _graphqlClient: GraphQLClient | undefined;
 
+  /**
+   * Initialize a HatsClient.
+   *
+   * @param chainId - Client chain ID. The client is initialized to work with one specific chain.
+   * @param publicClient - Viem Public Client
+   * @param walletClient - Optional Viem Wallet Client. If not provided, then only read operations will be possible.
+   * @returns A HatsClient instance.
+   *
+   * @throws MissingPublicClientError
+   * Thrown when a public client is not provided.
+   *
+   * @throws ChainIdMismatchError
+   * Thrown when there is a chain ID mismatch between one of the Viem clients and/or the provided chain ID.
+   */
   constructor({
     chainId,
     publicClient,
@@ -51,17 +96,17 @@ export class HatsClient {
     walletClient?: WalletClient;
   }) {
     if (publicClient === undefined) {
-      throw new Error("Public client is required");
+      throw new MissingPublicClientError("Public client is required");
     }
 
     if (publicClient.chain?.id !== chainId) {
-      throw new Error(
+      throw new ChainIdMismatchError(
         "Provided chain id should match the public client chain id"
       );
     }
 
     if (walletClient !== undefined && walletClient.chain?.id !== chainId) {
-      throw new Error(
+      throw new ChainIdMismatchError(
         "Provided chain id should match the wallet client chain id"
       );
     }
@@ -77,7 +122,9 @@ export class HatsClient {
     variables?: Variables
   ): Promise<ResponseType> {
     if (this._graphqlClient === undefined) {
-      throw new Error(`No subgraph support for network id ${this.chainId}`);
+      throw new SubgraphNotUpportedError(
+        `No subgraph support for network id ${this.chainId}`
+      );
     }
 
     const result = (await this._graphqlClient.request(
@@ -92,6 +139,18 @@ export class HatsClient {
                       Subgraph Read Functions
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Get all the hats of a tree.
+   *
+   * @param treeId - The tree domain. The tree domain is the first four bytes of the tophat ID.
+   * @returns An array of hat IDs.
+   *
+   * @throws SubgraphNotUpportedError
+   * Throws if there is no subgraph support for the client's chain ID network.
+   *
+   * @throws SubgraphTreeNotExistError
+   * Throws if there is no tree matching the provided tree ID.
+   */
   async gqlGetHatsOfTree(treeId: number): Promise<bigint[]> {
     const treeIdHex = treeIdDecimalToHex(treeId);
 
@@ -102,12 +161,26 @@ export class HatsClient {
     });
 
     if (!respone.tree) {
-      throw new Error("Tree does not exist on the subgraph");
+      throw new SubgraphTreeNotExistError(
+        "Tree does not exist on the subgraph"
+      );
     }
 
     return respone.tree.hats.map((hatObj) => BigInt(hatObj.id));
   }
 
+  /**
+   * Get all the hats of a wearer.
+   *
+   * @param wearer - The wearer's address.
+   * @returns An array of hat IDs.
+   *
+   * @throws SubgraphNotUpportedError
+   * Throws if there is no subgraph support for the client's chain ID network.
+   *
+   * @throws SubgraphWearerNotExistError
+   * Throws if there is no wearer matching the one provided.
+   */
   async gqlGetHatsOfWearer(wearer: Address): Promise<bigint[]> {
     const respone = await this._makeGqlRequest<{
       wearer: { currentHats: { id: string }[] };
@@ -116,12 +189,26 @@ export class HatsClient {
     });
 
     if (!respone.wearer) {
-      throw new Error("Wearer does not exist on the subgraph");
+      throw new SubgraphWearerNotExistError(
+        "Wearer does not exist on the subgraph"
+      );
     }
 
     return respone.wearer.currentHats.map((hatObj) => BigInt(hatObj.id));
   }
 
+  /**
+   * Get a mapping of wearers per hat for the whole tree.
+   *
+   * @param treeId - The tree domain. The tree domain is the first four bytes of the tophat ID.
+   * @returns A mapping of hat ID to an array of wearers for this hat.
+   *
+   * @throws SubgraphNotUpportedError
+   * Throws if there is no subgraph support for the client's chain ID network.
+   *
+   * @throws SubgraphTreeNotExistError
+   * Throws if there is no tree matching the provided tree ID.
+   */
   async gqlGetWearersPerHatInTree(
     treeId: number
   ): Promise<{ hatId: bigint; hatWearers: string[] }[]> {
@@ -134,7 +221,9 @@ export class HatsClient {
     });
 
     if (!respone.tree) {
-      throw new Error("Tree does not exist on the subgraph");
+      throw new SubgraphTreeNotExistError(
+        "Tree does not exist on the subgraph"
+      );
     }
 
     const res = respone.tree.hats.map((hatObj) => {
@@ -146,6 +235,18 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get all wearers of a hat.
+   *
+   * @param hatId - The hat ID.
+   * @returns An array of wearers.
+   *
+   * @throws SubgraphNotUpportedError
+   * Throws if there is no subgraph support for the client's chain ID network.
+   *
+   * @throws SubgraphHatNotExistError
+   * Throws if there is no Hat matching the provided hat ID.
+   */
   async gqlGetWearersOfHat(hatId: bigint): Promise<string[]> {
     const hatIdHex = hatIdDecimalToHex(hatId);
 
@@ -156,7 +257,7 @@ export class HatsClient {
     });
 
     if (!respone.hat) {
-      throw new Error("Wearer does not exist on the subgraph");
+      throw new SubgraphHatNotExistError("Hat does not exist on the subgraph");
     }
 
     if (respone.hat.wearers.length > 0) {
@@ -166,6 +267,18 @@ export class HatsClient {
     return [];
   }
 
+  /**
+   * Get all hats of a particular branch of the tree.
+   *
+   * @param rootHatId - The Hat id of the branch root.
+   * @returns An array of the branch hat IDs, including the root hat.
+   *
+   * @throws SubgraphNotUpportedError
+   * Throws if there is no subgraph support for the client's chain ID network.
+   *
+   * * @throws SubgraphTreeNotExistError
+   * Throws if there is no Tree for the provided root hat ID.
+   */
   async gqlGetHatsInBranch(rootHatId: bigint): Promise<bigint[]> {
     const topHatDomain = await this.getTopHatDomain(rootHatId);
     const treeHats = await this.gqlGetHatsOfTree(topHatDomain);
@@ -188,7 +301,7 @@ export class HatsClient {
       contracts: calls,
     });
 
-    let branchHats = [rootHatId];
+    const branchHats = [rootHatId];
     allHatsAdmins.forEach((resObj, idx) => {
       if (
         resObj.result !== undefined &&
@@ -206,6 +319,12 @@ export class HatsClient {
                       Onchain Read Functions
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Get a hat's properties.
+   *
+   * @param hatId - The hat ID.
+   * @returns An object containing the hat's properties.
+   */
   async viewHat(hatId: bigint): Promise<{
     details: string;
     maxSupply: number;
@@ -237,6 +356,13 @@ export class HatsClient {
     };
   }
 
+  /**
+   * Check if an address is a wearer of a specific hat.
+   *
+   * @param wearer - Address to check.
+   * @param hatId - The hat ID.
+   * @returns True if the address weares the hat, false otherwise.
+   */
   async isWearerOfHat({
     wearer,
     hatId,
@@ -254,6 +380,13 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Check if an address is an admin of a specific hat.
+   *
+   * @param user - The address to check.
+   * @param hatId - The hat ID.
+   * @returns True is the address is an admin of the hat, false otherwise.
+   */
   async isAdminOfHat({
     user,
     hatId,
@@ -271,6 +404,12 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Check if a hat is active.
+   *
+   * @param hatId - The hat ID.
+   * @returns True if active, false otherwise.
+   */
   async isActive(hatId: bigint): Promise<boolean> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -282,6 +421,13 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Check if a wearer is in good standing.
+   *
+   * @param wearer - The address of the wearer.
+   * @param hatID - The hat ID.
+   * @returns True if the wearer is in good standing, false otherwise.
+   */
   async isInGoodStanding({
     wearer,
     hatId,
@@ -299,6 +445,13 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Check if an address is eligible for a specific hat.
+   *
+   * @param wearer - The Address to check.
+   * @param hatId - THe hat ID.
+   * @returns True if eligible, false otherwise.
+   */
   async isEligible({
     wearer,
     hatId,
@@ -316,6 +469,12 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Predict the hat ID of a yet to be created hat.
+   *
+   * @param admin - The admin hat ID.
+   * @returns The hat ID of the next hat that will be created with the provided admin.
+   */
   async predictHatId(admin: bigint): Promise<bigint> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -327,6 +486,11 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get the number of trees.
+   *
+   * @returns The number of already created trees.
+   */
   async getTreesCount(): Promise<number> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -337,6 +501,12 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get the linkage request of a tree.
+   *
+   * @param topHatDomain - The tree domain. The tree domain is the first four bytes of the tophat ID.
+   * @returns If request exists, returns the requested new admin hat ID. If not, returns zero.
+   */
   async getLinkageRequest(topHatDomain: number): Promise<bigint> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -348,6 +518,12 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get the admin of a linked tree.
+   *
+   * @param topHatDomain - The tree domain. The tree domain is the first four bytes of the tophat ID.
+   * @returns If tree is linked, returns the admin hat ID of the linked tree. If not, returns zero.
+   */
   async getLinkedTreeAdmin(topHatDomain: number): Promise<bigint> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -359,6 +535,11 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get a hat's level. If the tree is linked, level is calulated in the global tree (formed of all linked trees).
+   * @param hatId - The hat ID.
+   * @returns The hat's level in the global tree.
+   */
   async getHatLevel(hatId: bigint): Promise<number> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -370,6 +551,11 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get a hat's level in its local tree (without considering linked trees).
+   * @param hatId - The hat ID.
+   * @returns The hat's local level.
+   */
   async getLocalHatLevel(hatId: bigint): Promise<number> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -381,6 +567,12 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get a hat's tree domain.
+   *
+   * @param hatId - The hat ID.
+   * @returns The tree domain of the hat. The tree domain is the first four bytes of the tophat ID.
+   */
   async getTopHatDomain(hatId: bigint): Promise<number> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -392,6 +584,12 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get the tree domain of the global's tree tophat (tippy top hat), which the provided tree is included in.
+   *
+   * @param topHatDomain The tree domain. The tree domain is the first four bytes of the tophat ID.
+   * @returns The tree domain of the tippy top hat.
+   */
   async getTippyTopHatDomain(topHatDomain: number): Promise<number> {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
@@ -403,8 +601,18 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get the direct admin of a hat (its parent).
+   * @param hatId- The hat ID.
+   * @returns The admin's hat ID. If the provided hat is an unlinked tophat, then this top hat is returned, as it is
+   * the admin of itself.
+   */
   async getAdmin(hatId: bigint): Promise<bigint> {
     const hatLevel = await this.getHatLevel(hatId);
+    if (hatLevel === 0) {
+      return hatId;
+    }
+
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
@@ -415,8 +623,14 @@ export class HatsClient {
     return res;
   }
 
+  /**
+   * Get the children hats of a hat.
+   *
+   * @param hatId - The hat ID.
+   * @returns An array of all children hats IDs.
+   */
   async getChildrenHats(hatId: bigint): Promise<bigint[]> {
-    let res: bigint[] = [];
+    const res: bigint[] = [];
     const hat = await this.viewHat(hatId);
 
     if (hat.numChildren === 0) {
@@ -440,6 +654,21 @@ export class HatsClient {
                       Write Functions
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Create a new tophat (new tree).
+   *
+   * @param account - A Viem account.
+   * @param target - Tophat's wearer address.
+   * @param details - Tophat's details field.
+   * @param imageURIi - Optional tophat's image URI.
+   * @returns An object containing the status of the call, the transactions hash and the created tophat ID.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpeced reason.
+   */
   async mintTopHat({
     account,
     target,
@@ -449,10 +678,12 @@ export class HatsClient {
     account: Account | Address;
     target: Address;
     details: string;
-    imageURI: string;
+    imageURI?: string;
   }): Promise<MintTopHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     try {
@@ -460,7 +691,7 @@ export class HatsClient {
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "mintTopHat",
-        args: [target, details, imageURI],
+        args: [target, details, imageURI === undefined ? "" : imageURI],
         account,
         chain: this._walletClient.chain,
       });
@@ -482,10 +713,42 @@ export class HatsClient {
         hatId: event.args.id,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Create a hat.
+   *
+   * @param account - A Viem account.
+   * @param admin - Hat's admin ID.
+   * @param details - Hat's details field.
+   * @param maxSupply - Hat's maximum amount of possible wearers.
+   * @param eligibility - Hat's eligibility address (zero address is not valid).
+   * @param toggle - Hat's toggle address (zero address is not valid).
+   * @param mutable - True if the hat should be mutable, false otherwise.
+   * @param imageURI - Optional hat's image URI.
+   * @returns An object containing the status of the call, the transaction hash and the created hat ID.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws ZeroEligibilityError
+   * Throws if provided the zero address as an eligibility.
+   *
+   * @throws ZeroToggleError
+   * Throws if provided the zero address as a toggle.
+   *
+   * @throws InvalidAdminError
+   * Throws if the provided admin ID is not valid.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat that will be created.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   *
+   */
   async createHat({
     account,
     admin,
@@ -503,10 +766,12 @@ export class HatsClient {
     eligibility: Address;
     toggle: Address;
     mutable: boolean;
-    imageURI: string;
+    imageURI?: string;
   }): Promise<CreateHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
     await this._validateHatCreation({ account, admin, eligibility, toggle });
 
@@ -522,7 +787,7 @@ export class HatsClient {
           eligibility,
           toggle,
           mutable,
-          imageURI,
+          imageURI === undefined ? "" : imageURI,
         ],
         account,
         chain: this._walletClient.chain,
@@ -545,10 +810,45 @@ export class HatsClient {
         hatId: event.args.id,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Create multiple hats.
+   *
+   * @param account - A Viem account.
+   * @param admins - The hats admin IDs.
+   * @param details - The hats details fields.
+   * @param maxSupplies - The hats maximum amounts of possible wearers.
+   * @param eligibilityModules - The hats eligibility addresses (zero address is not valid).
+   * @param toggleModules - The hats toggle addresses (zero address is not valid).
+   * @param mutables - True if the hat should be mutable, false otherwise.
+   * @param imageURIs - Optional hats image URIs.
+   * @returns An object containing the status of the call, the transaction hash and the created hat IDs.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws ZeroEligibilityError
+   * Throws if provided the zero address as an eligibility.
+   *
+   * @throws ZeroToggleError
+   * Throws if provided the zero address as a toggle.
+   *
+   * @throws InvalidAdminError
+   * Throws if the provided admin ID is not valid.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat that will be created.
+   *
+   * @throws BatchParamsError
+   * Throws if there is a length mismatch between the provided hats properties.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   *
+   */
   async batchCreateHats({
     account,
     admins,
@@ -566,10 +866,25 @@ export class HatsClient {
     eligibilityModules: Address[];
     toggleModules: Address[];
     mutables: boolean[];
-    imageURIs: string[];
+    imageURIs?: string[];
   }): Promise<BatchCreateHatsResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
+    }
+
+    const length = admins.length;
+
+    if (
+      details.length !== details.length ||
+      details.length !== maxSupplies.length ||
+      details.length !== eligibilityModules.length ||
+      details.length !== toggleModules.length ||
+      details.length !== mutables.length ||
+      (imageURIs !== undefined && details.length !== imageURIs.length)
+    ) {
+      throw new BatchParamsError("Length mismatch");
     }
 
     for (let i = 0; i < admins.length; i++) {
@@ -593,7 +908,7 @@ export class HatsClient {
           eligibilityModules,
           toggleModules,
           mutables,
-          imageURIs,
+          imageURIs === undefined ? Array(admins.length).fill("") : imageURIs,
         ],
         account,
         chain: this._walletClient.chain,
@@ -603,7 +918,7 @@ export class HatsClient {
         hash,
       });
 
-      let newHatIds: bigint[] = [];
+      const newHatIds: bigint[] = [];
 
       for (let i = 0; i < admins.length; i++) {
         const event = decodeEventLog({
@@ -622,10 +937,43 @@ export class HatsClient {
         hatIds: newHatIds,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Mint a hat.
+   *
+   * @param account - A Viem account.
+   * @param hatId - ID of the minted hat.
+   * @param wearer - Address of the new wearer.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of hat.
+   *
+   * @throws HatNotExistError
+   * Throws if the hat does not exist.
+   *
+   * @throws AllHatsWornError
+   * Throws if all the hats of the provided hat ID are currently worn.
+   *
+   * @throws NotEligibleError
+   * Throws if the new wearer is not eligible for the hat.
+   *
+   * @throws NotActiveError
+   * Throws if the hat is not active.
+   *
+   * @throws AlreadyWearingError
+   * Throws if the new wearer is already wearing the hat.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   *
+   */
   async mintHat({
     account,
     hatId,
@@ -636,7 +984,9 @@ export class HatsClient {
     wearer: Address;
   }): Promise<MintHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
     await this._validateHatMinting({ account, hatId, wearer });
 
@@ -659,10 +1009,46 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Mint multiple hats.
+   *
+   * @param account - A Viem account.
+   * @param hatIds - IDs of the minted hats.
+   * @param wearers - Addresses of the new wearers.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of hat.
+   *
+   * @throws HatNotExistError
+   * Throws if the hat does not exist.
+   *
+   * @throws AllHatsWornError
+   * Throws if all the hats of the provided hat ID are currently worn.
+   *
+   * @throws NotEligibleError
+   * Throws if the new wearer is not eligible for the hat.
+   *
+   * @throws NotActiveError
+   * Throws if the hat is not active.
+   *
+   * @throws AlreadyWearingError
+   * Throws if the new wearer is already wearing the hat.
+   *
+   * * @throws BatchParamsError
+   * Throws if there is a length mismatch between the provided properties.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   *
+   */
   async batchMintHats({
     account,
     hatIds,
@@ -673,7 +1059,13 @@ export class HatsClient {
     wearers: Address[];
   }): Promise<BatchMintHatsResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
+    }
+
+    if (hatIds.length !== wearers.length) {
+      throw new BatchParamsError("Length mismatch");
     }
 
     for (let i = 0; i < hatIds.length; i++) {
@@ -703,10 +1095,27 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Set a hat's status to active/inactive.
+   *
+   * @param account - A Viem account.
+   * @param hatId - hat ID.
+   * @param newStatus - Hat's new status: true for active, false for inactive.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotToggleError
+   * Throws if the calling account is not the toggle of the hat.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async setHatStatus({
     account,
     hatId,
@@ -717,7 +1126,9 @@ export class HatsClient {
     newStatus: boolean;
   }): Promise<SetHatStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     const hat = await this.viewHat(hatId);
@@ -728,7 +1139,7 @@ export class HatsClient {
       accountAddress = account;
     }
     if (hat.toggle !== accountAddress) {
-      throw new Error("The calling account is not the hat toggle");
+      throw new NotToggleError("The calling account is not the hat toggle");
     }
 
     try {
@@ -750,10 +1161,24 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Check a hat's status by calling its toggle module, and updating the status as needed.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat Id.
+   * @returns An object containing the status of the call, the transaction hash, an indicator whether the status was
+   * toggled and the new status in case the status was toggled.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async checkHatStatus({
     account,
     hatId,
@@ -762,7 +1187,9 @@ export class HatsClient {
     hatId: bigint;
   }): Promise<CheckHatStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     try {
@@ -800,10 +1227,29 @@ export class HatsClient {
         };
       }
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Set a hat's wearer status.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @param wearer - Wearer address.
+   * @param eligible - Wearer's eligibility. True for eligible, false otherwise.
+   * @param standing - Wearer's standing. True for good, false for bad.
+   * @returns An object containing the status of the call and the transaction hash
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotEligibilityError
+   * Throws if the calling account is not the eligibility of the hat.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async setHatWearerStatus({
     account,
     hatId,
@@ -818,7 +1264,9 @@ export class HatsClient {
     standing: boolean;
   }): Promise<SetHatWearerStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     const hat = await this.viewHat(hatId);
@@ -829,7 +1277,9 @@ export class HatsClient {
       accountAddress = account;
     }
     if (hat.eligibility !== accountAddress) {
-      throw new Error("The calling account is not the hat toggle");
+      throw new NotEligibilityError(
+        "The calling account is not the hat eligibility"
+      );
     }
 
     try {
@@ -851,10 +1301,26 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Check a hat's wearer status by calling the hat's eligibilty module.
+   * If the wearer is in non eligible and/or in bad standing, then its hat is burned.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @param wearer - Wearer address.
+   * @returns An object containing the status of the call, the transaction hash, indicator whether the wearer's standing
+   * was updated, indicator whether the wearer's hat was burned and if standing has changed then the new standing.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async checkHatWearerStatus({
     account,
     hatId,
@@ -865,7 +1331,9 @@ export class HatsClient {
     wearer: Address;
   }): Promise<CheckHatWearerStatusResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     try {
@@ -944,10 +1412,23 @@ export class HatsClient {
         };
       }
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Renounce a hat. This action burns the hat for the renouncing wearer.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID of the hat the caller wishes to renounce.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async renounceHat({
     account,
     hatId,
@@ -956,7 +1437,9 @@ export class HatsClient {
     hatId: bigint;
   }): Promise<RenounceHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     try {
@@ -978,10 +1461,43 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Transfer a hat from one wearer to another.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID to be transfered.
+   * @param from - Current wearer address.
+   * @param to - New wearer address.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws ImmutableHatError
+   * Throws if the hat is immutable. Immutable hats cannot be transfered.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat.
+   *
+   * @throws NotEligibleError
+   * Throws if the new wearer is not eligible for the hat.
+   *
+   * @throws NotActiveError
+   * THrows if the hat is not active.
+   *
+   * @throws NotWearerError
+   * Throws if the provided current wearer is not wearing the hat.
+   *
+   * @throws AlreadyWearingError
+   * Throws if the new wearer is already wearing the hat.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async transferHat({
     account,
     hatId,
@@ -994,7 +1510,9 @@ export class HatsClient {
     to: Address;
   }): Promise<TransferHatResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateHatTransfer({ account, hatId, from, to });
@@ -1018,10 +1536,29 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Make a hat immutable.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat.
+   *
+   * @throws ImmutableHatError
+   * Throws if the hat is immutable. Immutable hats cannot be edited.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async makeHatImmutable({
     account,
     hatId,
@@ -1030,7 +1567,9 @@ export class HatsClient {
     hatId: bigint;
   }): Promise<MakeHatImmutableResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateHatEdit({ account, hatId });
@@ -1054,10 +1593,33 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Change a hat's details.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @param newDetails - The new details.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat.
+   *
+   * @throws ImmutableHatError
+   * Throws if the hat is immutable.
+   *
+   * @throws StringTooLongError
+   * Throws if the new details length is larger than 7000.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async changeHatDetails({
     account,
     hatId,
@@ -1068,13 +1630,15 @@ export class HatsClient {
     newDetails: string;
   }): Promise<ChangeHatDetailsResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateHatEditOrTophat({ account, hatId });
 
     if (newDetails.length > 7000) {
-      throw new Error("Details field max length is 7000");
+      throw new StringTooLongError("Details field max length is 7000");
     }
 
     try {
@@ -1096,10 +1660,33 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Change a hat's eligibility.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @param newEligibility - The new eligibility address. Zero address is not valid.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat.
+   *
+   * @throws ImmutableHatError
+   * Throws if the hat is immutable.
+   *
+   * @throws ZeroEligibilityError
+   * Throws if the new eligibilty is the zero address.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async changeHatEligibility({
     account,
     hatId,
@@ -1110,13 +1697,15 @@ export class HatsClient {
     newEligibility: Address;
   }): Promise<ChangeHatEligibilityResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateHatEdit({ account, hatId });
 
     if (newEligibility == "0x0000000000000000000000000000000000000000") {
-      throw new Error("Zero eligibility address not valid");
+      throw new ZeroEligibilityError("Zero eligibility address not valid");
     }
 
     try {
@@ -1138,10 +1727,33 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Change a hat's toggle.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @param newToggle - The new toggle address. Zero address is not valid.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat.
+   *
+   * @throws ImmutableHatError
+   * Throws if the hat is immutable.
+   *
+   * @throws ZeroToggleError
+   * Throws if the new toggle is the zero address.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async changeHatToggle({
     account,
     hatId,
@@ -1152,13 +1764,15 @@ export class HatsClient {
     newToggle: Address;
   }): Promise<ChangeHatToggleResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateHatEdit({ account, hatId });
 
     if (newToggle == "0x0000000000000000000000000000000000000000") {
-      throw new Error("Zero toggle address not valid");
+      throw new ZeroToggleError("Zero toggle address not valid");
     }
 
     try {
@@ -1180,10 +1794,33 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Change a hat's image URI.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @param newImageURI - The new image URI.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat.
+   *
+   * @throws ImmutableHatError
+   * Throws if the hat is immutable.
+   *
+   * @throws StringTooLongError
+   * Throws if the new image URI length is larger than 7000.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async changeHatImageURI({
     account,
     hatId,
@@ -1194,13 +1831,15 @@ export class HatsClient {
     newImageURI: string;
   }): Promise<ChangeHatImageURIResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateHatEditOrTophat({ account, hatId });
 
     if (newImageURI.length > 7000) {
-      throw new Error("Image URI field max length is 7000");
+      throw new StringTooLongError("Image URI field max length is 7000");
     }
 
     try {
@@ -1222,10 +1861,33 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Change a hat's max supply.
+   *
+   * @param account - A Viem account.
+   * @param hatId - Hat ID.
+   * @param newMaxSupply -New maximum supply for the hat.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the hat.
+   *
+   * @throws ImmutableHatError
+   * Throws if the hat is immutable.
+   *
+   * @throws InvalidMaxSupplyError
+   * Throws if the new maximum supply is smaller the current amount of wearers.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async changeHatMaxSupply({
     account,
     hatId,
@@ -1236,7 +1898,9 @@ export class HatsClient {
     newMaxSupply: number;
   }): Promise<ChangeHatMaxSupplyResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateMaxSupplyEdit({ account, hatId, newMaxSupply });
@@ -1260,10 +1924,27 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Request a link from a tophat to a new admin hat.
+   *
+   * @param account - A Viem account.
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param requestedAdminHat - ID of the requested new admin hat.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the tophat.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async requestLinkTopHatToTree({
     account,
     topHatDomain,
@@ -1274,7 +1955,9 @@ export class HatsClient {
     requestedAdminHat: bigint;
   }): Promise<RequestLinkTopHatToTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateTopHatDomainAdmin({ account, topHatDomain });
@@ -1298,10 +1981,46 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Approve a tophat's linkage request.
+   *
+   * @param account - A Viem account.
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param newAdminHat - ID of the new admin hat.
+   * @param newEligibility - Optional new eligibility for the linked tophat.
+   * @param newToggle - Optional new toggle for the linked tophat.
+   * @param newDetails - Optional new details for the linked tophat.
+   * @param newImageURI - Optional new image URI for the linked tophat.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NoLinkageRequestError
+   * Throws if the tophat has not requested the link.
+   *
+   * @throws NotAdminOrWearerError
+   * Throws if the calling account is not an admin or a wearer of the new admin hat.
+   *
+   * @throws CircularLinkageError
+   * Throws if linking the trees creates a circular linkage.
+   *
+   * @throws CrossLinkageError
+   * Throws if the new admin hat is in a different global tree than the current global
+   * tree of the tophat that is being linked or if the calling account has no permission
+   * to relink to the new destination within the same global tree.
+   *
+   * * @throws StringTooLongErrorError
+   * Throws if a new details or new image URI were provided and either length is greater
+   * than 7000.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async approveLinkTopHatToTree({
     account,
     topHatDomain,
@@ -1320,12 +2039,16 @@ export class HatsClient {
     newImageURI?: string;
   }): Promise<ApproveLinkTopHatToTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     const linkageRequestToHat = await this.getLinkageRequest(topHatDomain);
     if (linkageRequestToHat !== newAdminHat) {
-      throw new Error("Linkage has not been requested to the admin hat");
+      throw new NoLinkageRequestError(
+        "Linkage has not been requested to the admin hat"
+      );
     }
 
     await this._validateLinkage({
@@ -1366,10 +2089,30 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Unlink a tree.
+   *
+   * @param account - A Viem account.
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param wearer - The current wearer of the tophat that is about to be unlinked.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * @throws NotWearerError
+   * Throws if provided wearer is not the wearer of the tophat.
+   *
+   * @throws NotAdminError
+   * Throws if the calling account is not an admin of the tophat.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async unlinkTopHatFromTree({
     account,
     topHatDomain,
@@ -1380,17 +2123,17 @@ export class HatsClient {
     wearer: Address;
   }): Promise<UnlinkTopHatFromTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     await this._validateTopHatDomainAdmin({ account, topHatDomain });
 
-    const topHatId: bigint = BigInt(
-      treeIdDecimalToHex(topHatDomain).padEnd(66, "0")
-    );
+    const topHatId = BigInt(treeIdDecimalToHex(topHatDomain).padEnd(66, "0"));
     const isWearer = await this.isWearerOfHat({ wearer, hatId: topHatId });
     if (wearer === "0x0000000000000000000000000000000000000000" || !isWearer) {
-      throw new Error("Wearer is not wearing the tophat");
+      throw new NotWearerError("Wearer is not wearing the tophat");
     }
 
     try {
@@ -1412,10 +2155,46 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      throw new TransactionRevertedError("Transaction reverted");
     }
   }
 
+  /**
+   * Relink a tree within the same global tree that it is already part of.
+   *
+   * @param account - A Viem account.
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param newAdminHat - ID of the new admin hat.
+   * @param newEligibility - Optional new eligibility for the linked tophat.
+   * @param newToggle - Optional new toggle for the linked tophat.
+   * @param newDetails - Optional new details for the linked tophat.
+   * @param newImageURI - Optional new image URI for the linked tophat.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Throws if no wallet client was provided in the hats client initialization.
+   *
+   * * @throws NotAdminError
+   * Throws if the calling account is not an admin of the tophat that is about to be relinked.
+   *
+   * @throws NotAdminOrWearerError
+   * Throws if the calling account is not an admin or a wearer of the new admin hat.
+   *
+   * @throws CircularLinkageError
+   * Throws if linking the trees creates a circular linkage.
+   *
+   * @throws CrossLinkageError
+   * Throws if the new admin hat is in a different global tree than the current global
+   * tree of the tophat that is being linked or if the calling account has no permission
+   * to relink to the new destination within the same global tree.
+   *
+   * * @throws StringTooLongErrorError
+   * Throws if a new details or new image URI were provided and either length is greater
+   * than 7000.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async relinkTopHatWithinTree({
     account,
     topHatDomain,
@@ -1497,10 +2276,10 @@ export class HatsClient {
     toggle: Address;
   }) {
     if (eligibility === "0x0000000000000000000000000000000000000000") {
-      throw new Error("Zero eligibility address not valid");
+      throw new ZeroEligibilityError("Zero eligibility address not valid");
     }
     if (toggle === "0x0000000000000000000000000000000000000000") {
-      throw new Error("Zero toggle address not valid");
+      throw new ZeroToggleError("Zero toggle address not valid");
     }
 
     const validHatId = await this._publicClient.readContract({
@@ -1510,7 +2289,7 @@ export class HatsClient {
       args: [admin],
     });
     if (!validHatId) {
-      throw new Error("Invalid admin ID");
+      throw new InvalidAdminError("Invalid admin ID");
     }
 
     const nextHatId = await this._publicClient.readContract({
@@ -1532,7 +2311,7 @@ export class HatsClient {
       hatId: nextHatId,
     });
     if (!isAdmin) {
-      throw new Error("Not Admin");
+      throw new NotAdminError("Not Admin");
     }
   }
 
@@ -1547,20 +2326,20 @@ export class HatsClient {
   }) {
     const hat = await this.viewHat(hatId);
     if (hat.maxSupply === 0) {
-      throw new Error("Hat does not exist");
+      throw new HatNotExistError("Hat does not exist");
     }
     if (hat.supply >= hat.maxSupply) {
-      throw new Error("All hats are worn");
+      throw new AllHatsWornError("All hats are worn");
     }
 
     const isWearerEligible = await this.isEligible({ wearer, hatId });
     if (!isWearerEligible) {
-      throw new Error("Wearer is not eligible");
+      throw new NotEligibleError("Wearer is not eligible");
     }
 
     const isHatActive = await this.isActive(hatId);
     if (!isHatActive) {
-      throw new Error("Hat is not active");
+      throw new NotActiveError("Hat is not active");
     }
 
     let accountAddress: Address;
@@ -1575,12 +2354,12 @@ export class HatsClient {
       hatId,
     });
     if (!isAdmin) {
-      throw new Error("Not Admin");
+      throw new NotAdminError("Not Admin");
     }
 
     const isAlreadyWearing = await this.isWearerOfHat({ wearer, hatId });
     if (isAlreadyWearing) {
-      throw new Error("Already wearing the hat");
+      throw new AlreadyWearingError("Already wearing the hat");
     }
   }
 
@@ -1603,7 +2382,7 @@ export class HatsClient {
       args: [hatId],
     });
     if (!isTopHat && !hat.mutable) {
-      throw new Error("Hat is immutable, transfer is not allowed");
+      throw new ImmutableHatError("Hat is immutable, transfer is not allowed");
     }
 
     let accountAddress: Address;
@@ -1618,22 +2397,22 @@ export class HatsClient {
       hatId,
     });
     if (!isAdmin) {
-      throw new Error("Not Admin");
+      throw new NotAdminError("Not Admin");
     }
 
     const isNewWearerEligible = await this.isEligible({ wearer: to, hatId });
     if (!isNewWearerEligible) {
-      throw new Error("New wearer is not eligible for the hat");
+      throw new NotEligibleError("New wearer is not eligible for the hat");
     }
 
     const isHatActive = await this.isActive(hatId);
     if (!isHatActive) {
-      throw new Error("Hat is not active");
+      throw new NotActiveError("Hat is not active");
     }
 
     const isAlreadyWearing = await this.isWearerOfHat({ wearer: to, hatId });
     if (isAlreadyWearing) {
-      throw new Error("New wearer is already wearing the hat");
+      throw new AlreadyWearingError("New wearer is already wearing the hat");
     }
 
     const isCurrentWearerEligible = await this.isEligible({
@@ -1642,7 +2421,7 @@ export class HatsClient {
     });
     const isCurrentWearer = await this.isWearerOfHat({ wearer: from, hatId });
     if (isCurrentWearerEligible && !isCurrentWearer) {
-      throw new Error("From address is not a wearer of the hat");
+      throw new NotWearerError("From address is not a wearer of the hat");
     }
   }
 
@@ -1655,7 +2434,7 @@ export class HatsClient {
   }) {
     const hat = await this.viewHat(hatId);
     if (!hat.mutable) {
-      throw new Error("Hat is immutable, editing is not allowed");
+      throw new ImmutableHatError("Hat is immutable, editing is not allowed");
     }
 
     let accountAddress: Address;
@@ -1670,7 +2449,7 @@ export class HatsClient {
       hatId,
     });
     if (!isAdmin) {
-      throw new Error("Not Admin");
+      throw new NotAdminError("Not Admin");
     }
   }
 
@@ -1689,7 +2468,7 @@ export class HatsClient {
       args: [hatId],
     });
     if (!isTopHat && !hat.mutable) {
-      throw new Error("Hat is immutable, edit is not allowed");
+      throw new ImmutableHatError("Hat is immutable, edit is not allowed");
     }
 
     let accountAddress: Address;
@@ -1704,7 +2483,7 @@ export class HatsClient {
       hatId,
     });
     if (!isAdmin) {
-      throw new Error("Not Admin");
+      throw new NotAdminError("Not Admin");
     }
   }
 
@@ -1719,7 +2498,7 @@ export class HatsClient {
   }) {
     const hat = await this.viewHat(hatId);
     if (!hat.mutable) {
-      throw new Error("Hat is immutable, editing is not allowed");
+      throw new ImmutableHatError("Hat is immutable, editing is not allowed");
     }
 
     let accountAddress: Address;
@@ -1734,11 +2513,11 @@ export class HatsClient {
       hatId,
     });
     if (!isAdmin) {
-      throw new Error("Not Admin");
+      throw new NotAdminError("Not Admin");
     }
 
     if (newMaxSupply < hat.supply) {
-      throw new Error(
+      throw new InvalidMaxSupplyError(
         "New max supply cannot be lower than the current aupply of minted hats"
       );
     }
@@ -1751,9 +2530,7 @@ export class HatsClient {
     account: Account | Address;
     topHatDomain: number;
   }) {
-    const topHatId: bigint = BigInt(
-      treeIdDecimalToHex(topHatDomain).padEnd(66, "0")
-    );
+    const topHatId = BigInt(treeIdDecimalToHex(topHatDomain).padEnd(66, "0"));
 
     let accountAddress: Address;
     if (typeof account === "object") {
@@ -1767,7 +2544,7 @@ export class HatsClient {
       hatId: topHatId,
     });
     if (!isAdmin) {
-      throw new Error("Not Admin");
+      throw new NotAdminError("Not Admin");
     }
   }
 
@@ -1800,7 +2577,7 @@ export class HatsClient {
       hatId: newAdminHat,
     });
     if (!isAdmin && !isWearer) {
-      throw new Error("Not admin or wearer");
+      throw new NotAdminOrWearerError("Not admin or wearer");
     }
 
     const noCircularLinkage = await this._publicClient.readContract({
@@ -1810,7 +2587,7 @@ export class HatsClient {
       args: [topHatDomain, newAdminHat],
     });
     if (!noCircularLinkage) {
-      throw new Error("Circular linkage not allowed");
+      throw new CircularLinkageError("Circular linkage not allowed");
     }
 
     const linkedAdmin = await this.getLinkedTreeAdmin(topHatDomain);
@@ -1851,7 +2628,7 @@ export class HatsClient {
           destLocalTopHatId !== originalLocalTopHatId &&
           destLocalTopHatId !== tippyTopHatId
         ) {
-          throw new Error("Cross tree linkage not allowed");
+          throw new CrossLinkageError("Cross tree linkage not allowed");
         }
       } else {
         const sameTippyTophat = await this._publicClient.readContract({
@@ -1862,17 +2639,17 @@ export class HatsClient {
         });
 
         if (!sameTippyTophat) {
-          throw new Error("Cross tree linkage not allowed");
+          throw new CrossLinkageError("Cross tree linkage not allowed");
         }
       }
     }
 
     if (newDetails !== undefined && newDetails.length > 7000) {
-      throw new Error("Details field max length is 7000");
+      throw new StringTooLongError("Details field max length is 7000");
     }
 
     if (newImageURI !== undefined && newImageURI.length > 7000) {
-      throw new Error("Image URI field max length is 7000");
+      throw new StringTooLongError("Image URI field max length is 7000");
     }
   }
 }

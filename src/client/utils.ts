@@ -18,7 +18,7 @@ export function hatIdDecimalToIp(hatId: bigint): string {
   const hexId = hatIdDecimalToHex(hatId);
   let ip = treeIdHexToDecimal(hexId.substring(0, 10)).toString();
   for (let i = 10; i < hexId.length; i += 4) {
-    let domainAtLevel = hexId.substring(i, i + 4);
+    const domainAtLevel = hexId.substring(i, i + 4);
     if (domainAtLevel === "0000") {
       break;
     }

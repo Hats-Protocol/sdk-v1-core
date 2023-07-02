@@ -118,7 +118,7 @@ describe("Basic tests", () => {
 
     describe("Subgraph gqlGetHatsOfWearer", () => {
       let res: bigint[];
-      let wearer: Address = "0x20ba9788Ab1aB8e7dc72341A9D219ECCAAE90d8B";
+      const wearer: Address = "0x20ba9788Ab1aB8e7dc72341A9D219ECCAAE90d8B";
 
       beforeAll(async () => {
         res = await hatsClientGoerli.gqlGetHatsOfWearer(wearer);
@@ -185,9 +185,6 @@ describe("Basic tests", () => {
     });
 
     describe("Subgraph gqlGetWearersOfHat", () => {
-      let res: { hatId: bigint; hatWearers: string[] }[];
-      let wearer1 = "0x60EdE337dDe466c0839553579c81BFe1e795BFd2";
-      wearer1 = wearer1.toLowerCase();
       let wearer2 = "0x20ba9788Ab1aB8e7dc72341A9D219ECCAAE90d8B";
       wearer2 = wearer2.toLowerCase();
 

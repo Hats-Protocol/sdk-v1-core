@@ -80,7 +80,7 @@ describe("mintHat tests", () => {
       }, 30000);
 
       test("Test mint to non existent Hat", async () => {
-        let nextHatId = await publicClient.readContract({
+        const nextHatId = await publicClient.readContract({
           address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
           abi: HATS_ABI,
           functionName: "getNextId",

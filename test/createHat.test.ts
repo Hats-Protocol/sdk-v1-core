@@ -11,7 +11,6 @@ describe("createHat tests", () => {
   let walletClient: WalletClient;
   let hatsClient: HatsClient;
   let address1: Address;
-  let address2: Address;
   let account1: PrivateKeyAccount;
   let account2: PrivateKeyAccount;
 
@@ -20,7 +19,6 @@ describe("createHat tests", () => {
   describe("Hats client is initialized", () => {
     beforeAll(() => {
       address1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-      address2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
       account1 = privateKeyToAccount(
         "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
       );
