@@ -877,12 +877,12 @@ export class HatsClient {
     const length = admins.length;
 
     if (
-      details.length !== details.length ||
-      details.length !== maxSupplies.length ||
-      details.length !== eligibilityModules.length ||
-      details.length !== toggleModules.length ||
-      details.length !== mutables.length ||
-      (imageURIs !== undefined && details.length !== imageURIs.length)
+      length !== details.length ||
+      length !== maxSupplies.length ||
+      length !== eligibilityModules.length ||
+      length !== toggleModules.length ||
+      length !== mutables.length ||
+      (imageURIs !== undefined && length !== imageURIs.length)
     ) {
       throw new BatchParamsError("Length mismatch");
     }
