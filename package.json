@@ -1,6 +1,6 @@
 {
-  "name": "@hats-protocol/sdk-v1-core",
-  "version": "0.1.0",
+  "name": "@hatsprotocol/sdk-v1-core",
+  "version": "0.1.1",
   "license": "MIT",
   "author": "Hats-Protocol",
   "repository": {

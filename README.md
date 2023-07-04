@@ -3,9 +3,9 @@
 ## Install
 
 ```bash
-yarn add @hats-protocol/sdk-v1-core
+yarn add @hatsprotocol/sdk-v1-core
 
-npm install @hats-protocol/sdk-v1-core
+npm install @hatsprotocol/sdk-v1-core
 ```
 
 ## Documentation
