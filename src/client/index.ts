@@ -1,7 +1,7 @@
 import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
-import type { PublicClient, WalletClient, Account, Address } from "viem";
-import { decodeEventLog, encodeEventTopics } from "viem";
+import type { PublicClient, WalletClient, Account, Address, Hex } from "viem";
+import { decodeEventLog, encodeEventTopics, encodeFunctionData } from "viem";
 import {
   GET_WEARER_HATS,
   GET_TREE_HATS,
@@ -31,6 +31,7 @@ import type {
   ApproveLinkTopHatToTreeResult,
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
+  MultiCallResult,
 } from "../types";
 import {
   ChainIdMismatchError,
@@ -62,7 +63,6 @@ import {
   NoLinkageRequestError,
   BatchParamsError,
 } from "../errors";
-
 import { HATS_V1 } from "../config";
 import { treeIdDecimalToHex, hatIdDecimalToHex } from "./utils";
 
@@ -2258,6 +2258,200 @@ export class HatsClient {
     } catch (err) {
       throw new Error("Transaction reverted");
     }
+  }
+
+  async multicall({
+    account,
+    calls,
+  }: {
+    account: Account | Address;
+    calls: {
+      functionName: string;
+      callData: Hex;
+    }[];
+  }): Promise<MultiCallResult> {
+    if (this._walletClient === undefined) {
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
+    }
+
+    const callDatas = calls.map((call) => call.callData);
+
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: HATS_V1,
+        abi: HATS_ABI,
+        functionName: "multicall",
+        args: [callDatas],
+        account,
+        chain: this._walletClient.chain,
+      });
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      const hatsCreated: bigint[] = [];
+      const hatsMinted: {
+        hatId: bigint;
+        wearer: `0x${string}`;
+      }[] = [];
+      const hatsBurned: {
+        hatId: bigint;
+        wearer: `0x${string}`;
+      }[] = [];
+      const hatStatusChanges: {
+        hatId: bigint;
+        newStatus: "active" | "inactive";
+      }[] = [];
+      const wearerStandingChanges: {
+        hatId: bigint;
+        wearer: `0x${string}`;
+        newStanding: "good" | "bad";
+      }[] = [];
+
+      receipt.logs.forEach((log) => {
+        const event = decodeEventLog({
+          abi: HATS_ABI,
+          data: log.data,
+          topics: log.topics,
+        });
+
+        switch (event.eventName) {
+          case "HatCreated": {
+            hatsCreated.push(event.args.id);
+            break;
+          }
+          case "TransferSingle": {
+            if (
+              event.args.to !== "0x0000000000000000000000000000000000000000"
+            ) {
+              hatsMinted.push({ hatId: event.args.id, wearer: event.args.to });
+            }
+            if (
+              event.args.from !== "0x0000000000000000000000000000000000000000"
+            ) {
+              hatsBurned.push({
+                hatId: event.args.id,
+                wearer: event.args.from,
+              });
+            }
+            break;
+          }
+          case "HatStatusChanged": {
+            hatStatusChanges.push({
+              hatId: event.args.hatId,
+              newStatus: event.args.newStatus ? "active" : "inactive",
+            });
+            break;
+          }
+          case "WearerStandingChanged": {
+            wearerStandingChanges.push({
+              hatId: event.args.hatId,
+              wearer: event.args.wearer,
+              newStanding: event.args.wearerStanding ? "good" : "bad",
+            });
+            break;
+          }
+        }
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+        hatsCreated,
+        hatsMinted,
+        hatsBurned,
+        hatStatusChanges,
+        wearerStandingChanges,
+      };
+    } catch (err) {
+      throw new TransactionRevertedError("Transaction reverted");
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                      Call Data functions
+    //////////////////////////////////////////////////////////////*/
+
+  mintTopHatCallData({
+    target,
+    details,
+    imageURI,
+  }: {
+    target: Address;
+    details: string;
+    imageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "mintTopHat",
+      args: [target, details, imageURI === undefined ? "" : imageURI],
+    });
+
+    return { functionName: "mintTopHat", callData };
+  }
+
+  createHatCallData({
+    admin,
+    details,
+    maxSupply,
+    eligibility,
+    toggle,
+    mutable,
+    imageURI,
+  }: {
+    admin: bigint;
+    details: string;
+    maxSupply: number;
+    eligibility: Address;
+    toggle: Address;
+    mutable: boolean;
+    imageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "createHat",
+      args: [
+        admin,
+        details,
+        maxSupply,
+        eligibility,
+        toggle,
+        mutable,
+        imageURI === undefined ? "" : imageURI,
+      ],
+    });
+
+    return { functionName: "createHat", callData };
+  }
+
+  transferHatCallData({
+    hatId,
+    from,
+    to,
+  }: {
+    hatId: bigint;
+    from: Address;
+    to: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "transferHat",
+      args: [hatId, from, to],
+    });
+
+    return { functionName: "transferHat", callData };
   }
 
   /*//////////////////////////////////////////////////////////////

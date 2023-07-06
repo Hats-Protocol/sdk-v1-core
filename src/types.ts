@@ -71,3 +71,24 @@ export interface ApproveLinkTopHatToTreeResult extends TransactionResult {}
 export interface UnlinkTopHatFromTreeResult extends TransactionResult {}
 
 export interface RelinkTopHatWithinTreeResult extends TransactionResult {}
+
+export interface MultiCallResult extends TransactionResult {
+  hatsCreated: bigint[];
+  hatsMinted: {
+    hatId: bigint;
+    wearer: `0x${string}`;
+  }[];
+  hatsBurned: {
+    hatId: bigint;
+    wearer: `0x${string}`;
+  }[];
+  hatStatusChanges: {
+    hatId: bigint;
+    newStatus: "active" | "inactive";
+  }[];
+  wearerStandingChanges: {
+    hatId: bigint;
+    wearer: `0x${string}`;
+    newStanding: "good" | "bad";
+  }[];
+}
