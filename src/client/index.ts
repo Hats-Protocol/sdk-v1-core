@@ -2516,6 +2516,371 @@ export class HatsClient {
     return { functionName: "mintHat", callData };
   }
 
+  batchCreateHatsCallData({
+    admins,
+    details,
+    maxSupplies,
+    eligibilityModules,
+    toggleModules,
+    mutables,
+    imageURIs,
+  }: {
+    admins: bigint[];
+    details: string[];
+    maxSupplies: number[];
+    eligibilityModules: Address[];
+    toggleModules: Address[];
+    mutables: boolean[];
+    imageURIs?: string[];
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "batchCreateHats",
+      args: [
+        admins,
+        details,
+        maxSupplies,
+        eligibilityModules,
+        toggleModules,
+        mutables,
+        imageURIs === undefined ? Array(admins.length).fill("") : imageURIs,
+      ],
+    });
+
+    return { functionName: "batchCreateHats", callData };
+  }
+
+  batchMintHatsCallData({
+    hatIds,
+    wearers,
+  }: {
+    hatIds: bigint[];
+    wearers: Address[];
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "batchMintHats",
+      args: [hatIds, wearers],
+    });
+
+    return { functionName: "batchMintHats", callData };
+  }
+
+  setHatStatusCallData({
+    hatId,
+    newStatus,
+  }: {
+    hatId: bigint;
+    newStatus: boolean;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "setHatStatus",
+      args: [hatId, newStatus],
+    });
+
+    return { functionName: "setHatStatus", callData };
+  }
+
+  checkHatStatusCallData({ hatId }: { hatId: bigint }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "checkHatStatus",
+      args: [hatId],
+    });
+
+    return { functionName: "checkHatStatus", callData };
+  }
+
+  setHatWearerStatusCallData({
+    hatId,
+    wearer,
+    eligible,
+    standing,
+  }: {
+    hatId: bigint;
+    wearer: Address;
+    eligible: boolean;
+    standing: boolean;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "setHatWearerStatus",
+      args: [hatId, wearer, eligible, standing],
+    });
+
+    return { functionName: "setHatWearerStatus", callData };
+  }
+
+  checkHatWearerStatusCallData({
+    hatId,
+    wearer,
+  }: {
+    hatId: bigint;
+    wearer: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "checkHatWearerStatus",
+      args: [hatId, wearer],
+    });
+
+    return { functionName: "checkHatWearerStatus", callData };
+  }
+
+  renounceHatCallData({ hatId }: { hatId: bigint }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "renounceHat",
+      args: [hatId],
+    });
+
+    return { functionName: "renounceHat", callData };
+  }
+
+  makeHatImmutableCallData({ hatId }: { hatId: bigint }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "makeHatImmutable",
+      args: [hatId],
+    });
+
+    return { functionName: "makeHatImmutable", callData };
+  }
+
+  changeHatDetailsCallData({
+    hatId,
+    newDetails,
+  }: {
+    hatId: bigint;
+    newDetails: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatDetails",
+      args: [hatId, newDetails],
+    });
+
+    return { functionName: "changeHatDetails", callData };
+  }
+
+  changeHatEligibilityCallData({
+    hatId,
+    newEligibility,
+  }: {
+    hatId: bigint;
+    newEligibility: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatEligibility",
+      args: [hatId, newEligibility],
+    });
+
+    return { functionName: "changeHatEligibility", callData };
+  }
+
+  changeHatToggleCallData({
+    hatId,
+    newToggle,
+  }: {
+    hatId: bigint;
+    newToggle: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatToggle",
+      args: [hatId, newToggle],
+    });
+
+    return { functionName: "changeHatToggle", callData };
+  }
+
+  changeHatImageURICallData({
+    hatId,
+    newImageURI,
+  }: {
+    hatId: bigint;
+    newImageURI: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatImageURI",
+      args: [hatId, newImageURI],
+    });
+
+    return { functionName: "changeHatImageURI", callData };
+  }
+
+  changeHatMaxSupplyCallData({
+    hatId,
+    newMaxSupply,
+  }: {
+    hatId: bigint;
+    newMaxSupply: number;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatMaxSupply",
+      args: [hatId, newMaxSupply],
+    });
+
+    return { functionName: "changeHatMaxSupply", callData };
+  }
+
+  requestLinkTopHatToTreeCallData({
+    topHatDomain,
+    requestedAdminHat,
+  }: {
+    topHatDomain: number;
+    requestedAdminHat: bigint;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "requestLinkTopHatToTree",
+      args: [topHatDomain, requestedAdminHat],
+    });
+
+    return { functionName: "requestLinkTopHatToTree", callData };
+  }
+
+  approveLinkTopHatToTreeCallData({
+    topHatDomain,
+    newAdminHat,
+    newEligibility,
+    newToggle,
+    newDetails,
+    newImageURI,
+  }: {
+    topHatDomain: number;
+    newAdminHat: bigint;
+    newEligibility?: Address;
+    newToggle?: Address;
+    newDetails?: string;
+    newImageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "approveLinkTopHatToTree",
+      args: [
+        topHatDomain,
+        newAdminHat,
+        newEligibility === undefined
+          ? "0x0000000000000000000000000000000000000000"
+          : newEligibility,
+        newToggle === undefined
+          ? "0x0000000000000000000000000000000000000000"
+          : newToggle,
+        newDetails === undefined ? "" : newDetails,
+        newImageURI === undefined ? "" : newImageURI,
+      ],
+    });
+
+    return { functionName: "approveLinkTopHatToTree", callData };
+  }
+
+  unlinkTopHatFromTreeCallData({
+    topHatDomain,
+    wearer,
+  }: {
+    topHatDomain: number;
+    wearer: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "unlinkTopHatFromTree",
+      args: [topHatDomain, wearer],
+    });
+
+    return { functionName: "unlinkTopHatFromTree", callData };
+  }
+
+  relinkTopHatWithinTreeCallData({
+    topHatDomain,
+    newAdminHat,
+    newEligibility,
+    newToggle,
+    newDetails,
+    newImageURI,
+  }: {
+    topHatDomain: number;
+    newAdminHat: bigint;
+    newEligibility?: Address;
+    newToggle?: Address;
+    newDetails?: string;
+    newImageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "relinkTopHatWithinTree",
+      args: [
+        topHatDomain,
+        newAdminHat,
+        newEligibility === undefined
+          ? "0x0000000000000000000000000000000000000000"
+          : newEligibility,
+        newToggle === undefined
+          ? "0x0000000000000000000000000000000000000000"
+          : newToggle,
+        newDetails === undefined ? "" : newDetails,
+        newImageURI === undefined ? "" : newImageURI,
+      ],
+    });
+
+    return { functionName: "relinkTopHatWithinTree", callData };
+  }
+
   /*//////////////////////////////////////////////////////////////
                       Validation Functions
     //////////////////////////////////////////////////////////////*/
