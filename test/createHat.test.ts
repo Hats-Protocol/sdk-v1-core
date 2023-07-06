@@ -1,10 +1,11 @@
 import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { mainnet } from "viem/chains";
+import { goerli } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
+import { HATS_V1 } from "../src/config";
 
 describe("createHat tests", () => {
   let publicClient: PublicClient;
@@ -27,17 +28,17 @@ describe("createHat tests", () => {
       );
 
       publicClient = createPublicClient({
-        chain: mainnet,
+        chain: goerli,
         transport: http("http://127.0.0.1:8545"),
       });
 
       walletClient = createWalletClient({
-        chain: mainnet,
+        chain: goerli,
         transport: http("http://127.0.0.1:8545"),
       });
 
       hatsClient = new HatsClient({
-        chainId: mainnet.id,
+        chainId: goerli.id,
         publicClient: publicClient,
         walletClient: walletClient,
       });
@@ -143,7 +144,7 @@ describe("createHat tests", () => {
       beforeAll(async () => {
         try {
           expectedHatId = await publicClient.readContract({
-            address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+            address: HATS_V1,
             abi: HATS_ABI,
             functionName: "getNextId",
             args: [topHatId],
@@ -171,7 +172,7 @@ describe("createHat tests", () => {
 
       test("Test hat properties", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [expectedHatId],

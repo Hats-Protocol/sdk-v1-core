@@ -1,1 +1,5 @@
-export const HATS_V1 = "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d";
+export const HATS_V1 = "0xD7173d73B3fDF9ea8085d195fA494AaF6Db38a5a";
+
+export const MAX_LEVELS = 14;
+
+export const MAX_LEVEL_HATS = 65535;
