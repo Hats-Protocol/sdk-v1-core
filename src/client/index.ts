@@ -62,8 +62,11 @@ import {
   NotAdminOrWearerError,
   NoLinkageRequestError,
   BatchParamsError,
+  MultiCallError,
+  MaxLevelReachedError,
+  MaxHatsInLevelReached,
 } from "../errors";
-import { HATS_V1 } from "../config";
+import { HATS_V1, MAX_LEVEL_HATS, MAX_LEVELS } from "../config";
 import { treeIdDecimalToHex, hatIdDecimalToHex } from "./utils";
 
 export class HatsClient {
@@ -469,18 +472,52 @@ export class HatsClient {
     return res;
   }
 
-  /**
-   * Predict the hat ID of a yet to be created hat.
-   *
-   * @param admin - The admin hat ID.
-   * @returns The hat ID of the next hat that will be created with the provided admin.
-   */
-  async predictHatId(admin: bigint): Promise<bigint> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
+  async predictNextChildrenHatIDs({
+    admin,
+    numChildren,
+  }: {
+    admin: bigint;
+    numChildren: number;
+  }): Promise<bigint[]> {
+    const res: bigint[] = [];
+    if (numChildren < 1) {
+      return res;
+    }
+
+    const adminHat = await this.viewHat(admin);
+    if (adminHat.numChildren + numChildren > MAX_LEVEL_HATS) {
+      throw new MaxHatsInLevelReached(
+        "Maximum amount of hats per level is 65535"
+      );
+    }
+
+    const level = await this.getLocalHatLevel(admin);
+    if (level === MAX_LEVELS) {
+      throw new MaxLevelReachedError(
+        "The provided admin's hat level is on the maximul level"
+      );
+    }
+
+    const contractDetails = {
+      address: HATS_V1 as Address,
       abi: HATS_ABI,
-      functionName: "getNextId",
-      args: [admin],
+    };
+
+    const calls = [];
+    for (let i = 0; i < numChildren; i++) {
+      calls.push({
+        ...contractDetails,
+        functionName: "buildHatId",
+        args: [admin, adminHat.numChildren + i + 1],
+      });
+    }
+    const childHats = await this._publicClient.multicall({
+      contracts: calls,
+    });
+    childHats.forEach((hat) => {
+      if (hat.result !== undefined) {
+        res.push(hat.result as bigint);
+      }
     });
 
     return res;
@@ -2279,6 +2316,18 @@ export class HatsClient {
     const callDatas = calls.map((call) => call.callData);
 
     try {
+      await this._publicClient.estimateContractGas({
+        address: HATS_V1,
+        abi: HATS_ABI,
+        functionName: "multicall",
+        args: [callDatas],
+        account,
+      });
+    } catch (err) {
+      throw new MultiCallError("One or more of the calls will revert");
+    }
+
+    try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
         abi: HATS_ABI,
@@ -2452,6 +2501,19 @@ export class HatsClient {
     });
 
     return { functionName: "transferHat", callData };
+  }
+
+  mintHatCallData({ hatId, wearer }: { hatId: bigint; wearer: Address }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "mintHat",
+      args: [hatId, wearer],
+    });
+
+    return { functionName: "mintHat", callData };
   }
 
   /*//////////////////////////////////////////////////////////////

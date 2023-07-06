@@ -47,7 +47,7 @@ describe("createHat tests", () => {
     describe("Tree is created", () => {
       let res: MintTopHatResult;
 
-      beforeAll(async () => {
+      beforeEach(async () => {
         try {
           res = await hatsClient.mintTopHat({
             target: address1,
@@ -65,67 +65,97 @@ describe("createHat tests", () => {
       test("Test mintTopHat return value", () => {
         expect(res.status).toBe("success");
       });
-    });
 
-    describe("Multi create two hats", () => {
-      let res: MultiCallResult;
-      let expectedID1_1: bigint;
-      let expectedID1_2: bigint;
+      test("Test create two hats", async () => {
+        const topHatIDHex = hatIdDecimalToHex(topHatId);
+        const expectedID1_1 = BigInt(
+          topHatIDHex.substring(0, 13) + "1" + topHatIDHex.substring(14)
+        );
+        const expectedID1_2 = BigInt(
+          topHatIDHex.substring(0, 13) + "2" + topHatIDHex.substring(14)
+        );
 
-      beforeAll(async () => {
-        try {
-          const topHatIDHex = hatIdDecimalToHex(topHatId);
-          expectedID1_1 = BigInt(
-            topHatIDHex.substring(0, 13) + "1" + topHatIDHex.substring(14)
-          );
-          expectedID1_2 = BigInt(
-            topHatIDHex.substring(0, 13) + "2" + topHatIDHex.substring(14)
-          );
+        const createHatData1_1 = hatsClient.createHatCallData({
+          admin: topHatId,
+          details: "1.1 details",
+          maxSupply: 3,
+          eligibility: address1,
+          toggle: address1,
+          mutable: true,
+          imageURI: "1.1 image URI",
+        });
 
-          const createHatData1_1 = hatsClient.createHatCallData({
-            admin: topHatId,
-            details: "1.1 details",
-            maxSupply: 3,
-            eligibility: address1,
-            toggle: address1,
-            mutable: true,
-            imageURI: "1.1 image URI",
-          });
+        const createHatData1_2 = hatsClient.createHatCallData({
+          admin: topHatId,
+          details: "1.2 details",
+          maxSupply: 5,
+          eligibility: address1,
+          toggle: address1,
+          mutable: true,
+          imageURI: "1.2 image URI",
+        });
 
-          const createHatData1_2 = hatsClient.createHatCallData({
-            admin: topHatId,
-            details: "1.2 details",
-            maxSupply: 5,
-            eligibility: address1,
-            toggle: address1,
-            mutable: true,
-            imageURI: "1.2 image URI",
-          });
-
-          res = await hatsClient.multicall({
-            account: account1,
+        expect(async () => {
+          await hatsClient.multicall({
+            account: account2,
             calls: [createHatData1_1, createHatData1_2],
           });
-        } catch (err) {
-          console.log(err);
-        }
-      }, 30000);
+        }).rejects.toThrow("One or more of the calls will revert");
 
-      test("Test multicall transaction success", () => {
+        const res = await hatsClient.multicall({
+          account: account1,
+          calls: [createHatData1_1, createHatData1_2],
+        });
+
         expect(res.status).toBe("success");
-      });
-
-      test("Test multicall transaction success", () => {
         expect(res.hatsCreated[0]).toBe(expectedID1_1);
         expect(res.hatsCreated[1]).toBe(expectedID1_2);
-      });
-
-      test("Test hats were created", async () => {
         const hat_1_1 = await hatsClient.viewHat(expectedID1_1);
         const hat_1_2 = await hatsClient.viewHat(expectedID1_2);
 
         expect(hat_1_1.details).toBe("1.1 details");
         expect(hat_1_2.details).toBe("1.2 details");
+      });
+
+      test("Test create hat and mint", async () => {
+        const topHatIDHex = hatIdDecimalToHex(topHatId);
+        const expectedChildID = BigInt(
+          topHatIDHex.substring(0, 13) + "1" + topHatIDHex.substring(14)
+        );
+
+        const createHatCallData = hatsClient.createHatCallData({
+          admin: topHatId,
+          details: "1.1 details",
+          maxSupply: 3,
+          eligibility: address1,
+          toggle: address1,
+          mutable: true,
+          imageURI: "1.1 image URI",
+        });
+
+        const mintHatCallData = hatsClient.mintHatCallData({
+          hatId: expectedChildID,
+          wearer: address1,
+        });
+
+        expect(async () => {
+          await hatsClient.multicall({
+            account: account2,
+            calls: [createHatCallData, mintHatCallData],
+          });
+        }).rejects.toThrow("One or more of the calls will revert");
+
+        const res = await hatsClient.multicall({
+          account: account1,
+          calls: [createHatCallData, mintHatCallData],
+        });
+
+        expect(res.status).toBe("success");
+        expect(res.hatsCreated[0]).toBe(expectedChildID);
+        expect(res.hatsMinted[0].hatId).toBe(expectedChildID);
+        expect(res.hatsMinted[0].wearer).toBe(address1);
+        const hat_1_1 = await hatsClient.viewHat(expectedChildID);
+        expect(hat_1_1.details).toBe("1.1 details");
       });
     });
   });
