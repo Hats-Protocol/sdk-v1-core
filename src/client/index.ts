@@ -7,6 +7,7 @@ import {
   GET_TREE_HATS,
   GET_TREE_WEARERS_PER_HAT,
   GET_WEARERS_OF_HAT,
+  GET_ALL_TREE,
 } from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
 import type {
@@ -32,6 +33,7 @@ import type {
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
   MultiCallResult,
+  SubgraphGetAllTreeResult,
 } from "../types";
 import {
   ChainIdMismatchError,
@@ -67,7 +69,13 @@ import {
   MaxHatsInLevelReached,
 } from "../errors";
 import { HATS_V1, MAX_LEVEL_HATS, MAX_LEVELS } from "../config";
-import { treeIdDecimalToHex, hatIdDecimalToHex } from "./utils";
+import {
+  treeIdDecimalToHex,
+  hatIdDecimalToHex,
+  treeIdToTopHatId,
+  hatIdHexToDecimal,
+  treeIdHexToDecimal,
+} from "./utils";
 
 export class HatsClient {
   readonly chainId: number;
@@ -316,6 +324,27 @@ export class HatsClient {
     });
 
     return branchHats;
+  }
+
+  protected async gqlGetAllTree(
+    treeId: number
+  ): Promise<SubgraphGetAllTreeResult> {
+    const treeIdHex = treeIdDecimalToHex(treeId);
+
+    const respone = await this._makeGqlRequest<SubgraphGetAllTreeResult>(
+      GET_ALL_TREE,
+      {
+        id: treeIdHex,
+      }
+    );
+
+    if (!respone.tree) {
+      throw new SubgraphTreeNotExistError(
+        "Tree does not exist on the subgraph"
+      );
+    }
+
+    return respone;
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -2879,6 +2908,57 @@ export class HatsClient {
     });
 
     return { functionName: "relinkTopHatWithinTree", callData };
+  }
+
+  async copyTreeCallData({
+    sourceTree,
+    targetTree,
+  }: {
+    sourceTree: number;
+    targetTree: number;
+  }): Promise<
+    {
+      functionName: string;
+      callData: Hex;
+    }[]
+  > {
+    const res: {
+      functionName: string;
+      callData: Hex;
+    }[] = [];
+    const { tree } = await this.gqlGetAllTree(sourceTree);
+    const targetTreeHex = treeIdDecimalToHex(targetTree);
+
+    tree.hats.forEach((hat, index) => {
+      if (index !== 0) {
+        const adminID = hatIdHexToDecimal(
+          targetTreeHex + hat.admin.id.substring(10)
+        );
+        const createHatCall = this.createHatCallData({
+          admin: adminID,
+          details: hat.details,
+          maxSupply: hat.maxSupply,
+          eligibility: hat.eligibility,
+          toggle: hat.toggle,
+          mutable: hat.mutable,
+          imageURI: hat.imageUri,
+        });
+        res.push({
+          functionName: "createHat",
+          callData: createHatCall.callData,
+        });
+
+        hat.wearers.forEach((wearer) => {
+          const mintHatCall = this.mintHatCallData({
+            hatId: hatIdHexToDecimal(targetTreeHex + hat.id.substring(10)),
+            wearer: wearer.id,
+          });
+          res.push({ functionName: "mintHat", callData: mintHatCall.callData });
+        });
+      }
+    });
+
+    return res;
   }
 
   /*//////////////////////////////////////////////////////////////

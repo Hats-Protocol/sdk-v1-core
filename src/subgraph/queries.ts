@@ -42,3 +42,36 @@ export const GET_WEARERS_OF_HAT = gql`
     }
   }
 `;
+
+export const GET_ALL_TREE = gql`
+  query getTree($id: ID!) {
+    tree(id: $id) {
+      hats {
+        id
+        details
+        maxSupply
+        imageUri
+        currentSupply
+        levelAtLocalTree
+        eligibility
+        toggle
+        mutable
+        wearers {
+          id
+        }
+        admin {
+          id
+        }
+      }
+      childOfTree {
+        id
+      }
+      linkedToHat {
+        id
+      }
+      parentOfTrees {
+        id
+      }
+    }
+  }
+`;

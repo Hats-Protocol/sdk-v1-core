@@ -26,3 +26,7 @@ export function hatIdDecimalToIp(hatId: bigint): string {
   }
   return ip;
 }
+
+export function treeIdToTopHatId(treeId: number): bigint {
+  return BigInt(treeIdDecimalToHex(treeId).padEnd(66, "0"));
+}

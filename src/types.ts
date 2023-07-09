@@ -1,17 +1,5 @@
 /* eslint @typescript-eslint/no-empty-interface: 0 */
 
-export type Hat = {
-  details: string;
-  maxSupply: number;
-  supply: number;
-  eligibility: `0x${string}`;
-  toggle: `0x${string}`;
-  imageUri: string;
-  numChildren: number;
-  mutable: boolean;
-  active: boolean;
-};
-
 interface TransactionResult {
   status: "success" | "reverted";
   transactionHash: `0x${string}`;
@@ -91,4 +79,35 @@ export interface MultiCallResult extends TransactionResult {
     wearer: `0x${string}`;
     newStanding: "good" | "bad";
   }[];
+}
+
+export interface SubgraphGetAllTreeResult {
+  tree: {
+    hats: {
+      id: string;
+      details: string;
+      maxSupply: number;
+      imageUri: string;
+      currentSupply: number;
+      levelAtLocalTree: number;
+      eligibility: `0x${string}`;
+      toggle: `0x${string}`;
+      mutable: boolean;
+      wearers: {
+        id: `0x${string}`;
+      }[];
+      admin: {
+        id: string;
+      };
+    }[];
+    childOfTree: {
+      id: string;
+    } | null;
+    linkedToHat: {
+      id: `0x${string}`;
+    } | null;
+    parentOfTrees: {
+      id: string;
+    }[];
+  };
 }
