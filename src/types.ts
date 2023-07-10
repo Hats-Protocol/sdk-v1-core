@@ -61,6 +61,7 @@ export interface UnlinkTopHatFromTreeResult extends TransactionResult {}
 export interface RelinkTopHatWithinTreeResult extends TransactionResult {}
 
 export interface MultiCallResult extends TransactionResult {
+  gasUsed: bigint;
   hatsCreated: bigint[];
   hatsMinted: {
     hatId: bigint;
@@ -93,6 +94,7 @@ export interface SubgraphGetAllTreeResult {
       eligibility: `0x${string}`;
       toggle: `0x${string}`;
       mutable: boolean;
+      createdAt: string | null;
       wearers: {
         id: `0x${string}`;
       }[];

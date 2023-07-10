@@ -110,17 +110,17 @@ export class HatsClient {
       throw new MissingPublicClientError("Public client is required");
     }
 
-    if (publicClient.chain?.id !== chainId) {
-      throw new ChainIdMismatchError(
-        "Provided chain id should match the public client chain id"
-      );
-    }
-
-    if (walletClient !== undefined && walletClient.chain?.id !== chainId) {
-      throw new ChainIdMismatchError(
-        "Provided chain id should match the wallet client chain id"
-      );
-    }
+    //if (publicClient.chain?.id !== chainId) {
+    //  throw new ChainIdMismatchError(
+    //    "Provided chain id should match the public client chain id"
+    //  );
+    //}
+    //
+    //if (walletClient !== undefined && walletClient.chain?.id !== chainId) {
+    //  throw new ChainIdMismatchError(
+    //    "Provided chain id should match the wallet client chain id"
+    //  );
+    //}
 
     this.chainId = chainId;
     this._graphqlClient = getGraphqlClient(chainId);
@@ -326,9 +326,7 @@ export class HatsClient {
     return branchHats;
   }
 
-  protected async gqlGetAllTree(
-    treeId: number
-  ): Promise<SubgraphGetAllTreeResult> {
+  async gqlGetAllTree(treeId: number): Promise<SubgraphGetAllTreeResult> {
     const treeIdHex = treeIdDecimalToHex(treeId);
 
     const respone = await this._makeGqlRequest<SubgraphGetAllTreeResult>(
@@ -2438,6 +2436,7 @@ export class HatsClient {
       return {
         status: receipt.status,
         transactionHash: receipt.transactionHash,
+        gasUsed: receipt.gasUsed,
         hatsCreated,
         hatsMinted,
         hatsBurned,
@@ -2930,7 +2929,8 @@ export class HatsClient {
     const targetTreeHex = treeIdDecimalToHex(targetTree);
 
     tree.hats.forEach((hat, index) => {
-      if (index !== 0) {
+      //console.log(`hat ${hat.id}`);
+      if (index !== 0 && hat.createdAt !== null) {
         const adminID = hatIdHexToDecimal(
           targetTreeHex + hat.admin.id.substring(10)
         );
@@ -2949,6 +2949,7 @@ export class HatsClient {
         });
 
         hat.wearers.forEach((wearer) => {
+          //console.log(`wearer ${wearer.id}`);
           const mintHatCall = this.mintHatCallData({
             hatId: hatIdHexToDecimal(targetTreeHex + hat.id.substring(10)),
             wearer: wearer.id,

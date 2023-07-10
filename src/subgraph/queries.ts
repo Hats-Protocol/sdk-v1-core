@@ -56,6 +56,7 @@ export const GET_ALL_TREE = gql`
         eligibility
         toggle
         mutable
+        createdAt
         wearers {
           id
         }
