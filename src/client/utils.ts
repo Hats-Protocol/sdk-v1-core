@@ -30,3 +30,10 @@ export function hatIdDecimalToIp(hatId: bigint): string {
 export function treeIdToTopHatId(treeId: number): bigint {
   return BigInt(treeIdDecimalToHex(treeId).padEnd(66, "0"));
 }
+
+export function hatIdToTreeId(hatId: bigint): number {
+  return parseInt(
+    "0x" + BigInt(hatId).toString(16).padStart(64, "0").substring(0, 8),
+    16
+  );
+}

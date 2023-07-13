@@ -5,7 +5,7 @@ import { goerli } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
-import { HATS_V1 } from "../src/config";
+import { HATS_V1 } from "../src/constants";
 
 describe("mintHat tests", () => {
   let publicClient: PublicClient;

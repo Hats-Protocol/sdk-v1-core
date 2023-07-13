@@ -3,7 +3,7 @@ import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet, goerli } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
-import { HATS_V1 } from "../src/config";
+import { HATS_V1 } from "../src/constants";
 import { treeIdDecimalToHex } from "../src/index";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type {

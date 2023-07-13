@@ -1,6 +1,13 @@
 import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
-import type { PublicClient, WalletClient, Account, Address, Hex } from "viem";
+import type {
+  PublicClient,
+  WalletClient,
+  Account,
+  Address,
+  Hex,
+  TransactionReceipt,
+} from "viem";
 import { decodeEventLog, encodeEventTopics, encodeFunctionData } from "viem";
 import {
   GET_WEARER_HATS,
@@ -68,13 +75,16 @@ import {
   MaxLevelReachedError,
   MaxHatsInLevelReached,
 } from "../errors";
-import { HATS_V1, MAX_LEVEL_HATS, MAX_LEVELS } from "../config";
+import {
+  HATS_V1,
+  MAX_LEVEL_HATS,
+  MAX_LEVELS,
+  ZERO_ADDRESS,
+} from "../constants";
 import {
   treeIdDecimalToHex,
   hatIdDecimalToHex,
-  treeIdToTopHatId,
   hatIdHexToDecimal,
-  treeIdHexToDecimal,
 } from "./utils";
 
 export class HatsClient {
@@ -110,17 +120,17 @@ export class HatsClient {
       throw new MissingPublicClientError("Public client is required");
     }
 
-    //if (publicClient.chain?.id !== chainId) {
-    //  throw new ChainIdMismatchError(
-    //    "Provided chain id should match the public client chain id"
-    //  );
-    //}
-    //
-    //if (walletClient !== undefined && walletClient.chain?.id !== chainId) {
-    //  throw new ChainIdMismatchError(
-    //    "Provided chain id should match the wallet client chain id"
-    //  );
-    //}
+    if (publicClient.chain?.id !== chainId) {
+      throw new ChainIdMismatchError(
+        "Provided chain id should match the public client chain id"
+      );
+    }
+
+    if (walletClient !== undefined && walletClient.chain?.id !== chainId) {
+      throw new ChainIdMismatchError(
+        "Provided chain id should match the wallet client chain id"
+      );
+    }
 
     this.chainId = chainId;
     this._graphqlClient = getGraphqlClient(chainId);
@@ -1768,7 +1778,7 @@ export class HatsClient {
 
     await this._validateHatEdit({ account, hatId });
 
-    if (newEligibility == "0x0000000000000000000000000000000000000000") {
+    if (newEligibility == ZERO_ADDRESS) {
       throw new ZeroEligibilityError("Zero eligibility address not valid");
     }
 
@@ -1835,7 +1845,7 @@ export class HatsClient {
 
     await this._validateHatEdit({ account, hatId });
 
-    if (newToggle == "0x0000000000000000000000000000000000000000") {
+    if (newToggle == ZERO_ADDRESS) {
       throw new ZeroToggleError("Zero toggle address not valid");
     }
 
@@ -2131,12 +2141,8 @@ export class HatsClient {
         args: [
           topHatDomain,
           newAdminHat,
-          newEligibility === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newEligibility,
-          newToggle === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newToggle,
+          newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+          newToggle === undefined ? ZERO_ADDRESS : newToggle,
           newDetails === undefined ? "" : newDetails,
           newImageURI === undefined ? "" : newImageURI,
         ],
@@ -2196,7 +2202,7 @@ export class HatsClient {
 
     const topHatId = BigInt(treeIdDecimalToHex(topHatDomain).padEnd(66, "0"));
     const isWearer = await this.isWearerOfHat({ wearer, hatId: topHatId });
-    if (wearer === "0x0000000000000000000000000000000000000000" || !isWearer) {
+    if (wearer === ZERO_ADDRESS || !isWearer) {
       throw new NotWearerError("Wearer is not wearing the tophat");
     }
 
@@ -2298,12 +2304,8 @@ export class HatsClient {
         args: [
           topHatDomain,
           newAdminHat,
-          newEligibility === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newEligibility,
-          newToggle === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newToggle,
+          newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+          newToggle === undefined ? ZERO_ADDRESS : newToggle,
           newDetails === undefined ? "" : newDetails,
           newImageURI === undefined ? "" : newImageURI,
         ],
@@ -2354,6 +2356,8 @@ export class HatsClient {
       throw new MultiCallError("One or more of the calls will revert");
     }
 
+    let receipt: TransactionReceipt;
+
     try {
       const hash = await this._walletClient.writeContract({
         address: HATS_V1,
@@ -2364,30 +2368,35 @@ export class HatsClient {
         chain: this._walletClient.chain,
       });
 
-      const receipt = await this._publicClient.waitForTransactionReceipt({
+      receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
       });
+    } catch (err) {
+      throw new TransactionRevertedError("Transaction reverted");
+    }
 
-      const hatsCreated: bigint[] = [];
-      const hatsMinted: {
-        hatId: bigint;
-        wearer: `0x${string}`;
-      }[] = [];
-      const hatsBurned: {
-        hatId: bigint;
-        wearer: `0x${string}`;
-      }[] = [];
-      const hatStatusChanges: {
-        hatId: bigint;
-        newStatus: "active" | "inactive";
-      }[] = [];
-      const wearerStandingChanges: {
-        hatId: bigint;
-        wearer: `0x${string}`;
-        newStanding: "good" | "bad";
-      }[] = [];
+    const hatsCreated: bigint[] = [];
+    const hatsMinted: {
+      hatId: bigint;
+      wearer: `0x${string}`;
+    }[] = [];
+    const hatsBurned: {
+      hatId: bigint;
+      wearer: `0x${string}`;
+    }[] = [];
+    const hatStatusChanges: {
+      hatId: bigint;
+      newStatus: "active" | "inactive";
+    }[] = [];
+    const wearerStandingChanges: {
+      hatId: bigint;
+      wearer: `0x${string}`;
+      newStanding: "good" | "bad";
+    }[] = [];
 
-      receipt.logs.forEach((log) => {
+    for (let i = 0; i < receipt.logs.length; i++) {
+      const log = receipt.logs[i];
+      try {
         const event = decodeEventLog({
           abi: HATS_ABI,
           data: log.data,
@@ -2400,14 +2409,10 @@ export class HatsClient {
             break;
           }
           case "TransferSingle": {
-            if (
-              event.args.to !== "0x0000000000000000000000000000000000000000"
-            ) {
+            if (event.args.to !== ZERO_ADDRESS) {
               hatsMinted.push({ hatId: event.args.id, wearer: event.args.to });
             }
-            if (
-              event.args.from !== "0x0000000000000000000000000000000000000000"
-            ) {
+            if (event.args.from !== ZERO_ADDRESS) {
               hatsBurned.push({
                 hatId: event.args.id,
                 wearer: event.args.from,
@@ -2431,21 +2436,22 @@ export class HatsClient {
             break;
           }
         }
-      });
-
-      return {
-        status: receipt.status,
-        transactionHash: receipt.transactionHash,
-        gasUsed: receipt.gasUsed,
-        hatsCreated,
-        hatsMinted,
-        hatsBurned,
-        hatStatusChanges,
-        wearerStandingChanges,
-      };
-    } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      } catch (err) {
+        console.log("Non Hats event encountered");
+        continue;
+      }
     }
+
+    return {
+      status: receipt.status,
+      transactionHash: receipt.transactionHash,
+      gasUsed: receipt.gasUsed,
+      hatsCreated,
+      hatsMinted,
+      hatsBurned,
+      hatStatusChanges,
+      wearerStandingChanges,
+    };
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -2838,12 +2844,8 @@ export class HatsClient {
       args: [
         topHatDomain,
         newAdminHat,
-        newEligibility === undefined
-          ? "0x0000000000000000000000000000000000000000"
-          : newEligibility,
-        newToggle === undefined
-          ? "0x0000000000000000000000000000000000000000"
-          : newToggle,
+        newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+        newToggle === undefined ? ZERO_ADDRESS : newToggle,
         newDetails === undefined ? "" : newDetails,
         newImageURI === undefined ? "" : newImageURI,
       ],
@@ -2895,12 +2897,8 @@ export class HatsClient {
       args: [
         topHatDomain,
         newAdminHat,
-        newEligibility === undefined
-          ? "0x0000000000000000000000000000000000000000"
-          : newEligibility,
-        newToggle === undefined
-          ? "0x0000000000000000000000000000000000000000"
-          : newToggle,
+        newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+        newToggle === undefined ? ZERO_ADDRESS : newToggle,
         newDetails === undefined ? "" : newDetails,
         newImageURI === undefined ? "" : newImageURI,
       ],
@@ -2977,10 +2975,10 @@ export class HatsClient {
     eligibility: Address;
     toggle: Address;
   }) {
-    if (eligibility === "0x0000000000000000000000000000000000000000") {
+    if (eligibility === ZERO_ADDRESS) {
       throw new ZeroEligibilityError("Zero eligibility address not valid");
     }
-    if (toggle === "0x0000000000000000000000000000000000000000") {
+    if (toggle === ZERO_ADDRESS) {
       throw new ZeroToggleError("Zero toggle address not valid");
     }
 
