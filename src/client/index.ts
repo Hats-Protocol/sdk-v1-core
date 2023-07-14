@@ -2927,7 +2927,6 @@ export class HatsClient {
     const targetTreeHex = treeIdDecimalToHex(targetTree);
 
     tree.hats.forEach((hat, index) => {
-      //console.log(`hat ${hat.id}`);
       if (index !== 0 && hat.createdAt !== null) {
         const adminID = hatIdHexToDecimal(
           targetTreeHex + hat.admin.id.substring(10)
@@ -2947,7 +2946,6 @@ export class HatsClient {
         });
 
         hat.wearers.forEach((wearer) => {
-          //console.log(`wearer ${wearer.id}`);
           const mintHatCall = this.mintHatCallData({
             hatId: hatIdHexToDecimal(targetTreeHex + hat.id.substring(10)),
             wearer: wearer.id,

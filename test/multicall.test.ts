@@ -2,9 +2,8 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
-import { HATS_ABI } from "../src/abi/Hats";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
-import type { MintTopHatResult, MultiCallResult } from "../src/types";
+import type { MintTopHatResult } from "../src/types";
 import { hatIdDecimalToHex } from "../src/client/utils";
 
 describe("createHat tests", () => {

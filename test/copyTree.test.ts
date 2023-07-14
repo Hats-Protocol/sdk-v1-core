@@ -2,14 +2,8 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
-import { HATS_ABI } from "../src/abi/Hats";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
-import type {
-  CreateHatResult,
-  MintTopHatResult,
-  MultiCallResult,
-} from "../src/types";
-import { hatIdDecimalToHex, treeIdDecimalToHex } from "../src/client/utils";
+import { treeIdDecimalToHex } from "../src/client/utils";
 
 describe("copyTree tests", () => {
   let publicClient: PublicClient;
@@ -75,7 +69,7 @@ describe("copyTree tests", () => {
           targetTree: treeDomainTarget,
         });
 
-        const multiCallRes = await hatsClient.multicall({
+        await hatsClient.multicall({
           account: account2,
           calls,
         });
