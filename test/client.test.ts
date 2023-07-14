@@ -1,8 +1,9 @@
-import { HatsClient } from "../src/index";
+import { HatsClient, hatIdDecimalToHex } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { mainnet, goerli } from "viem/chains";
+import { goerli } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
+import { HATS_V1 } from "../src/constants";
 import { treeIdDecimalToHex } from "../src/index";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type {
@@ -58,17 +59,17 @@ describe("Basic tests", () => {
       );
 
       publicClient = createPublicClient({
-        chain: mainnet,
+        chain: goerli,
         transport: http("http://127.0.0.1:8545"),
       });
 
       walletClient = createWalletClient({
-        chain: mainnet,
+        chain: goerli,
         transport: http("http://127.0.0.1:8545"),
       });
 
       hatsClient = new HatsClient({
-        chainId: mainnet.id,
+        chainId: goerli.id,
         publicClient: publicClient,
         walletClient: walletClient,
       });
@@ -273,7 +274,7 @@ describe("Basic tests", () => {
       beforeAll(async () => {
         try {
           let expectedTopHatDomain = await publicClient.readContract({
-            address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+            address: HATS_V1,
             abi: HATS_ABI,
             functionName: "lastTopHatId",
           });
@@ -303,7 +304,7 @@ describe("Basic tests", () => {
 
       test("Test top-hat is created", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [topHatId_1],
@@ -321,7 +322,7 @@ describe("Basic tests", () => {
       beforeAll(async () => {
         try {
           expectedHatId = await publicClient.readContract({
-            address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+            address: HATS_V1,
             abi: HATS_ABI,
             functionName: "getNextId",
             args: [topHatId_1],
@@ -351,7 +352,7 @@ describe("Basic tests", () => {
 
       test("Test hat is created", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_1],
@@ -415,7 +416,7 @@ describe("Basic tests", () => {
         });
 
         let nextTopHatDomain = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "lastTopHatId",
         });
@@ -470,16 +471,34 @@ describe("Basic tests", () => {
         expect(resChildHatWearer).toBe(true);
       });
 
-      test("test predictHatId SDK function", async () => {
+      test("test predictNextChildrenHatIDs SDK function", async () => {
         const predicedHatNextHatId = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "getNextId",
           args: [topHatId_1],
         });
-        const res = await hatsClient.predictHatId(topHatId_1);
+        const res1 = await hatsClient.predictNextChildrenHatIDs({
+          admin: topHatId_1,
+          numChildren: 1,
+        });
+        expect(res1[0]).toBe(predicedHatNextHatId);
 
-        expect(res).toBe(predicedHatNextHatId);
+        const topHatIDHex = hatIdDecimalToHex(topHatId_1);
+        const expectedID1_2 = BigInt(
+          topHatIDHex.substring(0, 13) + "2" + topHatIDHex.substring(14)
+        );
+        const expectedID1_3 = BigInt(
+          topHatIDHex.substring(0, 13) + "3" + topHatIDHex.substring(14)
+        );
+
+        const res2 = await hatsClient.predictNextChildrenHatIDs({
+          admin: topHatId_1,
+          numChildren: 2,
+        });
+
+        expect(res2[0]).toBe(expectedID1_2);
+        expect(res2[1]).toBe(expectedID1_3);
       });
 
       test("test getHatLevel SDK function", async () => {
@@ -521,7 +540,7 @@ describe("Basic tests", () => {
 
       test("Test hat 1.1 minted", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
           args: [address1, hatId_1_1],
@@ -551,7 +570,7 @@ describe("Basic tests", () => {
 
       test("Test hat 1.1 is renounced", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
           args: [address1, hatId_1_1],
@@ -582,7 +601,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.1 new details", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_1],
@@ -613,7 +632,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.1 new eligibility", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_1],
@@ -644,7 +663,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.1 new toggle", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_1],
@@ -675,7 +694,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.1 new image URI", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_1],
@@ -706,7 +725,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.1 new max supply", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_1],
@@ -736,7 +755,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.1 immutable", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_1],
@@ -774,7 +793,7 @@ describe("Basic tests", () => {
 
       test("Test hat 1.2 is created", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_2],
@@ -793,7 +812,7 @@ describe("Basic tests", () => {
 
       test("Test hat 1.3 is created", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [hatId_1_3],
@@ -836,7 +855,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.2 is minted", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
           args: [address1, hatId_1_2],
@@ -847,7 +866,7 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.3 is minted", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
           args: [address2, hatId_1_3],
@@ -878,7 +897,7 @@ describe("Basic tests", () => {
 
       test("Test hat 1.3 is inactive", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isActive",
           args: [hatId_1_3],
@@ -910,14 +929,14 @@ describe("Basic tests", () => {
 
       test("Test Hat 1.2 was transfered", async () => {
         const res1 = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
           args: [address2, hatId_1_2],
         });
 
         const res2 = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
           args: [address1, hatId_1_2],
@@ -951,7 +970,7 @@ describe("Basic tests", () => {
 
       test("Test hat 1.2 burned", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "isWearerOfHat",
           args: [address2, hatId_1_2],
@@ -982,7 +1001,7 @@ describe("Basic tests", () => {
 
       test("Test top-hat is created", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [topHatId_2],
@@ -1014,7 +1033,7 @@ describe("Basic tests", () => {
 
       test("Test link request", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "linkedTreeRequests",
           args: [topHatDomain_2],
@@ -1051,7 +1070,7 @@ describe("Basic tests", () => {
 
       test("Test tree linked", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "linkedTreeAdmins",
           args: [topHatDomain_2],
@@ -1084,7 +1103,7 @@ describe("Basic tests", () => {
 
       test("Test linked top-hat values", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [topHatId_2],
@@ -1122,7 +1141,7 @@ describe("Basic tests", () => {
 
       test("Test tree relinked", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "linkedTreeAdmins",
           args: [topHatDomain_2],
@@ -1133,7 +1152,7 @@ describe("Basic tests", () => {
 
       test("Test relinked top-hat values", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [topHatId_2],
@@ -1167,7 +1186,7 @@ describe("Basic tests", () => {
 
       test("Test tree 2 ulinked", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "linkedTreeAdmins",
           args: [topHatDomain_2],
@@ -1182,7 +1201,7 @@ describe("Basic tests", () => {
 
       test("Test unlinked top-hat values", async () => {
         const res = await publicClient.readContract({
-          address: "0x9D2dfd6066d5935267291718E8AA16C8Ab729E9d",
+          address: HATS_V1,
           abi: HATS_ABI,
           functionName: "viewHat",
           args: [topHatId_2],

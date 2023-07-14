@@ -193,3 +193,24 @@ export class BatchParamsError extends Error {
     this.name = "BatchParamsError";
   }
 }
+
+export class MultiCallError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MultiCallError";
+  }
+}
+
+export class MaxLevelReachedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MaxLevelReachedError";
+  }
+}
+
+export class MaxHatsInLevelReached extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MaxHatsInLevelReached";
+  }
+}

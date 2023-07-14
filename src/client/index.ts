@@ -1,12 +1,20 @@
 import { getGraphqlClient } from "../subgraph/index";
 import { GraphQLClient, Variables } from "graphql-request";
-import type { PublicClient, WalletClient, Account, Address } from "viem";
-import { decodeEventLog, encodeEventTopics } from "viem";
+import type {
+  PublicClient,
+  WalletClient,
+  Account,
+  Address,
+  Hex,
+  TransactionReceipt,
+} from "viem";
+import { decodeEventLog, encodeEventTopics, encodeFunctionData } from "viem";
 import {
   GET_WEARER_HATS,
   GET_TREE_HATS,
   GET_TREE_WEARERS_PER_HAT,
   GET_WEARERS_OF_HAT,
+  GET_ALL_TREE,
 } from "../subgraph/queries";
 import { HATS_ABI } from "../abi/Hats";
 import type {
@@ -31,6 +39,8 @@ import type {
   ApproveLinkTopHatToTreeResult,
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
+  MultiCallResult,
+  SubgraphGetAllTreeResult,
 } from "../types";
 import {
   ChainIdMismatchError,
@@ -61,10 +71,21 @@ import {
   NotAdminOrWearerError,
   NoLinkageRequestError,
   BatchParamsError,
+  MultiCallError,
+  MaxLevelReachedError,
+  MaxHatsInLevelReached,
 } from "../errors";
-
-import { HATS_V1 } from "../config";
-import { treeIdDecimalToHex, hatIdDecimalToHex } from "./utils";
+import {
+  HATS_V1,
+  MAX_LEVEL_HATS,
+  MAX_LEVELS,
+  ZERO_ADDRESS,
+} from "../constants";
+import {
+  treeIdDecimalToHex,
+  hatIdDecimalToHex,
+  hatIdHexToDecimal,
+} from "./utils";
 
 export class HatsClient {
   readonly chainId: number;
@@ -315,6 +336,25 @@ export class HatsClient {
     return branchHats;
   }
 
+  async gqlGetAllTree(treeId: number): Promise<SubgraphGetAllTreeResult> {
+    const treeIdHex = treeIdDecimalToHex(treeId);
+
+    const respone = await this._makeGqlRequest<SubgraphGetAllTreeResult>(
+      GET_ALL_TREE,
+      {
+        id: treeIdHex,
+      }
+    );
+
+    if (!respone.tree) {
+      throw new SubgraphTreeNotExistError(
+        "Tree does not exist on the subgraph"
+      );
+    }
+
+    return respone;
+  }
+
   /*//////////////////////////////////////////////////////////////
                       Onchain Read Functions
     //////////////////////////////////////////////////////////////*/
@@ -469,18 +509,52 @@ export class HatsClient {
     return res;
   }
 
-  /**
-   * Predict the hat ID of a yet to be created hat.
-   *
-   * @param admin - The admin hat ID.
-   * @returns The hat ID of the next hat that will be created with the provided admin.
-   */
-  async predictHatId(admin: bigint): Promise<bigint> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
+  async predictNextChildrenHatIDs({
+    admin,
+    numChildren,
+  }: {
+    admin: bigint;
+    numChildren: number;
+  }): Promise<bigint[]> {
+    const res: bigint[] = [];
+    if (numChildren < 1) {
+      return res;
+    }
+
+    const adminHat = await this.viewHat(admin);
+    if (adminHat.numChildren + numChildren > MAX_LEVEL_HATS) {
+      throw new MaxHatsInLevelReached(
+        "Maximum amount of hats per level is 65535"
+      );
+    }
+
+    const level = await this.getLocalHatLevel(admin);
+    if (level === MAX_LEVELS) {
+      throw new MaxLevelReachedError(
+        "The provided admin's hat level is on the maximul level"
+      );
+    }
+
+    const contractDetails = {
+      address: HATS_V1 as Address,
       abi: HATS_ABI,
-      functionName: "getNextId",
-      args: [admin],
+    };
+
+    const calls = [];
+    for (let i = 0; i < numChildren; i++) {
+      calls.push({
+        ...contractDetails,
+        functionName: "buildHatId",
+        args: [admin, adminHat.numChildren + i + 1],
+      });
+    }
+    const childHats = await this._publicClient.multicall({
+      contracts: calls,
+    });
+    childHats.forEach((hat) => {
+      if (hat.result !== undefined) {
+        res.push(hat.result as bigint);
+      }
     });
 
     return res;
@@ -1704,7 +1778,7 @@ export class HatsClient {
 
     await this._validateHatEdit({ account, hatId });
 
-    if (newEligibility == "0x0000000000000000000000000000000000000000") {
+    if (newEligibility == ZERO_ADDRESS) {
       throw new ZeroEligibilityError("Zero eligibility address not valid");
     }
 
@@ -1771,7 +1845,7 @@ export class HatsClient {
 
     await this._validateHatEdit({ account, hatId });
 
-    if (newToggle == "0x0000000000000000000000000000000000000000") {
+    if (newToggle == ZERO_ADDRESS) {
       throw new ZeroToggleError("Zero toggle address not valid");
     }
 
@@ -2067,12 +2141,8 @@ export class HatsClient {
         args: [
           topHatDomain,
           newAdminHat,
-          newEligibility === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newEligibility,
-          newToggle === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newToggle,
+          newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+          newToggle === undefined ? ZERO_ADDRESS : newToggle,
           newDetails === undefined ? "" : newDetails,
           newImageURI === undefined ? "" : newImageURI,
         ],
@@ -2132,7 +2202,7 @@ export class HatsClient {
 
     const topHatId = BigInt(treeIdDecimalToHex(topHatDomain).padEnd(66, "0"));
     const isWearer = await this.isWearerOfHat({ wearer, hatId: topHatId });
-    if (wearer === "0x0000000000000000000000000000000000000000" || !isWearer) {
+    if (wearer === ZERO_ADDRESS || !isWearer) {
       throw new NotWearerError("Wearer is not wearing the tophat");
     }
 
@@ -2234,12 +2304,8 @@ export class HatsClient {
         args: [
           topHatDomain,
           newAdminHat,
-          newEligibility === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newEligibility,
-          newToggle === undefined
-            ? "0x0000000000000000000000000000000000000000"
-            : newToggle,
+          newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+          newToggle === undefined ? ZERO_ADDRESS : newToggle,
           newDetails === undefined ? "" : newDetails,
           newImageURI === undefined ? "" : newImageURI,
         ],
@@ -2260,6 +2326,638 @@ export class HatsClient {
     }
   }
 
+  async multicall({
+    account,
+    calls,
+  }: {
+    account: Account | Address;
+    calls: {
+      functionName: string;
+      callData: Hex;
+    }[];
+  }): Promise<MultiCallResult> {
+    if (this._walletClient === undefined) {
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
+    }
+
+    const callDatas = calls.map((call) => call.callData);
+
+    try {
+      await this._publicClient.estimateContractGas({
+        address: HATS_V1,
+        abi: HATS_ABI,
+        functionName: "multicall",
+        args: [callDatas],
+        account,
+      });
+    } catch (err) {
+      throw new MultiCallError("One or more of the calls will revert");
+    }
+
+    let receipt: TransactionReceipt;
+
+    try {
+      const hash = await this._walletClient.writeContract({
+        address: HATS_V1,
+        abi: HATS_ABI,
+        functionName: "multicall",
+        args: [callDatas],
+        account,
+        chain: this._walletClient.chain,
+      });
+
+      receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+    } catch (err) {
+      throw new TransactionRevertedError("Transaction reverted");
+    }
+
+    const hatsCreated: bigint[] = [];
+    const hatsMinted: {
+      hatId: bigint;
+      wearer: `0x${string}`;
+    }[] = [];
+    const hatsBurned: {
+      hatId: bigint;
+      wearer: `0x${string}`;
+    }[] = [];
+    const hatStatusChanges: {
+      hatId: bigint;
+      newStatus: "active" | "inactive";
+    }[] = [];
+    const wearerStandingChanges: {
+      hatId: bigint;
+      wearer: `0x${string}`;
+      newStanding: "good" | "bad";
+    }[] = [];
+
+    for (let i = 0; i < receipt.logs.length; i++) {
+      const log = receipt.logs[i];
+      try {
+        const event = decodeEventLog({
+          abi: HATS_ABI,
+          data: log.data,
+          topics: log.topics,
+        });
+
+        switch (event.eventName) {
+          case "HatCreated": {
+            hatsCreated.push(event.args.id);
+            break;
+          }
+          case "TransferSingle": {
+            if (event.args.to !== ZERO_ADDRESS) {
+              hatsMinted.push({ hatId: event.args.id, wearer: event.args.to });
+            }
+            if (event.args.from !== ZERO_ADDRESS) {
+              hatsBurned.push({
+                hatId: event.args.id,
+                wearer: event.args.from,
+              });
+            }
+            break;
+          }
+          case "HatStatusChanged": {
+            hatStatusChanges.push({
+              hatId: event.args.hatId,
+              newStatus: event.args.newStatus ? "active" : "inactive",
+            });
+            break;
+          }
+          case "WearerStandingChanged": {
+            wearerStandingChanges.push({
+              hatId: event.args.hatId,
+              wearer: event.args.wearer,
+              newStanding: event.args.wearerStanding ? "good" : "bad",
+            });
+            break;
+          }
+        }
+      } catch (err) {
+        console.log("Non Hats event encountered");
+        continue;
+      }
+    }
+
+    return {
+      status: receipt.status,
+      transactionHash: receipt.transactionHash,
+      gasUsed: receipt.gasUsed,
+      hatsCreated,
+      hatsMinted,
+      hatsBurned,
+      hatStatusChanges,
+      wearerStandingChanges,
+    };
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                      Call Data functions
+    //////////////////////////////////////////////////////////////*/
+
+  mintTopHatCallData({
+    target,
+    details,
+    imageURI,
+  }: {
+    target: Address;
+    details: string;
+    imageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "mintTopHat",
+      args: [target, details, imageURI === undefined ? "" : imageURI],
+    });
+
+    return { functionName: "mintTopHat", callData };
+  }
+
+  createHatCallData({
+    admin,
+    details,
+    maxSupply,
+    eligibility,
+    toggle,
+    mutable,
+    imageURI,
+  }: {
+    admin: bigint;
+    details: string;
+    maxSupply: number;
+    eligibility: Address;
+    toggle: Address;
+    mutable: boolean;
+    imageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "createHat",
+      args: [
+        admin,
+        details,
+        maxSupply,
+        eligibility,
+        toggle,
+        mutable,
+        imageURI === undefined ? "" : imageURI,
+      ],
+    });
+
+    return { functionName: "createHat", callData };
+  }
+
+  transferHatCallData({
+    hatId,
+    from,
+    to,
+  }: {
+    hatId: bigint;
+    from: Address;
+    to: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "transferHat",
+      args: [hatId, from, to],
+    });
+
+    return { functionName: "transferHat", callData };
+  }
+
+  mintHatCallData({ hatId, wearer }: { hatId: bigint; wearer: Address }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "mintHat",
+      args: [hatId, wearer],
+    });
+
+    return { functionName: "mintHat", callData };
+  }
+
+  batchCreateHatsCallData({
+    admins,
+    details,
+    maxSupplies,
+    eligibilityModules,
+    toggleModules,
+    mutables,
+    imageURIs,
+  }: {
+    admins: bigint[];
+    details: string[];
+    maxSupplies: number[];
+    eligibilityModules: Address[];
+    toggleModules: Address[];
+    mutables: boolean[];
+    imageURIs?: string[];
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "batchCreateHats",
+      args: [
+        admins,
+        details,
+        maxSupplies,
+        eligibilityModules,
+        toggleModules,
+        mutables,
+        imageURIs === undefined ? Array(admins.length).fill("") : imageURIs,
+      ],
+    });
+
+    return { functionName: "batchCreateHats", callData };
+  }
+
+  batchMintHatsCallData({
+    hatIds,
+    wearers,
+  }: {
+    hatIds: bigint[];
+    wearers: Address[];
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "batchMintHats",
+      args: [hatIds, wearers],
+    });
+
+    return { functionName: "batchMintHats", callData };
+  }
+
+  setHatStatusCallData({
+    hatId,
+    newStatus,
+  }: {
+    hatId: bigint;
+    newStatus: boolean;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "setHatStatus",
+      args: [hatId, newStatus],
+    });
+
+    return { functionName: "setHatStatus", callData };
+  }
+
+  checkHatStatusCallData({ hatId }: { hatId: bigint }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "checkHatStatus",
+      args: [hatId],
+    });
+
+    return { functionName: "checkHatStatus", callData };
+  }
+
+  setHatWearerStatusCallData({
+    hatId,
+    wearer,
+    eligible,
+    standing,
+  }: {
+    hatId: bigint;
+    wearer: Address;
+    eligible: boolean;
+    standing: boolean;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "setHatWearerStatus",
+      args: [hatId, wearer, eligible, standing],
+    });
+
+    return { functionName: "setHatWearerStatus", callData };
+  }
+
+  checkHatWearerStatusCallData({
+    hatId,
+    wearer,
+  }: {
+    hatId: bigint;
+    wearer: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "checkHatWearerStatus",
+      args: [hatId, wearer],
+    });
+
+    return { functionName: "checkHatWearerStatus", callData };
+  }
+
+  renounceHatCallData({ hatId }: { hatId: bigint }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "renounceHat",
+      args: [hatId],
+    });
+
+    return { functionName: "renounceHat", callData };
+  }
+
+  makeHatImmutableCallData({ hatId }: { hatId: bigint }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "makeHatImmutable",
+      args: [hatId],
+    });
+
+    return { functionName: "makeHatImmutable", callData };
+  }
+
+  changeHatDetailsCallData({
+    hatId,
+    newDetails,
+  }: {
+    hatId: bigint;
+    newDetails: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatDetails",
+      args: [hatId, newDetails],
+    });
+
+    return { functionName: "changeHatDetails", callData };
+  }
+
+  changeHatEligibilityCallData({
+    hatId,
+    newEligibility,
+  }: {
+    hatId: bigint;
+    newEligibility: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatEligibility",
+      args: [hatId, newEligibility],
+    });
+
+    return { functionName: "changeHatEligibility", callData };
+  }
+
+  changeHatToggleCallData({
+    hatId,
+    newToggle,
+  }: {
+    hatId: bigint;
+    newToggle: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatToggle",
+      args: [hatId, newToggle],
+    });
+
+    return { functionName: "changeHatToggle", callData };
+  }
+
+  changeHatImageURICallData({
+    hatId,
+    newImageURI,
+  }: {
+    hatId: bigint;
+    newImageURI: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatImageURI",
+      args: [hatId, newImageURI],
+    });
+
+    return { functionName: "changeHatImageURI", callData };
+  }
+
+  changeHatMaxSupplyCallData({
+    hatId,
+    newMaxSupply,
+  }: {
+    hatId: bigint;
+    newMaxSupply: number;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "changeHatMaxSupply",
+      args: [hatId, newMaxSupply],
+    });
+
+    return { functionName: "changeHatMaxSupply", callData };
+  }
+
+  requestLinkTopHatToTreeCallData({
+    topHatDomain,
+    requestedAdminHat,
+  }: {
+    topHatDomain: number;
+    requestedAdminHat: bigint;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "requestLinkTopHatToTree",
+      args: [topHatDomain, requestedAdminHat],
+    });
+
+    return { functionName: "requestLinkTopHatToTree", callData };
+  }
+
+  approveLinkTopHatToTreeCallData({
+    topHatDomain,
+    newAdminHat,
+    newEligibility,
+    newToggle,
+    newDetails,
+    newImageURI,
+  }: {
+    topHatDomain: number;
+    newAdminHat: bigint;
+    newEligibility?: Address;
+    newToggle?: Address;
+    newDetails?: string;
+    newImageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "approveLinkTopHatToTree",
+      args: [
+        topHatDomain,
+        newAdminHat,
+        newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+        newToggle === undefined ? ZERO_ADDRESS : newToggle,
+        newDetails === undefined ? "" : newDetails,
+        newImageURI === undefined ? "" : newImageURI,
+      ],
+    });
+
+    return { functionName: "approveLinkTopHatToTree", callData };
+  }
+
+  unlinkTopHatFromTreeCallData({
+    topHatDomain,
+    wearer,
+  }: {
+    topHatDomain: number;
+    wearer: Address;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "unlinkTopHatFromTree",
+      args: [topHatDomain, wearer],
+    });
+
+    return { functionName: "unlinkTopHatFromTree", callData };
+  }
+
+  relinkTopHatWithinTreeCallData({
+    topHatDomain,
+    newAdminHat,
+    newEligibility,
+    newToggle,
+    newDetails,
+    newImageURI,
+  }: {
+    topHatDomain: number;
+    newAdminHat: bigint;
+    newEligibility?: Address;
+    newToggle?: Address;
+    newDetails?: string;
+    newImageURI?: string;
+  }): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "relinkTopHatWithinTree",
+      args: [
+        topHatDomain,
+        newAdminHat,
+        newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
+        newToggle === undefined ? ZERO_ADDRESS : newToggle,
+        newDetails === undefined ? "" : newDetails,
+        newImageURI === undefined ? "" : newImageURI,
+      ],
+    });
+
+    return { functionName: "relinkTopHatWithinTree", callData };
+  }
+
+  async copyTreeCallData({
+    sourceTree,
+    targetTree,
+  }: {
+    sourceTree: number;
+    targetTree: number;
+  }): Promise<
+    {
+      functionName: string;
+      callData: Hex;
+    }[]
+  > {
+    const res: {
+      functionName: string;
+      callData: Hex;
+    }[] = [];
+    const { tree } = await this.gqlGetAllTree(sourceTree);
+    const targetTreeHex = treeIdDecimalToHex(targetTree);
+
+    tree.hats.forEach((hat, index) => {
+      if (index !== 0 && hat.createdAt !== null) {
+        const adminID = hatIdHexToDecimal(
+          targetTreeHex + hat.admin.id.substring(10)
+        );
+        const createHatCall = this.createHatCallData({
+          admin: adminID,
+          details: hat.details,
+          maxSupply: hat.maxSupply,
+          eligibility: hat.eligibility,
+          toggle: hat.toggle,
+          mutable: hat.mutable,
+          imageURI: hat.imageUri,
+        });
+        res.push({
+          functionName: "createHat",
+          callData: createHatCall.callData,
+        });
+
+        hat.wearers.forEach((wearer) => {
+          const mintHatCall = this.mintHatCallData({
+            hatId: hatIdHexToDecimal(targetTreeHex + hat.id.substring(10)),
+            wearer: wearer.id,
+          });
+          res.push({ functionName: "mintHat", callData: mintHatCall.callData });
+        });
+      }
+    });
+
+    return res;
+  }
+
   /*//////////////////////////////////////////////////////////////
                       Validation Functions
     //////////////////////////////////////////////////////////////*/
@@ -2275,10 +2973,10 @@ export class HatsClient {
     eligibility: Address;
     toggle: Address;
   }) {
-    if (eligibility === "0x0000000000000000000000000000000000000000") {
+    if (eligibility === ZERO_ADDRESS) {
       throw new ZeroEligibilityError("Zero eligibility address not valid");
     }
-    if (toggle === "0x0000000000000000000000000000000000000000") {
+    if (toggle === ZERO_ADDRESS) {
       throw new ZeroToggleError("Zero toggle address not valid");
     }
 

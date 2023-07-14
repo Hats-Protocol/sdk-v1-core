@@ -5,6 +5,8 @@ import {
   hatIdHexToDecimal,
   treeIdHexToDecimal,
   hatIdDecimalToIp,
+  treeIdToTopHatId,
+  hatIdToTreeId,
 } from "./client/utils";
 
 export {
@@ -14,6 +16,8 @@ export {
   hatIdHexToDecimal,
   treeIdHexToDecimal,
   hatIdDecimalToIp,
+  treeIdToTopHatId,
+  hatIdToTreeId,
 };
 
 export type {

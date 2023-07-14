@@ -1,7 +1,7 @@
 import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { mainnet } from "viem/chains";
+import { goerli } from "viem/chains";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
 
@@ -32,17 +32,17 @@ describe("mintHat tests", () => {
       );
 
       publicClient = createPublicClient({
-        chain: mainnet,
+        chain: goerli,
         transport: http("http://127.0.0.1:8545"),
       });
 
       walletClient = createWalletClient({
-        chain: mainnet,
+        chain: goerli,
         transport: http("http://127.0.0.1:8545"),
       });
 
       hatsClient = new HatsClient({
-        chainId: mainnet.id,
+        chainId: goerli.id,
         publicClient: publicClient,
         walletClient: walletClient,
       });
