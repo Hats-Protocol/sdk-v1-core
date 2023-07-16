@@ -2326,6 +2326,19 @@ export class HatsClient {
     }
   }
 
+  /**
+   * Batch multiple operations
+   *
+   * @param account - A Viem account.
+   * @param calls - Array of call objects, containing the call data and the function name
+   * @returns An object containing newly created, minted or burned hats and hat/wearer status changes as a result of the multicall
+   *
+   * @throws MultiCallError
+   * Throws if the multicall simulation reverted.
+   *
+   * @throws TransactionRevertedError
+   * Throws if the transaction reverted for an unexpected reason.
+   */
   async multicall({
     account,
     calls,
@@ -2458,6 +2471,14 @@ export class HatsClient {
                       Call Data functions
     //////////////////////////////////////////////////////////////*/
 
+  /**
+   * Return the call data for a mintTopHat operation.
+   *
+   * @param target - Tophat's wearer address.
+   * @param details - Tophat's details field.
+   * @param imageURIi - Optional tophat's image URI.
+   * @returns An object containing the call data and the function name.
+   */
   mintTopHatCallData({
     target,
     details,
@@ -2479,6 +2500,18 @@ export class HatsClient {
     return { functionName: "mintTopHat", callData };
   }
 
+  /**
+   * Return the call data for a createHat operation.
+   *
+   * @param admin - Hat's admin ID.
+   * @param details - Hat's details field.
+   * @param maxSupply - Hat's maximum amount of possible wearers.
+   * @param eligibility - Hat's eligibility address (zero address is not valid).
+   * @param toggle - Hat's toggle address (zero address is not valid).
+   * @param mutable - True if the hat should be mutable, false otherwise.
+   * @param imageURI - Optional hat's image URI.
+   * @returns An object containing the call data and the function name.
+   */
   createHatCallData({
     admin,
     details,
@@ -2516,6 +2549,14 @@ export class HatsClient {
     return { functionName: "createHat", callData };
   }
 
+  /**
+   * Return the call data for a transferHat operation.
+   *
+   * @param hatId - Hat ID to be transfered.
+   * @param from - Current wearer address.
+   * @param to - New wearer address.
+   * @returns An object containing the call data and the function name.
+   */
   transferHatCallData({
     hatId,
     from,
@@ -2537,6 +2578,13 @@ export class HatsClient {
     return { functionName: "transferHat", callData };
   }
 
+  /**
+   * Return the call data for a mintHat operation.
+   *
+   * @param hatId - ID of the minted hat.
+   * @param wearer - Address of the new wearer.
+   * @returns An object containing the call data and the function name.
+   */
   mintHatCallData({ hatId, wearer }: { hatId: bigint; wearer: Address }): {
     functionName: string;
     callData: Hex;
@@ -2550,6 +2598,18 @@ export class HatsClient {
     return { functionName: "mintHat", callData };
   }
 
+  /**
+   * Return the call data for a batchCreateHats operation.
+   *
+   * @param admins - The hats admin IDs.
+   * @param details - The hats details fields.
+   * @param maxSupplies - The hats maximum amounts of possible wearers.
+   * @param eligibilityModules - The hats eligibility addresses (zero address is not valid).
+   * @param toggleModules - The hats toggle addresses (zero address is not valid).
+   * @param mutables - True if the hat should be mutable, false otherwise.
+   * @param imageURIs - Optional hats image URIs.
+   * @returns An object containing the call data and the function name.
+   */
   batchCreateHatsCallData({
     admins,
     details,
@@ -2587,6 +2647,13 @@ export class HatsClient {
     return { functionName: "batchCreateHats", callData };
   }
 
+  /**
+   * Return the call data for a batchMintHats operation.
+   *
+   * @param hatIds - IDs of the minted hats.
+   * @param wearers - Addresses of the new wearers.
+   * @returns An object containing the call data and the function name.
+   */
   batchMintHatsCallData({
     hatIds,
     wearers,
@@ -2606,6 +2673,13 @@ export class HatsClient {
     return { functionName: "batchMintHats", callData };
   }
 
+  /**
+   * Return the call data for a setHatStatus operation.
+   *
+   * @param hatId - hat ID.
+   * @param newStatus - Hat's new status: true for active, false for inactive.
+   * @returns An object containing the call data and the function name.
+   */
   setHatStatusCallData({
     hatId,
     newStatus,
@@ -2638,6 +2712,15 @@ export class HatsClient {
     return { functionName: "checkHatStatus", callData };
   }
 
+  /**
+   * Return the call data for a setHatWearerStatus operation.
+   *
+   * @param hatId - Hat ID.
+   * @param wearer - Wearer address.
+   * @param eligible - Wearer's eligibility. True for eligible, false otherwise.
+   * @param standing - Wearer's standing. True for good, false for bad.
+   * @returns An object containing the call data and the function name.
+   */
   setHatWearerStatusCallData({
     hatId,
     wearer,
@@ -2661,6 +2744,13 @@ export class HatsClient {
     return { functionName: "setHatWearerStatus", callData };
   }
 
+  /**
+   * Return the call data for a checkHatWearerStatus operation.
+   *
+   * @param hatId - Hat ID.
+   * @param wearer - Wearer address.
+   * @returns An object containing the call data and the function name.
+   */
   checkHatWearerStatusCallData({
     hatId,
     wearer,
@@ -2680,6 +2770,12 @@ export class HatsClient {
     return { functionName: "checkHatWearerStatus", callData };
   }
 
+  /**
+   * Return the call data for a renounceHat operation.
+   *
+   * @param hatId - Hat ID of the hat the caller wishes to renounce.
+   * @returns An object containing the call data and the function name.
+   */
   renounceHatCallData({ hatId }: { hatId: bigint }): {
     functionName: string;
     callData: Hex;
@@ -2693,6 +2789,12 @@ export class HatsClient {
     return { functionName: "renounceHat", callData };
   }
 
+  /**
+   * Return the call data for a makeHatImmutable operation.
+   *
+   * @param hatId - Hat ID.
+   * @returns An object containing the call data and the function name.
+   */
   makeHatImmutableCallData({ hatId }: { hatId: bigint }): {
     functionName: string;
     callData: Hex;
@@ -2706,6 +2808,13 @@ export class HatsClient {
     return { functionName: "makeHatImmutable", callData };
   }
 
+  /**
+   * Return the call data for a changeHatDetails operation.
+   *
+   * @param hatId - Hat ID.
+   * @param newDetails - The new details.
+   * @returns An object containing the call data and the function name.
+   */
   changeHatDetailsCallData({
     hatId,
     newDetails,
@@ -2725,6 +2834,13 @@ export class HatsClient {
     return { functionName: "changeHatDetails", callData };
   }
 
+  /**
+   * Return the call data for a changeHatEligibility operation.
+   *
+   * @param hatId - Hat ID.
+   * @param newEligibility - The new eligibility address. Zero address is not valid.
+   * @returns An object containing the call data and the function name.
+   */
   changeHatEligibilityCallData({
     hatId,
     newEligibility,
@@ -2744,6 +2860,13 @@ export class HatsClient {
     return { functionName: "changeHatEligibility", callData };
   }
 
+  /**
+   * Return the call data for a changeHatToggle operation.
+   *
+   * @param hatId - Hat ID.
+   * @param newToggle - The new toggle address. Zero address is not valid.
+   * @returns An object containing the call data and the function name.
+   */
   changeHatToggleCallData({
     hatId,
     newToggle,
@@ -2763,6 +2886,13 @@ export class HatsClient {
     return { functionName: "changeHatToggle", callData };
   }
 
+  /**
+   * Return the call data for a changeHatImageURI operation.
+   *
+   * @param hatId - Hat ID.
+   * @param newImageURI - The new image URI.
+   * @returns An object containing the call data and the function name.
+   */
   changeHatImageURICallData({
     hatId,
     newImageURI,
@@ -2782,6 +2912,13 @@ export class HatsClient {
     return { functionName: "changeHatImageURI", callData };
   }
 
+  /**
+   * Return the call data for a changeHatMaxSupply operation.
+   *
+   * @param hatId - Hat ID.
+   * @param newMaxSupply -New maximum supply for the hat.
+   * @returns An object containing the call data and the function name.
+   */
   changeHatMaxSupplyCallData({
     hatId,
     newMaxSupply,
@@ -2801,6 +2938,13 @@ export class HatsClient {
     return { functionName: "changeHatMaxSupply", callData };
   }
 
+  /**
+   * Return the call data for a requestLinkTopHatToTree operation.
+   *
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param requestedAdminHat - ID of the requested new admin hat.
+   * @returns An object containing the call data and the function name.
+   */
   requestLinkTopHatToTreeCallData({
     topHatDomain,
     requestedAdminHat,
@@ -2820,6 +2964,17 @@ export class HatsClient {
     return { functionName: "requestLinkTopHatToTree", callData };
   }
 
+  /**
+   * Return the call data for a approveLinkTopHatToTree operation.
+   *
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param newAdminHat - ID of the new admin hat.
+   * @param newEligibility - Optional new eligibility for the linked tophat.
+   * @param newToggle - Optional new toggle for the linked tophat.
+   * @param newDetails - Optional new details for the linked tophat.
+   * @param newImageURI - Optional new image URI for the linked tophat.
+   * @returns An object containing the call data and the function name.
+   */
   approveLinkTopHatToTreeCallData({
     topHatDomain,
     newAdminHat,
@@ -2854,6 +3009,13 @@ export class HatsClient {
     return { functionName: "approveLinkTopHatToTree", callData };
   }
 
+  /**
+   * Return the call data for a unlinkTopHatFromTree operation.
+   *
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param wearer - The current wearer of the tophat that is about to be unlinked.
+   * @returns An object containing the call data and the function name.
+   */
   unlinkTopHatFromTreeCallData({
     topHatDomain,
     wearer,
@@ -2873,6 +3035,17 @@ export class HatsClient {
     return { functionName: "unlinkTopHatFromTree", callData };
   }
 
+  /**
+   * Return the call data for a relinkTopHatWithinTree operation.
+   *
+   * @param topHatDomain - The tree domain of the requesting tree. The tree domain is the first four bytes of the tophat ID.
+   * @param newAdminHat - ID of the new admin hat.
+   * @param newEligibility - Optional new eligibility for the linked tophat.
+   * @param newToggle - Optional new toggle for the linked tophat.
+   * @param newDetails - Optional new details for the linked tophat.
+   * @param newImageURI - Optional new image URI for the linked tophat.
+   * @returns An object containing the call data and the function name.
+   */
   relinkTopHatWithinTreeCallData({
     topHatDomain,
     newAdminHat,
@@ -2907,6 +3080,14 @@ export class HatsClient {
     return { functionName: "relinkTopHatWithinTree", callData };
   }
 
+  /**
+   * Get the call data to copy a tree's hats and wearers.
+   * Note: this doensn't include the target's top-hat. The target top-hat should be created separately.
+   *
+   * @param sourceTree - The source tree domain.
+   * @param targetTree - The target tree domain.
+   * @returns An array of call data objects. Passing the result to the multicall function will execute the copy operation.
+   */
   async copyTreeCallData({
     sourceTree,
     targetTree,
