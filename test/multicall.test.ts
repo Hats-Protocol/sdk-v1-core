@@ -156,6 +156,45 @@ describe("createHat tests", () => {
         const hat_1_1 = await hatsClient.viewHat(expectedChildID);
         expect(hat_1_1.details).toBe("1.1 details");
       });
+
+      test("Test create hat and mint with multicall calldata", async () => {
+        const topHatIDHex = hatIdDecimalToHex(topHatId);
+        const expectedChildID = BigInt(
+          topHatIDHex.substring(0, 13) + "1" + topHatIDHex.substring(14)
+        );
+
+        const createHatCallData = hatsClient.createHatCallData({
+          admin: topHatId,
+          details: "1.1 details",
+          maxSupply: 3,
+          eligibility: address1,
+          toggle: address1,
+          mutable: true,
+          imageURI: "1.1 image URI",
+        });
+
+        const mintHatCallData = hatsClient.mintHatCallData({
+          hatId: expectedChildID,
+          wearer: address1,
+        });
+
+        const multicallCallData = hatsClient.multicallCallData([
+          createHatCallData.callData,
+          mintHatCallData.callData,
+        ]);
+
+        const res = await hatsClient.multicall({
+          account: account1,
+          calls: [multicallCallData],
+        });
+
+        expect(res.status).toBe("success");
+        expect(res.hatsCreated[0]).toBe(expectedChildID);
+        expect(res.hatsMinted[0].hatId).toBe(expectedChildID);
+        expect(res.hatsMinted[0].wearer).toBe(address1);
+        const hat_1_1 = await hatsClient.viewHat(expectedChildID);
+        expect(hat_1_1.details).toBe("1.1 details");
+      });
     });
   });
 });
