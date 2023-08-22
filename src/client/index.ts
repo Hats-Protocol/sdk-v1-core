@@ -2472,6 +2472,25 @@ export class HatsClient {
     //////////////////////////////////////////////////////////////*/
 
   /**
+   * Return the call data a multicall operation.
+   *
+   * @param calls - An array with the call data strings, for each function call.
+   * @returns An object containing the call data and the function name.
+   */
+  multicallCallData(calls: Hex[]): {
+    functionName: string;
+    callData: Hex;
+  } {
+    const callData = encodeFunctionData({
+      abi: HATS_ABI,
+      functionName: "multicall",
+      args: [calls],
+    });
+
+    return { functionName: "multicall", callData };
+  }
+
+  /**
    * Return the call data for a mintTopHat operation.
    *
    * @param target - Tophat's wearer address.
