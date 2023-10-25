@@ -11,3 +11,10 @@ export class SubgraphHatNotExistError extends Error {
     this.name = "SubgraphHatNotExistError";
   }
 }
+
+export class SubgraphTreeNotExistError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SubgraphTreeNotExistError";
+  }
+}

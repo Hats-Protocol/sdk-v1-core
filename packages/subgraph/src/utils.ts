@@ -37,3 +37,54 @@ export function hatIdToTreeId(hatId: bigint): number {
     16
   );
 }
+
+export function normalizeProps(props: any): any {
+  const fields: any[] = ["id"];
+  for (const [key, value] of Object.entries(props)) {
+    if (typeof value !== "object" && value === true) {
+      fields.push(key);
+    }
+
+    if (typeof value === "object") {
+      const subFields = normalizeProps(value);
+      const obj: any = {};
+      obj[key] = subFields;
+      fields.push(obj);
+    }
+  }
+
+  return fields;
+}
+
+export function normalizedPropsToQueryFields(props: any): any {
+  let fields = "";
+
+  // first iteration without opening comma
+  const elem = props[0];
+  if (typeof elem === "string") {
+    fields = fields + `${elem}`;
+  }
+
+  if (typeof elem === "object") {
+    const elemKey = Object.keys(elem)[0];
+    fields =
+      fields + `${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+  }
+
+  // loop over the rest
+  for (let i = 1; i < props.length; i++) {
+    const elem = props[i];
+    if (typeof elem === "string") {
+      fields = fields + `, ${elem}`;
+    }
+
+    if (typeof elem === "object") {
+      const elemKey = Object.keys(elem)[0];
+      fields =
+        fields +
+        `, ${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+    }
+  }
+
+  return fields;
+}

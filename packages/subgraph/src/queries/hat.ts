@@ -54,10 +54,10 @@ export const HAT_DETAILS_WITHOUT_EVENTS_FRAGMENT = gql`
   ${EVENT_DETAILS_FRAGMENT}
 `;
 
-export const HAT_DETAILS_FRAGMENT = gql`
+export const HAT_DETAILS_WITH_EVENTS_FRAGMENT = gql`
   fragment HatDetails on Hat {
     ...HatDetailsUnit
-    events(orderBy: timestamp, orderDirection: desc) {
+    events(orderBy: timestamp, orderDirection: desc, first: $numEvents) {
       ...EventDetails
     }
   }
@@ -65,19 +65,22 @@ export const HAT_DETAILS_FRAGMENT = gql`
 `;
 
 export const GET_HAT = gql`
-  query getHat($id: ID!) {
+  query getHat($id: ID!, $numEvents: Int = 5) {
     hat(id: $id) {
       ...HatDetails
     }
   }
-  ${HAT_DETAILS_FRAGMENT}
+  ${HAT_DETAILS_WITH_EVENTS_FRAGMENT}
 `;
 
 export const GET_HATS_BY_IDS = gql`
-  query getHatsByIds($ids: [ID!]!) {
+  query getHatsByIds($ids: [ID!]!, $numEvents: Int = 5) {
     hats(where: { id_in: $ids }) {
       ...HatDetails
     }
   }
-  ${HAT_DETAILS_FRAGMENT}
+  ${HAT_DETAILS_WITH_EVENTS_FRAGMENT}
 `;
+
+//query ($id: String) { hat (id: $id) { id, prettyId, eligibility, admin { id, prettyId, eligibility, subHats { id, prettyId, eligibility } } } }
+//query ($ids: [string!]) { hats(where: { id_in: $ids }) { id, prettyId } }

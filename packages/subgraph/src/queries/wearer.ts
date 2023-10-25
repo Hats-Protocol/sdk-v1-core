@@ -1,6 +1,6 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
-import { HAT_DETAILS_FRAGMENT } from './hat';
+import { HAT_DETAILS_WITH_EVENTS_FRAGMENT } from "./hat";
 
 // todo get wearer hats
 export const GET_WEARER_DETAILS = gql`
@@ -11,7 +11,7 @@ export const GET_WEARER_DETAILS = gql`
       }
     }
   }
-  ${HAT_DETAILS_FRAGMENT}
+  ${HAT_DETAILS_WITH_EVENTS_FRAGMENT}
 `;
 
 export const GET_ALL_WEARERS = gql`
@@ -28,7 +28,7 @@ export const GET_CONTROLLERS_FOR_USER = gql`
       ...HatDetails
     }
   }
-  ${HAT_DETAILS_FRAGMENT}
+  ${HAT_DETAILS_WITH_EVENTS_FRAGMENT}
 `;
 
 export const GET_PAGINATED_WEARERS_FOR_HAT = gql`
