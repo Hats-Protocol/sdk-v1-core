@@ -67,8 +67,17 @@ export function normalizedPropsToQueryFields(props: any): any {
 
   if (typeof elem === "object") {
     const elemKey = Object.keys(elem)[0];
-    fields =
-      fields + `${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+    if (elemKey === "hats") {
+      fields =
+        fields +
+        `${elemKey} (first: $firstHats) { ${normalizedPropsToQueryFields(
+          elem[elemKey]
+        )} }`;
+    } else {
+      fields =
+        fields +
+        `${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+    }
   }
 
   // loop over the rest
@@ -80,9 +89,17 @@ export function normalizedPropsToQueryFields(props: any): any {
 
     if (typeof elem === "object") {
       const elemKey = Object.keys(elem)[0];
-      fields =
-        fields +
-        `, ${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+      if (elemKey === "hats") {
+        fields =
+          fields +
+          `, ${elemKey} (first: $firstHats) { ${normalizedPropsToQueryFields(
+            elem[elemKey]
+          )} }`;
+      } else {
+        fields =
+          fields +
+          `, ${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+      }
     }
   }
 

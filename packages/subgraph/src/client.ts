@@ -1,10 +1,4 @@
 import {
-  GET_HAT,
-  GET_HATS_BY_IDS,
-  GET_TREE,
-  GET_ALL_TREE_IDS,
-} from "./queries";
-import {
   treeIdDecimalToHex,
   hatIdDecimalToHex,
   normalizeProps,
@@ -12,7 +6,11 @@ import {
 } from "./utils";
 import { gql } from "graphql-request";
 import { getGraphqlClient } from "./endpoints";
-import { SubgraphNotUpportedError, SubgraphHatNotExistError } from "./errors";
+import {
+  SubgraphNotUpportedError,
+  SubgraphHatNotExistError,
+  SubgraphTreeNotExistError,
+} from "./errors";
 import { Variables } from "graphql-request";
 import type { Hat, Tree, HatConfig, TreeConfig, WearerConfig } from "./types";
 
@@ -49,7 +47,7 @@ export class HatsSubgraphClient {
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-      query getHat($id: ID!, $numEvents: Int = 5) {
+      query getHat($id: ID!, $firstHats: Int!) {
         hat(id: $id) {
           ${queryFields}
         }
@@ -58,6 +56,7 @@ export class HatsSubgraphClient {
 
     const respone = await this._makeGqlRequest<{ hat: Hat }>(chainId, query, {
       id: hatIdHex,
+      firstHats: 1000,
     });
 
     if (!respone.hat) {
@@ -84,7 +83,7 @@ export class HatsSubgraphClient {
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-      query getHatsByIds($ids: [ID!]!) {
+      query getHatsByIds($ids: [ID!]!, $firstHats: Int!) {
         hats(where: { id_in: $ids }) {
             ${queryFields}
         }
@@ -96,6 +95,7 @@ export class HatsSubgraphClient {
       query,
       {
         ids: hatIdsHex,
+        firstHats: 1000,
       }
     );
 
@@ -108,29 +108,127 @@ export class HatsSubgraphClient {
     return respone.hats;
   }
 
-  async fetchTree({
-    treeId,
+  async getTree({
     chainId,
+    treeId,
+    props,
+    firstHats,
   }: {
-    treeId: number;
     chainId: number;
+    treeId: number;
+    props: TreeConfig;
+    firstHats?: number;
   }): Promise<Tree> {
     const treeIdHex = treeIdDecimalToHex(treeId);
 
-    const respone = await this._makeGqlRequest<{ tree: Tree }>(
-      chainId,
-      GET_TREE,
-      {
-        id: treeIdHex,
+    const normalizedProps = normalizeProps(props);
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+
+    const query = gql`
+      query getTree($id: ID!, $firstHats: Int!) {
+        tree(id: $id) {
+          ${queryFields}
+        }
       }
-    );
+    `;
+
+    const firstHatsVariable = firstHats ?? 1000;
+    const respone = await this._makeGqlRequest<{ tree: Tree }>(chainId, query, {
+      id: treeIdHex,
+      firstHats: firstHatsVariable,
+    });
 
     if (!respone.tree) {
-      throw new SubgraphHatNotExistError(
+      throw new SubgraphTreeNotExistError(
         `Tree with an ID of ${treeId} does not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
     return respone.tree;
+  }
+
+  async getTrees({
+    chainId,
+    treeIds,
+    props,
+    firstHats,
+  }: {
+    chainId: number;
+    treeIds: number[];
+    props: TreeConfig;
+    firstHats?: number;
+  }): Promise<Tree[]> {
+    const treeIdsHex = treeIds.map((treeId) => treeIdDecimalToHex(treeId));
+
+    const normalizedProps = normalizeProps(props);
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+
+    const query = gql`
+    query getTreesById($ids: [ID!]!, $firstHats: Int!) {
+      trees(where: { id_in: $ids }) {
+        ${queryFields}
+      }
+    }
+  `;
+
+    const firstHatsVariable = firstHats ?? 1000;
+    const respone = await this._makeGqlRequest<{ trees: Tree[] }>(
+      chainId,
+      query,
+      {
+        ids: treeIdsHex,
+        firstHats: firstHatsVariable,
+      }
+    );
+
+    if (!respone.trees || respone.trees.length < treeIds.length) {
+      throw new SubgraphTreeNotExistError(
+        `One or more of the provided trees do not exist in the subgraph for chain ID ${chainId}`
+      );
+    }
+
+    return respone.trees;
+  }
+
+  async getTreesPaginated({
+    chainId,
+    props,
+    page,
+    perPage,
+    firstHats,
+  }: {
+    chainId: number;
+    props: TreeConfig;
+    page: number;
+    perPage: number;
+    firstHats?: number;
+  }): Promise<Tree[]> {
+    const normalizedProps = normalizeProps(props);
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+
+    const query = gql`
+    query getPaginatedTrees($skip: Int!, $first: Int!, $firstHats: Int!) {
+      trees(skip: $skip, first: $first) {
+        ${queryFields}
+      }
+    }
+  `;
+
+    const firstHatsVariable = firstHats ?? 1000;
+    const respone = await this._makeGqlRequest<{ trees: Tree[] }>(
+      chainId,
+      query,
+      {
+        skip: page * perPage,
+        first: perPage,
+        firstHats: firstHatsVariable,
+      }
+    );
+
+    if (!respone.trees) {
+      throw new Error("Unexpected error");
+    }
+
+    return respone.trees;
   }
 }
