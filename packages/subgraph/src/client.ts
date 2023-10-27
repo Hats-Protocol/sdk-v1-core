@@ -10,9 +10,17 @@ import {
   SubgraphNotUpportedError,
   SubgraphHatNotExistError,
   SubgraphTreeNotExistError,
+  SubgraphWearerNotExistError,
 } from "./errors";
 import { Variables } from "graphql-request";
-import type { Hat, Tree, HatConfig, TreeConfig, WearerConfig } from "./types";
+import type {
+  Hat,
+  Tree,
+  HatConfig,
+  TreeConfig,
+  WearerConfig,
+  Wearer,
+} from "./types";
 
 export class HatsSubgraphClient {
   protected async _makeGqlRequest<ResponseType>(
@@ -230,5 +238,95 @@ export class HatsSubgraphClient {
     }
 
     return respone.trees;
+  }
+
+  async getWearer({
+    chainId,
+    wearerAddress,
+    props,
+  }: {
+    chainId: number;
+    wearerAddress: `0x${string}`;
+    props: WearerConfig;
+  }): Promise<Wearer> {
+    const wearerAddressLowerCase = wearerAddress.toLowerCase();
+
+    const normalizedProps = normalizeProps(props);
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+
+    const query = gql`
+      query getCurrentHatsForWearer($id: ID!) {
+        wearer(id: $id) {
+            ${queryFields}
+        }
+      }
+    `;
+
+    const respone = await this._makeGqlRequest<{ wearer: Wearer }>(
+      chainId,
+      query,
+      {
+        id: wearerAddressLowerCase,
+        firstHats: 1000,
+      }
+    );
+
+    if (!respone.wearer) {
+      throw new SubgraphWearerNotExistError(
+        `Wearer with an address of ${wearerAddress} does not exist in the subgraph for chain ID ${chainId}`
+      );
+    }
+
+    return respone.wearer;
+  }
+
+  async getWearersOfHatPaginated({
+    chainId,
+    hatId,
+    props,
+    page,
+    perPage,
+  }: {
+    chainId: number;
+    hatId: bigint;
+    props: WearerConfig;
+    page: number;
+    perPage: number;
+  }): Promise<Wearer[]> {
+    const hatIdHex = hatIdDecimalToHex(hatId);
+
+    const normalizedProps = normalizeProps(props);
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+
+    const query = gql`
+      query getPaginatedWearersForHat($hatId: ID!, $first: Int!, $skip: Int!, $firstHats: Int!) {
+        wearers(
+          skip: $skip
+          first: $first
+          where: { currentHats_: { id: $hatId } }
+        ) {
+          ${queryFields}
+        }
+      }
+    `;
+
+    const respone = await this._makeGqlRequest<{ wearers: Wearer[] }>(
+      chainId,
+      query,
+      {
+        hatId: hatIdHex,
+        skip: page * perPage,
+        first: perPage,
+        firstHats: 1000,
+      }
+    );
+
+    if (!respone.wearers) {
+      throw new SubgraphHatNotExistError(
+        `Hat with an ID of ${hatId} does not exist in the subgraph for chain ID ${chainId}`
+      );
+    }
+
+    return respone.wearers;
   }
 }

@@ -102,6 +102,7 @@ describe("Client Tests", () => {
     expect(1).toBe(1);
   });
   */
+  /*
   test("Test getTrees", async () => {
     const res = await client.getTrees({
       chainId: 10,
@@ -115,6 +116,45 @@ describe("Client Tests", () => {
       },
       treeIds: [1, 2],
       firstHats: 1,
+    });
+
+    console.log(JSON.stringify(res, null, 2));
+
+    expect(1).toBe(1);
+  });
+  */
+  /*
+  test("Test getWearer", async () => {
+    const res = await client.getWearer({
+      chainId: 10,
+      props: {
+        currentHats: {
+          prettyId: true,
+        },
+        mintEvent: {
+          hat: {
+            prettyId: true,
+          },
+        },
+      },
+      wearerAddress: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c",
+    });
+
+    console.log(JSON.stringify(res, null, 2));
+
+    expect(1).toBe(1);
+  });
+  */
+
+  test("Test getWearersOfHatPaginated", async () => {
+    const res = await client.getWearersOfHatPaginated({
+      chainId: 10,
+      props: {},
+      hatId: BigInt(
+        "0x0000000100020001000100000000000000000000000000000000000000000000"
+      ),
+      page: 0,
+      perPage: 2,
     });
 
     console.log(JSON.stringify(res, null, 2));

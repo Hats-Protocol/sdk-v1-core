@@ -48,14 +48,15 @@ export interface HatConfig {
 }
 
 export interface Wearer {
-  id: `0x${string}`;
-  chainId?: number;
   currentHats?: Hat[];
+  mintEvent?: HatMintedEvent[];
+  burnEvent?: HatBurnedEvent[];
 }
 
 export interface WearerConfig {
-  chainId?: boolean;
   currentHats?: HatConfig;
+  mintEvent?: HatMintedEventConfig;
+  burnEvent?: HatBurnedEventConfig;
 }
 
 export interface Tree {
@@ -95,17 +96,33 @@ export interface HatEventConfig {
 }
 
 export interface TreeEvent extends HatEvent {
-  hat?: Partial<Hat>;
+  hat?: Hat;
 }
 
 export interface TreeEventConfig extends HatEventConfig {
   hat?: HatConfig;
 }
 
+export interface HatMintedEvent extends HatEvent {
+  hat?: Hat;
+}
+
+export interface HatMintedEventConfig extends HatEventConfig {
+  hat?: HatConfig;
+}
+
+export interface HatBurnedEvent extends HatEvent {
+  hat?: Hat;
+}
+
+export interface HatBurnedEventConfig extends HatEventConfig {
+  hat?: HatConfig;
+}
+
 export interface ClaimsHatter {
   id: string;
-  claimableHats?: Partial<Hat>[];
-  claimableForHats?: Partial<Hat>[];
+  claimableHats?: Hat[];
+  claimableForHats?: Hat[];
 }
 
 export interface ClaimsHatterConfig {
