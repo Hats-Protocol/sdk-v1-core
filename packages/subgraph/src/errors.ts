@@ -24,3 +24,10 @@ export class SubgraphWearerNotExistError extends Error {
     this.name = "SubgraphWearerNotExistError";
   }
 }
+
+export class InputValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InputValidationError";
+  }
+}

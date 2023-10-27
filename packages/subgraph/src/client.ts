@@ -4,15 +4,16 @@ import {
   normalizeProps,
   normalizedPropsToQueryFields,
 } from "./utils";
-import { gql } from "graphql-request";
+import { gql, Variables } from "graphql-request";
 import { getGraphqlClient } from "./endpoints";
 import {
   SubgraphNotUpportedError,
   SubgraphHatNotExistError,
   SubgraphTreeNotExistError,
   SubgraphWearerNotExistError,
+  InputValidationError,
 } from "./errors";
-import { Variables } from "graphql-request";
+import { hatConfigSchema, treeConfigSchema } from "./schemas";
 import type {
   Hat,
   Tree,
@@ -49,13 +50,18 @@ export class HatsSubgraphClient {
     hatId: bigint;
     props: HatConfig;
   }): Promise<Hat> {
+    const validationRes = hatConfigSchema.safeParse(props);
+    if (validationRes.success === false) {
+      throw new InputValidationError(validationRes.error.message);
+    }
+
     const hatIdHex = hatIdDecimalToHex(hatId);
 
     const normalizedProps = normalizeProps(props);
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-      query getHat($id: ID!, $firstHats: Int!) {
+      query getHat($id: ID!, $numHats: Int!, $numWearers: Int!) {
         hat(id: $id) {
           ${queryFields}
         }
@@ -64,7 +70,8 @@ export class HatsSubgraphClient {
 
     const respone = await this._makeGqlRequest<{ hat: Hat }>(chainId, query, {
       id: hatIdHex,
-      firstHats: 1000,
+      numHats: 1000,
+      numWearers: 1000,
     });
 
     if (!respone.hat) {
@@ -76,7 +83,7 @@ export class HatsSubgraphClient {
     return respone.hat;
   }
 
-  async getHats({
+  async getHatsByIds({
     chainId,
     hatIds,
     props,
@@ -85,13 +92,18 @@ export class HatsSubgraphClient {
     hatIds: bigint[];
     props: HatConfig;
   }): Promise<Hat[]> {
+    const validationRes = hatConfigSchema.safeParse(props);
+    if (validationRes.success === false) {
+      throw new InputValidationError(validationRes.error.message);
+    }
+
     const hatIdsHex: string[] = hatIds.map((id) => hatIdDecimalToHex(id));
 
     const normalizedProps = normalizeProps(props);
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-      query getHatsByIds($ids: [ID!]!, $firstHats: Int!) {
+      query getHatsByIds($ids: [ID!]!, $numHats: Int!, $numWearers: Int!) {
         hats(where: { id_in: $ids }) {
             ${queryFields}
         }
@@ -103,7 +115,8 @@ export class HatsSubgraphClient {
       query,
       {
         ids: hatIdsHex,
-        firstHats: 1000,
+        numHats: 1000,
+        numWearers: 1000,
       }
     );
 
@@ -120,30 +133,33 @@ export class HatsSubgraphClient {
     chainId,
     treeId,
     props,
-    firstHats,
   }: {
     chainId: number;
     treeId: number;
     props: TreeConfig;
-    firstHats?: number;
   }): Promise<Tree> {
+    const validationRes = treeConfigSchema.safeParse(props);
+    if (validationRes.success === false) {
+      throw new InputValidationError(validationRes.error.message);
+    }
+
     const treeIdHex = treeIdDecimalToHex(treeId);
 
     const normalizedProps = normalizeProps(props);
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-      query getTree($id: ID!, $firstHats: Int!) {
+      query getTree($id: ID!, $numHats: Int!, $numWearers: Int!) {
         tree(id: $id) {
           ${queryFields}
         }
       }
     `;
 
-    const firstHatsVariable = firstHats ?? 1000;
     const respone = await this._makeGqlRequest<{ tree: Tree }>(chainId, query, {
       id: treeIdHex,
-      firstHats: firstHatsVariable,
+      numHats: 1000,
+      numWearers: 1000,
     });
 
     if (!respone.tree) {
@@ -155,7 +171,7 @@ export class HatsSubgraphClient {
     return respone.tree;
   }
 
-  async getTrees({
+  async getTreesByIds({
     chainId,
     treeIds,
     props,

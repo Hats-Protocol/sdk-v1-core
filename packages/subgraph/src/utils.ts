@@ -92,7 +92,13 @@ export function normalizedPropsToQueryFields(props: any): any {
       if (elemKey === "hats") {
         fields =
           fields +
-          `, ${elemKey} (first: $firstHats) { ${normalizedPropsToQueryFields(
+          `, ${elemKey} (first: $numHats) { ${normalizedPropsToQueryFields(
+            elem[elemKey]
+          )} }`;
+      } else if (elemKey === "wearers") {
+        fields =
+          fields +
+          `, ${elemKey} (first: $numWearers) { ${normalizedPropsToQueryFields(
             elem[elemKey]
           )} }`;
       } else {

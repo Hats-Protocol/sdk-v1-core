@@ -1,4 +1,7 @@
+import { gql } from "graphql-request";
 import { HatsSubgraphClient } from "../src/index";
+import { getGraphqlClient } from "../src/endpoints";
+import type { GraphQLClient } from "graphql-request";
 
 describe("Client Tests", () => {
   let client: HatsSubgraphClient;
@@ -7,79 +10,149 @@ describe("Client Tests", () => {
     client = new HatsSubgraphClient();
   });
 
-  /*
-  test("Test getHat", async () => {
-    const res = await client.getHat({
-      chainId: 10,
-      hatId: BigInt(
-        "0x0000000100020001000100000000000000000000000000000000000000000000"
-      ),
-      props: {
-        prettyId: true,
-        eligibility: true,
-        admin: {
-          prettyId: true,
-          eligibility: true,
-          subHats: { prettyId: true, eligibility: true },
-        },
-      },
-    });
-
-    console.log(JSON.stringify(res, null, 2));
-
-    expect(1).toBe(1);
-  }, 30000);
-  */
-
-  /*
-  test("Test getHats", async () => {
-    const res = await client.getHats({
-      chainId: 10,
-      hatIds: [
-        BigInt(
+  describe("getHat Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.getHat({
+        chainId: 10,
+        hatId: BigInt(
           "0x0000000100020001000100000000000000000000000000000000000000000000"
         ),
-        BigInt(
-          "0x0000000100020001000000000000000000000000000000000000000000000000"
-        ),
-      ],
-      props: {
-        prettyId: true,
-        admin: {
+        props: {
           prettyId: true,
-          subHats: {
+          eligibility: true,
+          wearers: {},
+          admin: {
             prettyId: true,
+            eligibility: true,
+            subHats: { prettyId: true, eligibility: true },
           },
         },
-      },
-    });
+      });
 
-    console.log(JSON.stringify(res, null, 2));
+      const query = gql`
+        query getHat($id: ID!) {
+          hat(id: $id) {
+            id
+            prettyId
+            eligibility
+            wearers(first: 1000) {
+              id
+            }
+            admin {
+              id
+              prettyId
+              eligibility
+              subHats {
+                id
+                prettyId
+                eligibility
+              }
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
 
-    expect(1).toBe(1);
+      const ref = (await gqlClient.request(query, {
+        id: "0x0000000100020001000100000000000000000000000000000000000000000000",
+      })) as { hat: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hat));
+    }, 30000);
   });
-*/
-  /*
-  test("Test getTree", async () => {
-    const res = await client.getTree({
-      chainId: 10,
-      treeId: 1,
-      props: {
-        hats: {
+
+  describe("getHatsByIds Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.getHatsByIds({
+        chainId: 10,
+        hatIds: [
+          BigInt(
+            "0x0000000100020001000100000000000000000000000000000000000000000000"
+          ),
+          BigInt(
+            "0x0000000100020001000000000000000000000000000000000000000000000000"
+          ),
+        ],
+        props: {
           prettyId: true,
           admin: {
             prettyId: true,
+            subHats: {
+              prettyId: true,
+            },
           },
         },
-      },
-      firstHats: 1,
-    });
+      });
 
-    console.log(JSON.stringify(res, null, 2));
+      const query = gql`
+        query getHat($ids: [ID!]!) {
+          hats(where: { id_in: $ids }) {
+            id
+            prettyId
+            admin {
+              id
+              prettyId
+              subHats {
+                id
+                prettyId
+              }
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
 
-    expect(1).toBe(1);
+      const ref = (await gqlClient.request(query, {
+        ids: [
+          "0x0000000100020001000100000000000000000000000000000000000000000000",
+          "0x0000000100020001000000000000000000000000000000000000000000000000",
+        ],
+      })) as { hats: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hats));
+    }, 30000);
   });
-*/
+
+  describe("getTree Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.getTree({
+        chainId: 10,
+        treeId: 1,
+        props: {
+          hats: {
+            prettyId: true,
+            admin: {
+              prettyId: true,
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query getTree($id: ID!) {
+          tree(id: $id) {
+            id
+            hats(first: 1000) {
+              id
+              prettyId
+              admin {
+                id
+                prettyId
+              }
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        id: "0x00000001",
+      })) as { tree: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.tree));
+    }, 30000);
+  });
+
   /*
   test("Test getTreesPaginated", async () => {
     const res = await client.getTreesPaginated({
@@ -145,7 +218,7 @@ describe("Client Tests", () => {
     expect(1).toBe(1);
   });
   */
-
+  /*
   test("Test getWearersOfHatPaginated", async () => {
     const res = await client.getWearersOfHatPaginated({
       chainId: 10,
@@ -161,4 +234,5 @@ describe("Client Tests", () => {
 
     expect(1).toBe(1);
   });
+  */
 });

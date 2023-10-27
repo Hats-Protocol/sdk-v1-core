@@ -26,7 +26,8 @@
   },
   "dependencies": {
     "graphql": "^16.6.0",
-    "graphql-request": "^6.1.0"
+    "graphql-request": "^6.1.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.0.0",
