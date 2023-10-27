@@ -153,49 +153,89 @@ describe("Client Tests", () => {
     }, 30000);
   });
 
-  /*
-  test("Test getTreesPaginated", async () => {
-    const res = await client.getTreesPaginated({
-      chainId: 10,
-      props: {
-        hats: {
-          prettyId: true,
-          admin: {
+  describe("getTreesByIds Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.getTreesByIds({
+        chainId: 10,
+        props: {
+          hats: {
             prettyId: true,
+            admin: {
+              prettyId: true,
+            },
           },
         },
-      },
-      page: 3,
-      perPage: 10,
-      firstHats: 1,
+        treeIds: [1, 2],
+      });
+
+      const query = gql`
+        query getTreesById($ids: [ID!]!) {
+          trees(where: { id_in: $ids }) {
+            id
+            hats {
+              id
+              prettyId
+              admin {
+                id
+                prettyId
+              }
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        ids: ["0x00000001", "0x00000002"],
+      })) as { trees: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.trees));
     });
-
-    console.log(JSON.stringify(res, null, 2));
-
-    expect(1).toBe(1);
   });
-  */
-  /*
-  test("Test getTrees", async () => {
-    const res = await client.getTrees({
-      chainId: 10,
-      props: {
-        hats: {
-          prettyId: true,
-          admin: {
+
+  describe("getTreesPaginated Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.getTreesPaginated({
+        chainId: 10,
+        props: {
+          hats: {
             prettyId: true,
+            admin: {
+              prettyId: true,
+            },
           },
         },
-      },
-      treeIds: [1, 2],
-      firstHats: 1,
+        page: 3,
+        perPage: 10,
+        numHatsPerTree: 1,
+      });
+
+      const query = gql`
+        query getPaginatedTrees($skip: Int!, $first: Int!) {
+          trees(skip: $skip, first: $first) {
+            id
+            hats(first: 1) {
+              id
+              prettyId
+              admin {
+                id
+                prettyId
+              }
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        skip: 30,
+        first: 10,
+      })) as { trees: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.trees));
     });
-
-    console.log(JSON.stringify(res, null, 2));
-
-    expect(1).toBe(1);
   });
-  */
+
   /*
   test("Test getWearer", async () => {
     const res = await client.getWearer({

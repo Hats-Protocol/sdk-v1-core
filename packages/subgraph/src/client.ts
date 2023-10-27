@@ -175,33 +175,36 @@ export class HatsSubgraphClient {
     chainId,
     treeIds,
     props,
-    firstHats,
   }: {
     chainId: number;
     treeIds: number[];
     props: TreeConfig;
-    firstHats?: number;
   }): Promise<Tree[]> {
+    const validationRes = treeConfigSchema.safeParse(props);
+    if (validationRes.success === false) {
+      throw new InputValidationError(validationRes.error.message);
+    }
+
     const treeIdsHex = treeIds.map((treeId) => treeIdDecimalToHex(treeId));
 
     const normalizedProps = normalizeProps(props);
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-    query getTreesById($ids: [ID!]!, $firstHats: Int!) {
+    query getTreesById($ids: [ID!]!, $numHats: Int!, $numWearers: Int!) {
       trees(where: { id_in: $ids }) {
         ${queryFields}
       }
     }
   `;
 
-    const firstHatsVariable = firstHats ?? 1000;
     const respone = await this._makeGqlRequest<{ trees: Tree[] }>(
       chainId,
       query,
       {
         ids: treeIdsHex,
-        firstHats: firstHatsVariable,
+        numHats: 1000,
+        numWearers: 1000,
       }
     );
 
@@ -219,33 +222,38 @@ export class HatsSubgraphClient {
     props,
     page,
     perPage,
-    firstHats,
+    numHatsPerTree,
   }: {
     chainId: number;
     props: TreeConfig;
     page: number;
     perPage: number;
-    firstHats?: number;
+    numHatsPerTree?: number;
   }): Promise<Tree[]> {
+    const validationRes = treeConfigSchema.safeParse(props);
+    if (validationRes.success === false) {
+      throw new InputValidationError(validationRes.error.message);
+    }
+
     const normalizedProps = normalizeProps(props);
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-    query getPaginatedTrees($skip: Int!, $first: Int!, $firstHats: Int!) {
+    query getPaginatedTrees($skip: Int!, $first: Int!, $numHats: Int!, $numWearers: Int!) {
       trees(skip: $skip, first: $first) {
         ${queryFields}
       }
     }
   `;
 
-    const firstHatsVariable = firstHats ?? 1000;
     const respone = await this._makeGqlRequest<{ trees: Tree[] }>(
       chainId,
       query,
       {
         skip: page * perPage,
         first: perPage,
-        firstHats: firstHatsVariable,
+        numHats: numHatsPerTree ?? 1000,
+        numWearers: 1000,
       }
     );
 
