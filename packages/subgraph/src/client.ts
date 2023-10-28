@@ -13,7 +13,11 @@ import {
   SubgraphWearerNotExistError,
   InputValidationError,
 } from "./errors";
-import { hatConfigSchema, treeConfigSchema } from "./schemas";
+import {
+  hatConfigSchema,
+  treeConfigSchema,
+  wearerConfigSchema,
+} from "./schemas";
 import type {
   Hat,
   Tree,
@@ -273,13 +277,18 @@ export class HatsSubgraphClient {
     wearerAddress: `0x${string}`;
     props: WearerConfig;
   }): Promise<Wearer> {
+    const validationRes = wearerConfigSchema.safeParse(props);
+    if (validationRes.success === false) {
+      throw new InputValidationError(validationRes.error.message);
+    }
+
     const wearerAddressLowerCase = wearerAddress.toLowerCase();
 
     const normalizedProps = normalizeProps(props);
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-      query getCurrentHatsForWearer($id: ID!) {
+      query getCurrentHatsForWearer($id: ID!, $numHats: Int!, $numWearers: Int!) {
         wearer(id: $id) {
             ${queryFields}
         }
@@ -291,7 +300,8 @@ export class HatsSubgraphClient {
       query,
       {
         id: wearerAddressLowerCase,
-        firstHats: 1000,
+        numHats: 1000,
+        numWearers: 1000,
       }
     );
 
@@ -317,13 +327,18 @@ export class HatsSubgraphClient {
     page: number;
     perPage: number;
   }): Promise<Wearer[]> {
+    const validationRes = wearerConfigSchema.safeParse(props);
+    if (validationRes.success === false) {
+      throw new InputValidationError(validationRes.error.message);
+    }
+
     const hatIdHex = hatIdDecimalToHex(hatId);
 
     const normalizedProps = normalizeProps(props);
     const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
-      query getPaginatedWearersForHat($hatId: ID!, $first: Int!, $skip: Int!, $firstHats: Int!) {
+      query getPaginatedWearersForHat($hatId: ID!, $first: Int!, $skip: Int!, $numHats: Int!, $numWearers: Int!) {
         wearers(
           skip: $skip
           first: $first
@@ -341,7 +356,8 @@ export class HatsSubgraphClient {
         hatId: hatIdHex,
         skip: page * perPage,
         first: perPage,
-        firstHats: 1000,
+        numHats: 1000,
+        numWearers: 1000,
       }
     );
 

@@ -236,43 +236,88 @@ describe("Client Tests", () => {
     });
   });
 
-  /*
-  test("Test getWearer", async () => {
-    const res = await client.getWearer({
-      chainId: 10,
-      props: {
-        currentHats: {
-          prettyId: true,
-        },
-        mintEvent: {
-          hat: {
+  describe("getWearer Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.getWearer({
+        chainId: 10,
+        props: {
+          currentHats: {
             prettyId: true,
           },
+          mintEvent: {
+            hat: {
+              prettyId: true,
+            },
+          },
         },
-      },
-      wearerAddress: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c",
+        wearerAddress: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c",
+      });
+
+      const query = gql`
+        query getCurrentHatsForWearer($id: ID!) {
+          wearer(id: $id) {
+            id
+            currentHats {
+              id
+              prettyId
+            }
+            mintEvent {
+              id
+              hat {
+                id
+                prettyId
+              }
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        id: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c".toLowerCase(),
+      })) as { wearer: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.wearer));
     });
-
-    console.log(JSON.stringify(res, null, 2));
-
-    expect(1).toBe(1);
   });
-  */
-  /*
-  test("Test getWearersOfHatPaginated", async () => {
-    const res = await client.getWearersOfHatPaginated({
-      chainId: 10,
-      props: {},
-      hatId: BigInt(
-        "0x0000000100020001000100000000000000000000000000000000000000000000"
-      ),
-      page: 0,
-      perPage: 2,
+
+  describe("getWearersOfHatPaginated Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.getWearersOfHatPaginated({
+        chainId: 10,
+        props: {},
+        hatId: BigInt(
+          "0x0000000100020001000100000000000000000000000000000000000000000000"
+        ),
+        page: 0,
+        perPage: 2,
+      });
+
+      const query = gql`
+        query getPaginatedWearersForHat(
+          $hatId: ID!
+          $first: Int!
+          $skip: Int!
+        ) {
+          wearers(
+            skip: $skip
+            first: $first
+            where: { currentHats_: { id: $hatId } }
+          ) {
+            id
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        hatId:
+          "0x0000000100020001000100000000000000000000000000000000000000000000",
+        first: 2,
+        skip: 0,
+      })) as { wearers: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.wearers));
     });
-
-    console.log(JSON.stringify(res, null, 2));
-
-    expect(1).toBe(1);
   });
-  */
 });
