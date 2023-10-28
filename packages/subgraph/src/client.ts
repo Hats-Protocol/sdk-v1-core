@@ -369,4 +369,74 @@ export class HatsSubgraphClient {
 
     return respone.wearers;
   }
+
+  async searchTreesHatsWearers({
+    chainId,
+    search,
+    treeProps,
+    hatProps,
+    wearerProps,
+  }: {
+    chainId: number;
+    search: string;
+    treeProps: TreeConfig;
+    hatProps: HatConfig;
+    wearerProps: WearerConfig;
+  }): Promise<{ trees: Tree[]; hats: Hat[]; wearers: Wearer[] }> {
+    const treeValidationRes = treeConfigSchema.safeParse(treeProps);
+    if (treeValidationRes.success === false) {
+      throw new InputValidationError(treeValidationRes.error.message);
+    }
+
+    const hatValidationRes = hatConfigSchema.safeParse(hatProps);
+    if (hatValidationRes.success === false) {
+      throw new InputValidationError(hatValidationRes.error.message);
+    }
+
+    const wearerValidationRes = wearerConfigSchema.safeParse(wearerProps);
+    if (wearerValidationRes.success === false) {
+      throw new InputValidationError(wearerValidationRes.error.message);
+    }
+
+    const treeNormalizedProps = normalizeProps(treeProps);
+    const treeQueryFields = normalizedPropsToQueryFields(treeNormalizedProps);
+
+    const hatNormalizedProps = normalizeProps(hatProps);
+    const hatQueryFields = normalizedPropsToQueryFields(hatNormalizedProps);
+
+    const wearerNormalizedProps = normalizeProps(wearerProps);
+    const wearerQueryFields = normalizedPropsToQueryFields(
+      wearerNormalizedProps
+    );
+
+    const query = gql`
+      query search($search: String!) {
+        trees(where: { id: $search }) {
+          ${treeQueryFields}
+        }
+        hats(where: { or: [{ id: $search }, { prettyId: $search }] }) {
+          ${hatQueryFields}
+        }
+        wearers(where: { id: $search }) {
+          ${wearerQueryFields}
+        }
+      }
+    `;
+
+    const respone = await this._makeGqlRequest<{
+      trees: Tree[];
+      hats: Hat[];
+      wearers: Wearer[];
+    }>(chainId, query, {
+      search,
+      numHats: 1000,
+      numWearers: 1000,
+    });
+
+    if (!respone.wearers || !respone.trees || !respone.hats) {
+      throw new Error("Unexpected error");
+    }
+
+    return respone;
+  }
 }

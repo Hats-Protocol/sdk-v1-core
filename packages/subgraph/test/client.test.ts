@@ -320,4 +320,39 @@ describe("Client Tests", () => {
       expect(JSON.stringify(res)).toBe(JSON.stringify(ref.wearers));
     });
   });
+
+  describe("searchTreesHatsWearers Tests", () => {
+    test("Scenario 1", async () => {
+      const res = await client.searchTreesHatsWearers({
+        chainId: 10,
+        search:
+          "0x0000000100020001000100000000000000000000000000000000000000000000",
+        treeProps: {},
+        hatProps: {},
+        wearerProps: {},
+      });
+
+      const query = gql`
+        query search($search: String!) {
+          trees(where: { id: $search }) {
+            id
+          }
+          hats(where: { or: [{ id: $search }, { prettyId: $search }] }) {
+            id
+          }
+          wearers(where: { id: $search }) {
+            id
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        search:
+          "0x0000000100020001000100000000000000000000000000000000000000000000",
+      })) as { trees: any; hats: any; wearers: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref));
+    });
+  });
 });
