@@ -1,54 +1,10 @@
-import { getGraphqlClient } from "../subgraph/index";
-import { GraphQLClient, Variables } from "graphql-request";
-import type {
-  PublicClient,
-  WalletClient,
-  Account,
-  Address,
-  Hex,
-  TransactionReceipt,
-} from "viem";
 import { decodeEventLog, encodeEventTopics, encodeFunctionData } from "viem";
-import {
-  GET_WEARER_HATS,
-  GET_TREE_HATS,
-  GET_TREE_WEARERS_PER_HAT,
-  GET_WEARERS_OF_HAT,
-  GET_ALL_TREE,
-} from "../subgraph/queries";
+import { HatsSubgraphClient } from "@hatsprotocol/sdk-v1-subgraph";
+
 import { HATS_ABI } from "../abi/Hats";
-import type {
-  CreateHatResult,
-  MintTopHatResult,
-  BatchCreateHatsResult,
-  MintHatResult,
-  RenounceHatResult,
-  ChangeHatDetailsResult,
-  ChangeHatEligibilityResult,
-  ChangeHatToggleResult,
-  ChangeHatImageURIResult,
-  ChangeHatMaxSupplyResult,
-  MakeHatImmutableResult,
-  BatchMintHatsResult,
-  SetHatStatusResult,
-  TransferHatResult,
-  SetHatWearerStatusResult,
-  CheckHatStatusResult,
-  CheckHatWearerStatusResult,
-  RequestLinkTopHatToTreeResult,
-  ApproveLinkTopHatToTreeResult,
-  UnlinkTopHatFromTreeResult,
-  RelinkTopHatWithinTreeResult,
-  MultiCallResult,
-  SubgraphGetAllTreeResult,
-} from "../types";
 import {
   ChainIdMismatchError,
   MissingPublicClientError,
-  SubgraphTreeNotExistError,
-  SubgraphNotUpportedError,
-  SubgraphWearerNotExistError,
-  SubgraphHatNotExistError,
   MissingWalletClientError,
   TransactionRevertedError,
   ZeroToggleError,
@@ -81,17 +37,45 @@ import {
   MAX_LEVELS,
   ZERO_ADDRESS,
 } from "../constants";
-import {
-  treeIdDecimalToHex,
-  hatIdDecimalToHex,
-  hatIdHexToDecimal,
-} from "./utils";
+import { treeIdDecimalToHex, hatIdHexToDecimal } from "./utils";
+import type {
+  PublicClient,
+  WalletClient,
+  Account,
+  Address,
+  Hex,
+  TransactionReceipt,
+} from "viem";
+import type {
+  CreateHatResult,
+  MintTopHatResult,
+  BatchCreateHatsResult,
+  MintHatResult,
+  RenounceHatResult,
+  ChangeHatDetailsResult,
+  ChangeHatEligibilityResult,
+  ChangeHatToggleResult,
+  ChangeHatImageURIResult,
+  ChangeHatMaxSupplyResult,
+  MakeHatImmutableResult,
+  BatchMintHatsResult,
+  SetHatStatusResult,
+  TransferHatResult,
+  SetHatWearerStatusResult,
+  CheckHatStatusResult,
+  CheckHatWearerStatusResult,
+  RequestLinkTopHatToTreeResult,
+  ApproveLinkTopHatToTreeResult,
+  UnlinkTopHatFromTreeResult,
+  RelinkTopHatWithinTreeResult,
+  MultiCallResult,
+} from "../types";
 
 export class HatsClient {
   readonly chainId: number;
   private readonly _publicClient: PublicClient;
   private readonly _walletClient: WalletClient | undefined;
-  private readonly _graphqlClient: GraphQLClient | undefined;
+  private readonly _graphqlClient: HatsSubgraphClient | undefined;
 
   /**
    * Initialize a HatsClient.
@@ -133,226 +117,9 @@ export class HatsClient {
     }
 
     this.chainId = chainId;
-    this._graphqlClient = getGraphqlClient(chainId);
+    this._graphqlClient = new HatsSubgraphClient();
     this._publicClient = publicClient;
     this._walletClient = walletClient;
-  }
-
-  protected async _makeGqlRequest<ResponseType>(
-    query: string,
-    variables?: Variables
-  ): Promise<ResponseType> {
-    if (this._graphqlClient === undefined) {
-      throw new SubgraphNotUpportedError(
-        `No subgraph support for network id ${this.chainId}`
-      );
-    }
-
-    const result = (await this._graphqlClient.request(
-      query,
-      variables
-    )) as ResponseType;
-
-    return result;
-  }
-
-  /*//////////////////////////////////////////////////////////////
-                      Subgraph Read Functions
-    //////////////////////////////////////////////////////////////*/
-
-  /**
-   * Get all the hats of a tree.
-   *
-   * @param treeId - The tree domain. The tree domain is the first four bytes of the tophat ID.
-   * @returns An array of hat IDs.
-   *
-   * @throws SubgraphNotUpportedError
-   * Throws if there is no subgraph support for the client's chain ID network.
-   *
-   * @throws SubgraphTreeNotExistError
-   * Throws if there is no tree matching the provided tree ID.
-   */
-  async gqlGetHatsOfTree(treeId: number): Promise<bigint[]> {
-    const treeIdHex = treeIdDecimalToHex(treeId);
-
-    const respone = await this._makeGqlRequest<{
-      tree: { hats: { id: string }[] };
-    }>(GET_TREE_HATS, {
-      id: treeIdHex,
-    });
-
-    if (!respone.tree) {
-      throw new SubgraphTreeNotExistError(
-        "Tree does not exist on the subgraph"
-      );
-    }
-
-    return respone.tree.hats.map((hatObj) => BigInt(hatObj.id));
-  }
-
-  /**
-   * Get all the hats of a wearer.
-   *
-   * @param wearer - The wearer's address.
-   * @returns An array of hat IDs.
-   *
-   * @throws SubgraphNotUpportedError
-   * Throws if there is no subgraph support for the client's chain ID network.
-   *
-   * @throws SubgraphWearerNotExistError
-   * Throws if there is no wearer matching the one provided.
-   */
-  async gqlGetHatsOfWearer(wearer: Address): Promise<bigint[]> {
-    const respone = await this._makeGqlRequest<{
-      wearer: { currentHats: { id: string }[] };
-    }>(GET_WEARER_HATS, {
-      id: wearer.toLowerCase(),
-    });
-
-    if (!respone.wearer) {
-      throw new SubgraphWearerNotExistError(
-        "Wearer does not exist on the subgraph"
-      );
-    }
-
-    return respone.wearer.currentHats.map((hatObj) => BigInt(hatObj.id));
-  }
-
-  /**
-   * Get a mapping of wearers per hat for the whole tree.
-   *
-   * @param treeId - The tree domain. The tree domain is the first four bytes of the tophat ID.
-   * @returns A mapping of hat ID to an array of wearers for this hat.
-   *
-   * @throws SubgraphNotUpportedError
-   * Throws if there is no subgraph support for the client's chain ID network.
-   *
-   * @throws SubgraphTreeNotExistError
-   * Throws if there is no tree matching the provided tree ID.
-   */
-  async gqlGetWearersPerHatInTree(
-    treeId: number
-  ): Promise<{ hatId: bigint; hatWearers: string[] }[]> {
-    const treeIdHex = treeIdDecimalToHex(treeId);
-
-    const respone = await this._makeGqlRequest<{
-      tree: { hats: { id: string; wearers: { id: string }[] }[] };
-    }>(GET_TREE_WEARERS_PER_HAT, {
-      id: treeIdHex,
-    });
-
-    if (!respone.tree) {
-      throw new SubgraphTreeNotExistError(
-        "Tree does not exist on the subgraph"
-      );
-    }
-
-    const res = respone.tree.hats.map((hatObj) => {
-      const hatId = BigInt(hatObj.id);
-      const hatWearers = hatObj.wearers.map((wearerObj) => wearerObj.id);
-      return { hatId, hatWearers };
-    });
-
-    return res;
-  }
-
-  /**
-   * Get all wearers of a hat.
-   *
-   * @param hatId - The hat ID.
-   * @returns An array of wearers.
-   *
-   * @throws SubgraphNotUpportedError
-   * Throws if there is no subgraph support for the client's chain ID network.
-   *
-   * @throws SubgraphHatNotExistError
-   * Throws if there is no Hat matching the provided hat ID.
-   */
-  async gqlGetWearersOfHat(hatId: bigint): Promise<string[]> {
-    const hatIdHex = hatIdDecimalToHex(hatId);
-
-    const respone = await this._makeGqlRequest<{
-      hat: { wearers: { id: string }[] };
-    }>(GET_WEARERS_OF_HAT, {
-      id: hatIdHex,
-    });
-
-    if (!respone.hat) {
-      throw new SubgraphHatNotExistError("Hat does not exist on the subgraph");
-    }
-
-    if (respone.hat.wearers.length > 0) {
-      return respone.hat.wearers.map((wearerObj) => wearerObj.id);
-    }
-
-    return [];
-  }
-
-  /**
-   * Get all hats of a particular branch of the tree.
-   *
-   * @param rootHatId - The Hat id of the branch root.
-   * @returns An array of the branch hat IDs, including the root hat.
-   *
-   * @throws SubgraphNotUpportedError
-   * Throws if there is no subgraph support for the client's chain ID network.
-   *
-   * * @throws SubgraphTreeNotExistError
-   * Throws if there is no Tree for the provided root hat ID.
-   */
-  async gqlGetHatsInBranch(rootHatId: bigint): Promise<bigint[]> {
-    const topHatDomain = await this.getTopHatDomain(rootHatId);
-    const treeHats = await this.gqlGetHatsOfTree(topHatDomain);
-    const rootHatLevel = await this.getLocalHatLevel(rootHatId);
-
-    const contractDetails = {
-      address: HATS_V1 as Address,
-      abi: HATS_ABI,
-    };
-
-    const calls = treeHats.map((hat) => {
-      return {
-        ...contractDetails,
-        functionName: "getAdminAtLocalLevel",
-        args: [hat, rootHatLevel],
-      };
-    });
-
-    const allHatsAdmins = await this._publicClient.multicall({
-      contracts: calls,
-    });
-
-    const branchHats = [rootHatId];
-    allHatsAdmins.forEach((resObj, idx) => {
-      if (
-        resObj.result !== undefined &&
-        resObj.result === rootHatId &&
-        treeHats[idx] !== rootHatId
-      ) {
-        branchHats.push(treeHats[idx]);
-      }
-    });
-
-    return branchHats;
-  }
-
-  async gqlGetAllTree(treeId: number): Promise<SubgraphGetAllTreeResult> {
-    const treeIdHex = treeIdDecimalToHex(treeId);
-
-    const respone = await this._makeGqlRequest<SubgraphGetAllTreeResult>(
-      GET_ALL_TREE,
-      {
-        id: treeIdHex,
-      }
-    );
-
-    if (!respone.tree) {
-      throw new SubgraphTreeNotExistError(
-        "Tree does not exist on the subgraph"
-      );
-    }
-
-    return respone;
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -3119,36 +2886,62 @@ export class HatsClient {
       callData: Hex;
     }[]
   > {
+    if (this._graphqlClient === undefined) {
+      throw new Error("Subgraph client was not initialized");
+    }
+
     const res: {
       functionName: string;
       callData: Hex;
     }[] = [];
-    const { tree } = await this.gqlGetAllTree(sourceTree);
+    const tree = await this._graphqlClient.getTree({
+      chainId: this.chainId,
+      treeId: sourceTree,
+      props: {
+        hats: {
+          details: true,
+          maxSupply: true,
+          imageUri: true,
+          currentSupply: true,
+          levelAtLocalTree: true,
+          eligibility: true,
+          toggle: true,
+          mutable: true,
+          createdAt: true,
+          wearers: {},
+          admin: {},
+        },
+        childOfTree: {},
+        linkedToHat: {},
+        parentOfTrees: {},
+      },
+    });
+
     const targetTreeHex = treeIdDecimalToHex(targetTree);
 
-    tree.hats.forEach((hat, index) => {
+    tree.hats?.forEach((hat, index) => {
       if (index !== 0 && hat.createdAt !== null) {
         const adminID = hatIdHexToDecimal(
-          targetTreeHex + hat.admin.id.substring(10)
+          targetTreeHex + hat.admin?.id.substring(10)
         );
         const createHatCall = this.createHatCallData({
           admin: adminID,
-          details: hat.details,
-          maxSupply: hat.maxSupply,
-          eligibility: hat.eligibility,
-          toggle: hat.toggle,
-          mutable: hat.mutable,
-          imageURI: hat.imageUri,
+          details: hat.details as string,
+          maxSupply: +(hat.maxSupply as string),
+          eligibility: hat.eligibility as `0x${string}`,
+          toggle: hat.toggle as `0x${string}`,
+          mutable: hat.mutable as boolean,
+          imageURI: hat.imageUri as string,
         });
         res.push({
           functionName: "createHat",
           callData: createHatCall.callData,
         });
 
-        hat.wearers.forEach((wearer) => {
+        hat.wearers?.forEach((wearer) => {
           const mintHatCall = this.mintHatCallData({
             hatId: hatIdHexToDecimal(targetTreeHex + hat.id.substring(10)),
-            wearer: wearer.id,
+            wearer: wearer.id as `0x${string}`,
           });
           res.push({ functionName: "mintHat", callData: mintHatCall.callData });
         });

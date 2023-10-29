@@ -48,6 +48,7 @@ export interface HatConfig {
 }
 
 export interface Wearer {
+  id: string;
   currentHats?: Hat[];
   mintEvent?: HatMintedEvent[];
   burnEvent?: HatBurnedEvent[];
