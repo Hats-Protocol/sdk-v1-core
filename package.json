@@ -1,34 +1,5 @@
 {
-  "name": "@hatsprotocol/sdk-v1-core",
-  "version": "0.6.0",
-  "license": "MIT",
-  "author": "Hats-Protocol",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Hats-Protocol/sdk-v1-core"
-  },
-  "main": "dist/hats.cjs.js",
-  "module": "dist/hats.esm.js",
-  "typings": "dist/index.d.ts",
-  "keywords": [
-    "hats-protocol",
-    "hats",
-    "ethereum",
-    "eth"
-  ],
-  "scripts": {
-    "test": "jest -i",
-    "build": "rollup -c",
-    "eslint": "eslint . --ext '.ts,.tsx'",
-    "eslint:fix": "eslint . --ext '.ts,.tsx' --fix",
-    "prettier": "prettier --check --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}'",
-    "prettier:fix": "prettier --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}' --write"
-  },
-  "dependencies": {
-    "graphql": "^16.6.0",
-    "graphql-request": "^6.1.0",
-    "viem": "1.9.5"
-  },
+  "private": true,
   "devDependencies": {
     "@rollup/plugin-json": "^6.0.0",
     "@types/jest": "^29.5.2",
@@ -45,8 +16,5 @@
     "ts-jest": "^29.1.0",
     "tslib": "^2.6.0",
     "typescript": "^5.1.3"
-  },
-  "peerDependencies": {
-    "viem": "1.9.5"
   }
 }
