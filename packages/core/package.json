@@ -27,7 +27,8 @@
   "dependencies": {
     "graphql": "^16.6.0",
     "graphql-request": "^6.1.0",
-    "viem": "1.9.5"
+    "viem": "1.9.5",
+    "@hatsprotocol/sdk-v1-subgraph": "workspace:*"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.0.0",

@@ -21,6 +21,7 @@ export const hatConfigSchema: z.ZodType<HatConfig> = z
     toggle: z.boolean().optional(),
     mutable: z.boolean().optional(),
     imageUri: z.boolean().optional(),
+    levelAtLocalTree: z.boolean().optional(),
     currentSupply: z.boolean().optional(),
     tree: z.lazy(() => treeConfigSchema).optional(),
     wearers: z.lazy(() => wearerConfigSchema).optional(),
