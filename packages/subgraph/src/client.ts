@@ -339,17 +339,15 @@ export class HatsSubgraphClient {
 
     const query = gql`
       query getPaginatedWearersForHat($hatId: ID!, $first: Int!, $skip: Int!, $numHats: Int!, $numWearers: Int!) {
-        wearers(
-          skip: $skip
-          first: $first
-          where: { currentHats_: { id: $hatId } }
-        ) {
-          ${queryFields}
+        hat(id: $hatId) {
+            wearers(skip: $skip, first: $first) {
+                ${queryFields}
+            }
         }
       }
     `;
 
-    const respone = await this._makeGqlRequest<{ wearers: Wearer[] }>(
+    const respone = await this._makeGqlRequest<{ hat: { wearers: Wearer[] } }>(
       chainId,
       query,
       {
@@ -361,13 +359,13 @@ export class HatsSubgraphClient {
       }
     );
 
-    if (!respone.wearers) {
+    if (!respone.hat) {
       throw new SubgraphHatNotExistError(
         `Hat with an ID of ${hatId} does not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
-    return respone.wearers;
+    return respone.hat.wearers;
   }
 
   async searchTreesHatsWearers({
@@ -428,7 +426,7 @@ export class HatsSubgraphClient {
       hats: Hat[];
       wearers: Wearer[];
     }>(chainId, query, {
-      search,
+      search: search.toLowerCase(),
       numHats: 1000,
       numWearers: 1000,
     });
