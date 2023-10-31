@@ -1,5 +1,40 @@
 import { HatsSubgraphClient } from "./client";
-import type { Hat } from "./types";
+import { getGraphqlClient } from "./endpoints";
+import type {
+  Hat,
+  Tree,
+  Wearer,
+  HatEvent,
+  TreeEvent,
+  HatMintedEvent,
+  HatBurnedEvent,
+  ClaimsHatter,
+  HatConfig,
+  TreeConfig,
+  WearerConfig,
+  HatEventConfig,
+  TreeEventConfig,
+  HatMintedEventConfig,
+  HatBurnedEventConfig,
+  ClaimsHatterConfig,
+} from "./types";
 
-export { HatsSubgraphClient };
-export type { Hat };
+export { HatsSubgraphClient, getGraphqlClient };
+export type {
+  Hat,
+  Tree,
+  Wearer,
+  HatEvent,
+  TreeEvent,
+  HatMintedEvent,
+  HatBurnedEvent,
+  ClaimsHatter,
+  HatConfig,
+  TreeConfig,
+  WearerConfig,
+  HatEventConfig,
+  TreeEventConfig,
+  HatMintedEventConfig,
+  HatBurnedEventConfig,
+  ClaimsHatterConfig,
+};
