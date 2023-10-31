@@ -59,32 +59,15 @@ export function normalizeProps(props: any): any {
 export function normalizedPropsToQueryFields(props: any): any {
   let fields = "";
 
-  // first iteration without opening comma
-  const elem = props[0];
-  if (typeof elem === "string") {
-    fields = fields + `${elem}`;
-  }
-
-  if (typeof elem === "object") {
-    const elemKey = Object.keys(elem)[0];
-    if (elemKey === "hats") {
-      fields =
-        fields +
-        `${elemKey} (first: $firstHats) { ${normalizedPropsToQueryFields(
-          elem[elemKey]
-        )} }`;
-    } else {
-      fields =
-        fields +
-        `${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
-    }
-  }
-
   // loop over the rest
-  for (let i = 1; i < props.length; i++) {
+  for (let i = 0; i < props.length; i++) {
+    if (i > 0) {
+      fields += ", ";
+    }
+
     const elem = props[i];
     if (typeof elem === "string") {
-      fields = fields + `, ${elem}`;
+      fields = fields + `${elem}`;
     }
 
     if (typeof elem === "object") {
@@ -92,19 +75,19 @@ export function normalizedPropsToQueryFields(props: any): any {
       if (elemKey === "hats") {
         fields =
           fields +
-          `, ${elemKey} (first: $numHats) { ${normalizedPropsToQueryFields(
+          `${elemKey} (first: $numHats) { ${normalizedPropsToQueryFields(
             elem[elemKey]
           )} }`;
       } else if (elemKey === "wearers") {
         fields =
           fields +
-          `, ${elemKey} (first: $numWearers) { ${normalizedPropsToQueryFields(
+          `${elemKey} (first: $numWearers) { ${normalizedPropsToQueryFields(
             elem[elemKey]
           )} }`;
       } else {
         fields =
           fields +
-          `, ${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+          `${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
       }
     }
   }
