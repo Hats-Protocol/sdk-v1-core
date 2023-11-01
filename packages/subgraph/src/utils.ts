@@ -80,22 +80,42 @@ export function normalizedPropsToQueryFields(
 
       const first = getFirstFilter(currentObjType, filters, elemKey);
 
-      if (elemKey === "events") {
-        fields =
-          fields +
-          `${elemKey} (orderBy: timestamp, orderDirection: desc, first: ${first}) { ${normalizedPropsToQueryFields(
-            elem[elemKey],
-            nextObjType(currentObjType, elemKey),
-            filters
-          )} }`;
+      if (first !== undefined) {
+        if (elemKey === "events") {
+          fields =
+            fields +
+            `${elemKey} (orderBy: timestamp, orderDirection: desc, first: ${first}) { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        } else {
+          fields =
+            fields +
+            `${elemKey} (first: ${first}) { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        }
       } else {
-        fields =
-          fields +
-          `${elemKey} (first: ${first}) { ${normalizedPropsToQueryFields(
-            elem[elemKey],
-            nextObjType(currentObjType, elemKey),
-            filters
-          )} }`;
+        if (elemKey === "events") {
+          fields =
+            fields +
+            `${elemKey} (orderBy: timestamp, orderDirection: desc) { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        } else {
+          fields =
+            fields +
+            `${elemKey} { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        }
       }
     }
   }
@@ -183,12 +203,12 @@ function getFirstFilter(
   currentObjType: GqlObjType,
   filters: Filters | undefined,
   key: string
-): number {
-  let first = 1000;
+): number | undefined {
+  let first: number | undefined = undefined;
   if (filters !== undefined && filters.first !== undefined) {
     if (currentObjType === "Hat" && filters.first.hat !== undefined) {
       switch (key) {
-        case "wearer": {
+        case "wearers": {
           first = filters.first.hat.wearers ?? first;
           break;
         }

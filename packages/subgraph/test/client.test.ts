@@ -82,7 +82,7 @@ describe("Client Tests", () => {
             id
             prettyId
             eligibility
-            wearers(first: 1000) {
+            wearers {
               id
             }
             admin {
@@ -156,7 +156,7 @@ describe("Client Tests", () => {
             tree {
               id
             }
-            wearers(first: 1000) {
+            wearers {
               id
             }
             admin {
@@ -180,7 +180,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
             }
           }
@@ -332,7 +332,7 @@ describe("Client Tests", () => {
             currentSupply
             tree {
               id
-              hats(first: 1000) {
+              hats {
                 id
               }
               childOfTree {
@@ -353,19 +353,19 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            wearers(first: 1000) {
+            wearers {
               id
-              currentHats(first: 1000) {
+              currentHats {
                 id
               }
-              mintEvent(first: 1000) {
+              mintEvent {
                 id
               }
-              burnEvent(first: 1000) {
+              burnEvent {
                 id
               }
             }
@@ -385,7 +385,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -409,7 +409,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -418,10 +418,10 @@ describe("Client Tests", () => {
               currentHats {
                 id
               }
-              mintEvent(first: 1000) {
+              mintEvent {
                 id
               }
-              burnEvent(first: 1000) {
+              burnEvent {
                 id
               }
             }
@@ -466,7 +466,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -486,7 +486,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -510,7 +510,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -537,15 +537,112 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
               blockNumber
               timestamp
               transactionID
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        id: "0x0000000100020001000100000000000000000000000000000000000000000000",
+      })) as { hat: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hat));
+    }, 30000);
+
+    test("Scenario 4", async () => {
+      const res = await client.getHat({
+        chainId: 10,
+        hatId: BigInt(
+          "0x0000000100020001000100000000000000000000000000000000000000000000"
+        ),
+        props: {
+          prettyId: true,
+          status: true,
+          createdAt: true,
+          details: true,
+          maxSupply: true,
+          eligibility: true,
+          toggle: true,
+          mutable: true,
+          imageUri: true,
+          levelAtLocalTree: true,
+          currentSupply: true,
+          tree: {},
+          wearers: {},
+          admin: {},
+          badStandings: {},
+          claimableBy: {},
+          claimableForBy: {},
+          linkRequestFromTree: {},
+          subHats: {},
+          linkedTrees: {},
+          events: {},
+        },
+        filters: {
+          first: {
+            hat: {
+              wearers: 1,
+              subHats: 1,
+              events: 1,
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query getHat($id: ID!) {
+          hat(id: $id) {
+            id
+            prettyId
+            status
+            createdAt
+            details
+            maxSupply
+            eligibility
+            toggle
+            mutable
+            imageUri
+            levelAtLocalTree
+            currentSupply
+            tree {
+              id
+            }
+            wearers(first: 1) {
+              id
+            }
+            admin {
+              id
+            }
+            badStandings {
+              id
+            }
+            claimableBy {
+              id
+            }
+            claimableForBy {
+              id
+            }
+            linkRequestFromTree {
+              id
+            }
+            subHats(first: 1) {
+              id
+            }
+            linkedTrees {
+              id
+            }
+            events(orderBy: timestamp, orderDirection: desc, first: 1) {
+              id
             }
           }
         }
@@ -724,7 +821,7 @@ describe("Client Tests", () => {
             tree {
               id
             }
-            wearers(first: 1000) {
+            wearers {
               id
             }
             admin {
@@ -748,7 +845,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
             }
           }
@@ -929,19 +1026,19 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            wearers(first: 1000) {
+            wearers {
               id
               currentHats {
                 id
               }
-              mintEvent(first: 1000) {
+              mintEvent {
                 id
               }
-              burnEvent(first: 1000) {
+              burnEvent {
                 id
               }
             }
@@ -961,7 +1058,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -985,7 +1082,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -994,10 +1091,10 @@ describe("Client Tests", () => {
               currentHats {
                 id
               }
-              mintEvent(first: 1000) {
+              mintEvent {
                 id
               }
-              burnEvent(first: 1000) {
+              burnEvent {
                 id
               }
             }
@@ -1042,7 +1139,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -1062,7 +1159,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -1086,7 +1183,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -1113,11 +1210,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
               blockNumber
               timestamp
@@ -1238,7 +1335,7 @@ describe("Client Tests", () => {
         query getTree($id: ID!) {
           tree(id: $id) {
             id
-            hats(first: 1000) {
+            hats {
               id
               prettyId
               admin {
@@ -1299,7 +1396,7 @@ describe("Client Tests", () => {
             parentOfTrees {
               id
             }
-            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
             }
           }
@@ -1412,7 +1509,7 @@ describe("Client Tests", () => {
         query getPaginatedTrees($skip: Int!, $first: Int!) {
           trees(skip: $skip, first: $first) {
             id
-            hats(first: 1000) {
+            hats {
               id
               prettyId
               admin {
@@ -1452,7 +1549,7 @@ describe("Client Tests", () => {
         query getPaginatedTrees($skip: Int!, $first: Int!) {
           trees(skip: $skip, first: $first) {
             id
-            hats(first: 1000) {
+            hats {
               id
               prettyId
               admin {
@@ -1558,11 +1655,11 @@ describe("Client Tests", () => {
         query getCurrentHatsForWearer($id: ID!) {
           wearer(id: $id) {
             id
-            currentHats(first: 1000) {
+            currentHats {
               id
-              wearers(first: 1000) {
+              wearers {
                 id
-                currentHats(first: 1000) {
+                currentHats {
                   id
                 }
               }
