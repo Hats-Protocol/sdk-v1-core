@@ -180,7 +180,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events(first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
               id
             }
           }
@@ -353,7 +353,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -409,7 +409,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -466,7 +466,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -510,7 +510,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -537,11 +537,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
-            events(first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
               id
               blockNumber
               timestamp
@@ -748,7 +748,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events(first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
               id
             }
           }
@@ -929,7 +929,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -985,7 +985,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -1042,7 +1042,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -1086,7 +1086,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
@@ -1113,11 +1113,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events(first: 1000) {
+              events(orderBy: timestamp, orderDirection: desc, first: 1000) {
                 id
               }
             }
-            events(first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
               id
               blockNumber
               timestamp
@@ -1299,7 +1299,7 @@ describe("Client Tests", () => {
             parentOfTrees {
               id
             }
-            events(first: 1000) {
+            events(orderBy: timestamp, orderDirection: desc, first: 1000) {
               id
             }
           }

@@ -80,13 +80,23 @@ export function normalizedPropsToQueryFields(
 
       const first = getFirstFilter(currentObjType, filters, elemKey);
 
-      fields =
-        fields +
-        `${elemKey} (first: ${first}) { ${normalizedPropsToQueryFields(
-          elem[elemKey],
-          nextObjType(currentObjType, elemKey),
-          filters
-        )} }`;
+      if (elemKey === "events") {
+        fields =
+          fields +
+          `${elemKey} (orderBy: timestamp, orderDirection: desc, first: ${first}) { ${normalizedPropsToQueryFields(
+            elem[elemKey],
+            nextObjType(currentObjType, elemKey),
+            filters
+          )} }`;
+      } else {
+        fields =
+          fields +
+          `${elemKey} (first: ${first}) { ${normalizedPropsToQueryFields(
+            elem[elemKey],
+            nextObjType(currentObjType, elemKey),
+            filters
+          )} }`;
+      }
     }
   }
 
