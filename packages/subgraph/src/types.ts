@@ -20,7 +20,7 @@ export interface Hat {
   linkedTrees?: Tree[];
   claimableBy?: ClaimsHatter[];
   claimableForBy?: ClaimsHatter[];
-  events?: HatEvent[];
+  events?: HatsEvent[];
 }
 
 export interface HatConfig {
@@ -44,20 +44,20 @@ export interface HatConfig {
   linkedTrees?: TreeConfig;
   claimableBy?: ClaimsHatterConfig;
   claimableForBy?: ClaimsHatterConfig;
-  events?: HatEventConfig;
+  events?: HatsEventConfig;
 }
 
 export interface Wearer {
   id: string;
   currentHats?: Hat[];
-  mintEvent?: HatMintedEvent[];
-  burnEvent?: HatBurnedEvent[];
+  mintEvent?: HatsEvent[];
+  burnEvent?: HatsEvent[];
 }
 
 export interface WearerConfig {
   currentHats?: HatConfig;
-  mintEvent?: HatMintedEventConfig;
-  burnEvent?: HatBurnedEventConfig;
+  mintEvent?: HatsEventConfig;
+  burnEvent?: HatsEventConfig;
 }
 
 export interface Tree {
@@ -69,7 +69,7 @@ export interface Tree {
   linkRequestFromTree?: Tree[];
   requestedLinkToTree?: Tree;
   requestedLinkToHat?: Hat;
-  events?: TreeEvent[];
+  events?: HatsEvent[];
 }
 
 export interface TreeConfig {
@@ -80,44 +80,24 @@ export interface TreeConfig {
   linkRequestFromTree?: TreeConfig;
   requestedLinkToTree?: TreeConfig;
   requestedLinkToHat?: HatConfig;
-  events?: TreeEventConfig;
+  events?: HatsEventConfig;
 }
 
-export interface HatEvent {
+export interface HatsEvent {
   id: string;
   timestamp?: bigint;
   blockNumber?: number;
   transactionID?: string;
+  hat?: Hat;
+  tree?: Tree;
 }
 
-export interface HatEventConfig {
+export interface HatsEventConfig {
   timestamp?: boolean;
   blockNumber?: boolean;
   transactionID?: boolean;
-}
-
-export interface TreeEvent extends HatEvent {
-  hat?: Hat;
-}
-
-export interface TreeEventConfig extends HatEventConfig {
   hat?: HatConfig;
-}
-
-export interface HatMintedEvent extends HatEvent {
-  hat?: Hat;
-}
-
-export interface HatMintedEventConfig extends HatEventConfig {
-  hat?: HatConfig;
-}
-
-export interface HatBurnedEvent extends HatEvent {
-  hat?: Hat;
-}
-
-export interface HatBurnedEventConfig extends HatEventConfig {
-  hat?: HatConfig;
+  tree?: TreeConfig;
 }
 
 export interface ClaimsHatter {
@@ -130,3 +110,40 @@ export interface ClaimsHatterConfig {
   claimableHats?: HatConfig;
   claimableForHats?: HatConfig;
 }
+
+export interface Filters {
+  first?: {
+    hat?: {
+      wearers?: number;
+      badStandings?: number;
+      subHats?: number;
+      linkRequestFromTree?: number;
+      linkedTrees?: number;
+      claimableBy?: number;
+      claimableForBy?: number;
+      events?: number;
+    };
+    wearer?: {
+      currentHats?: number;
+      mintEvent?: number;
+      burnEvent?: number;
+    };
+    tree?: {
+      hats?: number;
+      parentOfTrees?: number;
+      linkRequestFromTree?: number;
+      events?: number;
+    };
+    claimsHatter?: {
+      claimableHats?: number;
+      claimableForHats?: number;
+    };
+  };
+}
+
+export type GqlObjType =
+  | "Hat"
+  | "Tree"
+  | "Wearer"
+  | "HatsEvent"
+  | "ClaimsHatter";

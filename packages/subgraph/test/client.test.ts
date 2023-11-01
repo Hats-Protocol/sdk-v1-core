@@ -180,7 +180,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events {
+            events(first: 1000) {
               id
             }
           }
@@ -332,7 +332,7 @@ describe("Client Tests", () => {
             currentSupply
             tree {
               id
-              hats {
+              hats(first: 1000) {
                 id
               }
               childOfTree {
@@ -353,19 +353,19 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
             wearers(first: 1000) {
               id
-              currentHats {
+              currentHats(first: 1000) {
                 id
               }
-              mintEvent {
+              mintEvent(first: 1000) {
                 id
               }
-              burnEvent {
+              burnEvent(first: 1000) {
                 id
               }
             }
@@ -409,7 +409,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
@@ -418,10 +418,10 @@ describe("Client Tests", () => {
               currentHats {
                 id
               }
-              mintEvent {
+              mintEvent(first: 1000) {
                 id
               }
-              burnEvent {
+              burnEvent(first: 1000) {
                 id
               }
             }
@@ -466,7 +466,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
@@ -510,7 +510,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
@@ -537,11 +537,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
-            events {
+            events(first: 1000) {
               id
               blockNumber
               timestamp
@@ -748,7 +748,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events {
+            events(first: 1000) {
               id
             }
           }
@@ -929,7 +929,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
@@ -938,10 +938,10 @@ describe("Client Tests", () => {
               currentHats {
                 id
               }
-              mintEvent {
+              mintEvent(first: 1000) {
                 id
               }
-              burnEvent {
+              burnEvent(first: 1000) {
                 id
               }
             }
@@ -985,7 +985,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
@@ -994,10 +994,10 @@ describe("Client Tests", () => {
               currentHats {
                 id
               }
-              mintEvent {
+              mintEvent(first: 1000) {
                 id
               }
-              burnEvent {
+              burnEvent(first: 1000) {
                 id
               }
             }
@@ -1042,7 +1042,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
@@ -1086,7 +1086,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
@@ -1113,11 +1113,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(first: 1000) {
                 id
               }
             }
-            events {
+            events(first: 1000) {
               id
               blockNumber
               timestamp
@@ -1299,7 +1299,7 @@ describe("Client Tests", () => {
             parentOfTrees {
               id
             }
-            events {
+            events(first: 1000) {
               id
             }
           }
@@ -1389,53 +1389,11 @@ describe("Client Tests", () => {
           },
           page: 3,
           perPage: 10,
-          numHatsPerTree: 1,
         });
       }).rejects.toThrow(InputValidationError);
     });
 
     test("Scenario 1", async () => {
-      const res = await client.getTreesPaginated({
-        chainId: 10,
-        props: {
-          hats: {
-            prettyId: true,
-            admin: {
-              prettyId: true,
-            },
-          },
-        },
-        page: 3,
-        perPage: 10,
-        numHatsPerTree: 1,
-      });
-
-      const query = gql`
-        query getPaginatedTrees($skip: Int!, $first: Int!) {
-          trees(skip: $skip, first: $first) {
-            id
-            hats(first: 1) {
-              id
-              prettyId
-              admin {
-                id
-                prettyId
-              }
-            }
-          }
-        }
-      `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
-
-      const ref = (await gqlClient.request(query, {
-        skip: 30,
-        first: 10,
-      })) as { trees: any };
-
-      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.trees));
-    });
-
-    test("Scenario 2", async () => {
       const res = await client.getTreesPaginated({
         chainId: 10,
         props: {
@@ -1475,7 +1433,7 @@ describe("Client Tests", () => {
       expect(JSON.stringify(res)).toBe(JSON.stringify(ref.trees));
     });
 
-    test("Scenario 3", async () => {
+    test("Scenario 2", async () => {
       const res = await client.getTreesPaginated({
         chainId: 10,
         props: {

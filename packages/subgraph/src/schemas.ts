@@ -4,10 +4,7 @@ import type {
   TreeConfig,
   WearerConfig,
   ClaimsHatterConfig,
-  HatEventConfig,
-  TreeEventConfig,
-  HatMintedEventConfig,
-  HatBurnedEventConfig,
+  HatsEventConfig,
 } from "./types";
 
 export const hatConfigSchema: z.ZodType<HatConfig> = z
@@ -32,7 +29,7 @@ export const hatConfigSchema: z.ZodType<HatConfig> = z
     linkedTrees: z.lazy(() => treeConfigSchema).optional(),
     claimableBy: z.lazy(() => claimsHatterConfigSchema).optional(),
     claimableForBy: z.lazy(() => claimsHatterConfigSchema).optional(),
-    events: z.lazy(() => hatEventConfigSchema).optional(),
+    events: z.lazy(() => hatsEventConfigSchema).optional(),
   })
   .strict();
 
@@ -45,15 +42,15 @@ export const treeConfigSchema: z.ZodType<TreeConfig> = z
     linkRequestFromTree: z.lazy(() => treeConfigSchema).optional(),
     requestedLinkToTree: z.lazy(() => treeConfigSchema).optional(),
     requestedLinkToHat: z.lazy(() => hatConfigSchema).optional(),
-    events: z.lazy(() => treeEventConfigSchema).optional(),
+    events: z.lazy(() => hatsEventConfigSchema).optional(),
   })
   .strict();
 
 export const wearerConfigSchema: z.ZodType<WearerConfig> = z
   .object({
     currentHats: z.lazy(() => hatConfigSchema).optional(),
-    mintEvent: z.lazy(() => hatMintedEventConfigSchema).optional(),
-    burnEvent: z.lazy(() => hatBurnedEventConfigSchema).optional(),
+    mintEvent: z.lazy(() => hatsEventConfigSchema).optional(),
+    burnEvent: z.lazy(() => hatsEventConfigSchema).optional(),
   })
   .strict();
 
@@ -64,37 +61,12 @@ export const claimsHatterConfigSchema: z.ZodType<ClaimsHatterConfig> = z
   })
   .strict();
 
-export const hatEventConfigSchema: z.ZodType<HatEventConfig> = z
-  .object({
-    timestamp: z.boolean().optional(),
-    blockNumber: z.boolean().optional(),
-    transactionID: z.boolean().optional(),
-  })
-  .strict();
-
-export const treeEventConfigSchema: z.ZodType<TreeEventConfig> = z
+export const hatsEventConfigSchema: z.ZodType<HatsEventConfig> = z
   .object({
     timestamp: z.boolean().optional(),
     blockNumber: z.boolean().optional(),
     transactionID: z.boolean().optional(),
     hat: z.lazy(() => hatConfigSchema).optional(),
-  })
-  .strict();
-
-export const hatMintedEventConfigSchema: z.ZodType<HatMintedEventConfig> = z
-  .object({
-    timestamp: z.boolean().optional(),
-    blockNumber: z.boolean().optional(),
-    transactionID: z.boolean().optional(),
-    hat: z.lazy(() => hatConfigSchema).optional(),
-  })
-  .strict();
-
-export const hatBurnedEventConfigSchema: z.ZodType<HatBurnedEventConfig> = z
-  .object({
-    timestamp: z.boolean().optional(),
-    blockNumber: z.boolean().optional(),
-    transactionID: z.boolean().optional(),
-    hat: z.lazy(() => hatConfigSchema).optional(),
+    tree: z.lazy(() => treeConfigSchema).optional(),
   })
   .strict();
