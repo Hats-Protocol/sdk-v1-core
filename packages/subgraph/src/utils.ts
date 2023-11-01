@@ -1,3 +1,5 @@
+import type { Filters, GqlObjType } from "./types";
+
 export function hatIdDecimalToHex(hatId: bigint): string {
   return "0x" + BigInt(hatId).toString(16).padStart(64, "0");
 }
@@ -56,58 +58,242 @@ export function normalizeProps(props: any): any {
   return fields;
 }
 
-export function normalizedPropsToQueryFields(props: any): any {
+export function normalizedPropsToQueryFields(
+  props: any,
+  currentObjType: GqlObjType,
+  filters?: Filters
+): any {
   let fields = "";
 
-  // first iteration without opening comma
-  const elem = props[0];
-  if (typeof elem === "string") {
-    fields = fields + `${elem}`;
-  }
-
-  if (typeof elem === "object") {
-    const elemKey = Object.keys(elem)[0];
-    if (elemKey === "hats") {
-      fields =
-        fields +
-        `${elemKey} (first: $firstHats) { ${normalizedPropsToQueryFields(
-          elem[elemKey]
-        )} }`;
-    } else {
-      fields =
-        fields +
-        `${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+  for (let i = 0; i < props.length; i++) {
+    if (i > 0) {
+      fields += ", ";
     }
-  }
 
-  // loop over the rest
-  for (let i = 1; i < props.length; i++) {
     const elem = props[i];
     if (typeof elem === "string") {
-      fields = fields + `, ${elem}`;
+      fields = fields + `${elem}`;
     }
 
     if (typeof elem === "object") {
       const elemKey = Object.keys(elem)[0];
-      if (elemKey === "hats") {
-        fields =
-          fields +
-          `, ${elemKey} (first: $numHats) { ${normalizedPropsToQueryFields(
-            elem[elemKey]
-          )} }`;
-      } else if (elemKey === "wearers") {
-        fields =
-          fields +
-          `, ${elemKey} (first: $numWearers) { ${normalizedPropsToQueryFields(
-            elem[elemKey]
-          )} }`;
+
+      const first = getFirstFilter(currentObjType, filters, elemKey);
+
+      if (first !== undefined) {
+        if (elemKey === "events") {
+          fields =
+            fields +
+            `${elemKey} (orderBy: timestamp, orderDirection: desc, first: ${first}) { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        } else {
+          fields =
+            fields +
+            `${elemKey} (first: ${first}) { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        }
       } else {
-        fields =
-          fields +
-          `, ${elemKey} { ${normalizedPropsToQueryFields(elem[elemKey])} }`;
+        if (elemKey === "events") {
+          fields =
+            fields +
+            `${elemKey} (orderBy: timestamp, orderDirection: desc) { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        } else {
+          fields =
+            fields +
+            `${elemKey} { ${normalizedPropsToQueryFields(
+              elem[elemKey],
+              nextObjType(currentObjType, elemKey),
+              filters
+            )} }`;
+        }
       }
     }
   }
 
   return fields;
+}
+
+function nextObjType(currentObjType: GqlObjType, key: string): GqlObjType {
+  if (currentObjType === "Hat") {
+    if (key === "tree") {
+      return "Tree";
+    } else if (key === "wearers") {
+      return "Wearer";
+    } else if (key === "badStandings") {
+      return "Wearer";
+    } else if (key === "admin") {
+      return "Hat";
+    } else if (key === "subHats") {
+      return "Hat";
+    } else if (key === "linkRequestFromTree") {
+      return "Tree";
+    } else if (key === "linkedTrees") {
+      return "Tree";
+    } else if (key === "claimableBy") {
+      return "ClaimsHatter";
+    } else if (key === "claimableForBy") {
+      return "ClaimsHatter";
+    } else if (key === "events") {
+      return "HatsEvent";
+    } else {
+      throw new Error("Unexpected key");
+    }
+  } else if (currentObjType === "Wearer") {
+    if (key === "currentHats") {
+      return "Hat";
+    } else if (key === "mintEvent") {
+      return "HatsEvent";
+    } else if (key === "burnEvent") {
+      return "HatsEvent";
+    } else {
+      throw new Error("Unexpected key");
+    }
+  } else if (currentObjType === "Tree") {
+    if (key === "hats") {
+      return "Hat";
+    } else if (key === "childOfTree") {
+      return "Tree";
+    } else if (key === "parentOfTrees") {
+      return "Tree";
+    } else if (key === "linkedToHat") {
+      return "Hat";
+    } else if (key === "linkRequestFromTree") {
+      return "Tree";
+    } else if (key === "requestedLinkToTree") {
+      return "Tree";
+    } else if (key === "requestedLinkToHat") {
+      return "Hat";
+    } else if (key === "events") {
+      return "HatsEvent";
+    } else {
+      throw new Error("Unexpected key");
+    }
+  } else if (currentObjType === "HatsEvent") {
+    if (key === "hat") {
+      return "Hat";
+    } else if (key === "tree") {
+      return "Tree";
+    } else {
+      throw new Error("Unexpected key");
+    }
+  } else if (currentObjType === "ClaimsHatter") {
+    if (key === "claimableHats") {
+      return "Hat";
+    } else if (key === "claimableForHats") {
+      return "Hat";
+    } else {
+      throw new Error("Unexpected key");
+    }
+  } else {
+    throw new Error("Unexpected object type");
+  }
+}
+
+function getFirstFilter(
+  currentObjType: GqlObjType,
+  filters: Filters | undefined,
+  key: string
+): number | undefined {
+  let first: number | undefined = undefined;
+  if (filters !== undefined && filters.first !== undefined) {
+    if (currentObjType === "Hat" && filters.first.hat !== undefined) {
+      switch (key) {
+        case "wearers": {
+          first = filters.first.hat.wearers ?? first;
+          break;
+        }
+        case "badStandings": {
+          first = filters.first.hat.badStandings ?? first;
+          break;
+        }
+        case "subHats": {
+          first = filters.first.hat.subHats ?? first;
+          break;
+        }
+        case "linkRequestFromTree": {
+          first = filters.first.hat.linkRequestFromTree ?? first;
+          break;
+        }
+        case "linkedTrees": {
+          first = filters.first.hat.linkedTrees ?? first;
+          break;
+        }
+        case "claimableBy": {
+          first = filters.first.hat.claimableBy ?? first;
+          break;
+        }
+        case "claimableForBy": {
+          first = filters.first.hat.claimableBy ?? first;
+          break;
+        }
+        case "events": {
+          first = filters.first.hat.events ?? first;
+          break;
+        }
+      }
+    } else if (currentObjType === "Tree" && filters.first.tree !== undefined) {
+      switch (key) {
+        case "hats": {
+          first = filters.first.tree.hats ?? first;
+          break;
+        }
+        case "parentOfTrees": {
+          first = filters.first.tree.parentOfTrees ?? first;
+          break;
+        }
+        case "linkRequestFromTree": {
+          first = filters.first.tree.linkRequestFromTree ?? first;
+          break;
+        }
+        case "events": {
+          first = filters.first.tree.events ?? first;
+          break;
+        }
+      }
+    } else if (
+      currentObjType === "Wearer" &&
+      filters.first.wearer !== undefined
+    ) {
+      switch (key) {
+        case "currentHats": {
+          first = filters.first.wearer.currentHats ?? first;
+          break;
+        }
+        case "mintEvent": {
+          first = filters.first.wearer.mintEvent ?? first;
+          break;
+        }
+        case "burnEvent": {
+          first = filters.first.wearer.burnEvent ?? first;
+          break;
+        }
+      }
+    } else if (
+      currentObjType === "ClaimsHatter" &&
+      filters.first.claimsHatter !== undefined
+    ) {
+      switch (key) {
+        case "claimableHats": {
+          first = filters.first.claimsHatter.claimableHats ?? first;
+          break;
+        }
+        case "claimableForHats": {
+          first = filters.first.claimsHatter.claimableForHats ?? first;
+          break;
+        }
+      }
+    }
+  }
+
+  return first;
 }

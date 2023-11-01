@@ -25,6 +25,7 @@ import type {
   TreeConfig,
   WearerConfig,
   Wearer,
+  Filters,
 } from "./types";
 
 export class HatsSubgraphClient {
@@ -49,10 +50,12 @@ export class HatsSubgraphClient {
     chainId,
     hatId,
     props,
+    filters,
   }: {
     chainId: number;
     hatId: bigint;
     props: HatConfig;
+    filters?: Filters;
   }): Promise<Hat> {
     const validationRes = hatConfigSchema.safeParse(props);
     if (validationRes.success === false) {
@@ -62,10 +65,14 @@ export class HatsSubgraphClient {
     const hatIdHex = hatIdDecimalToHex(hatId);
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+    const queryFields = normalizedPropsToQueryFields(
+      normalizedProps,
+      "Hat",
+      filters
+    );
 
     const query = gql`
-      query getHat($id: ID!, $numHats: Int!, $numWearers: Int!) {
+      query getHat($id: ID!) {
         hat(id: $id) {
           ${queryFields}
         }
@@ -74,8 +81,6 @@ export class HatsSubgraphClient {
 
     const respone = await this._makeGqlRequest<{ hat: Hat }>(chainId, query, {
       id: hatIdHex,
-      numHats: 1000,
-      numWearers: 1000,
     });
 
     if (!respone.hat) {
@@ -91,10 +96,12 @@ export class HatsSubgraphClient {
     chainId,
     hatIds,
     props,
+    filters,
   }: {
     chainId: number;
     hatIds: bigint[];
     props: HatConfig;
+    filters?: Filters;
   }): Promise<Hat[]> {
     const validationRes = hatConfigSchema.safeParse(props);
     if (validationRes.success === false) {
@@ -104,10 +111,14 @@ export class HatsSubgraphClient {
     const hatIdsHex: string[] = hatIds.map((id) => hatIdDecimalToHex(id));
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+    const queryFields = normalizedPropsToQueryFields(
+      normalizedProps,
+      "Hat",
+      filters
+    );
 
     const query = gql`
-      query getHatsByIds($ids: [ID!]!, $numHats: Int!, $numWearers: Int!) {
+      query getHatsByIds($ids: [ID!]!) {
         hats(where: { id_in: $ids }) {
             ${queryFields}
         }
@@ -119,8 +130,6 @@ export class HatsSubgraphClient {
       query,
       {
         ids: hatIdsHex,
-        numHats: 1000,
-        numWearers: 1000,
       }
     );
 
@@ -137,10 +146,12 @@ export class HatsSubgraphClient {
     chainId,
     treeId,
     props,
+    filters,
   }: {
     chainId: number;
     treeId: number;
     props: TreeConfig;
+    filters?: Filters;
   }): Promise<Tree> {
     const validationRes = treeConfigSchema.safeParse(props);
     if (validationRes.success === false) {
@@ -150,10 +161,14 @@ export class HatsSubgraphClient {
     const treeIdHex = treeIdDecimalToHex(treeId);
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+    const queryFields = normalizedPropsToQueryFields(
+      normalizedProps,
+      "Tree",
+      filters
+    );
 
     const query = gql`
-      query getTree($id: ID!, $numHats: Int!, $numWearers: Int!) {
+      query getTree($id: ID!) {
         tree(id: $id) {
           ${queryFields}
         }
@@ -162,8 +177,6 @@ export class HatsSubgraphClient {
 
     const respone = await this._makeGqlRequest<{ tree: Tree }>(chainId, query, {
       id: treeIdHex,
-      numHats: 1000,
-      numWearers: 1000,
     });
 
     if (!respone.tree) {
@@ -179,10 +192,12 @@ export class HatsSubgraphClient {
     chainId,
     treeIds,
     props,
+    filters,
   }: {
     chainId: number;
     treeIds: number[];
     props: TreeConfig;
+    filters?: Filters;
   }): Promise<Tree[]> {
     const validationRes = treeConfigSchema.safeParse(props);
     if (validationRes.success === false) {
@@ -192,10 +207,14 @@ export class HatsSubgraphClient {
     const treeIdsHex = treeIds.map((treeId) => treeIdDecimalToHex(treeId));
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+    const queryFields = normalizedPropsToQueryFields(
+      normalizedProps,
+      "Tree",
+      filters
+    );
 
     const query = gql`
-    query getTreesById($ids: [ID!]!, $numHats: Int!, $numWearers: Int!) {
+    query getTreesById($ids: [ID!]!) {
       trees(where: { id_in: $ids }) {
         ${queryFields}
       }
@@ -207,8 +226,6 @@ export class HatsSubgraphClient {
       query,
       {
         ids: treeIdsHex,
-        numHats: 1000,
-        numWearers: 1000,
       }
     );
 
@@ -226,13 +243,13 @@ export class HatsSubgraphClient {
     props,
     page,
     perPage,
-    numHatsPerTree,
+    filters,
   }: {
     chainId: number;
     props: TreeConfig;
     page: number;
     perPage: number;
-    numHatsPerTree?: number;
+    filters?: Filters;
   }): Promise<Tree[]> {
     const validationRes = treeConfigSchema.safeParse(props);
     if (validationRes.success === false) {
@@ -240,10 +257,14 @@ export class HatsSubgraphClient {
     }
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+    const queryFields = normalizedPropsToQueryFields(
+      normalizedProps,
+      "Tree",
+      filters
+    );
 
     const query = gql`
-    query getPaginatedTrees($skip: Int!, $first: Int!, $numHats: Int!, $numWearers: Int!) {
+    query getPaginatedTrees($skip: Int!, $first: Int!) {
       trees(skip: $skip, first: $first) {
         ${queryFields}
       }
@@ -256,8 +277,6 @@ export class HatsSubgraphClient {
       {
         skip: page * perPage,
         first: perPage,
-        numHats: numHatsPerTree ?? 1000,
-        numWearers: 1000,
       }
     );
 
@@ -272,10 +291,12 @@ export class HatsSubgraphClient {
     chainId,
     wearerAddress,
     props,
+    filters,
   }: {
     chainId: number;
     wearerAddress: `0x${string}`;
     props: WearerConfig;
+    filters?: Filters;
   }): Promise<Wearer> {
     const validationRes = wearerConfigSchema.safeParse(props);
     if (validationRes.success === false) {
@@ -285,10 +306,14 @@ export class HatsSubgraphClient {
     const wearerAddressLowerCase = wearerAddress.toLowerCase();
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+    const queryFields = normalizedPropsToQueryFields(
+      normalizedProps,
+      "Wearer",
+      filters
+    );
 
     const query = gql`
-      query getCurrentHatsForWearer($id: ID!, $numHats: Int!, $numWearers: Int!) {
+      query getCurrentHatsForWearer($id: ID!) {
         wearer(id: $id) {
             ${queryFields}
         }
@@ -300,8 +325,6 @@ export class HatsSubgraphClient {
       query,
       {
         id: wearerAddressLowerCase,
-        numHats: 1000,
-        numWearers: 1000,
       }
     );
 
@@ -320,12 +343,14 @@ export class HatsSubgraphClient {
     props,
     page,
     perPage,
+    filters,
   }: {
     chainId: number;
     hatId: bigint;
     props: WearerConfig;
     page: number;
     perPage: number;
+    filters?: Filters;
   }): Promise<Wearer[]> {
     const validationRes = wearerConfigSchema.safeParse(props);
     if (validationRes.success === false) {
@@ -335,10 +360,14 @@ export class HatsSubgraphClient {
     const hatIdHex = hatIdDecimalToHex(hatId);
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(normalizedProps);
+    const queryFields = normalizedPropsToQueryFields(
+      normalizedProps,
+      "Wearer",
+      filters
+    );
 
     const query = gql`
-      query getPaginatedWearersForHat($hatId: ID!, $first: Int!, $skip: Int!, $numHats: Int!, $numWearers: Int!) {
+      query getPaginatedWearersForHat($hatId: ID!, $first: Int!, $skip: Int!) {
         hat(id: $hatId) {
             wearers(skip: $skip, first: $first) {
                 ${queryFields}
@@ -354,8 +383,6 @@ export class HatsSubgraphClient {
         hatId: hatIdHex,
         skip: page * perPage,
         first: perPage,
-        numHats: 1000,
-        numWearers: 1000,
       }
     );
 
@@ -374,12 +401,14 @@ export class HatsSubgraphClient {
     treeProps,
     hatProps,
     wearerProps,
+    filters,
   }: {
     chainId: number;
     search: string;
     treeProps: TreeConfig;
     hatProps: HatConfig;
     wearerProps: WearerConfig;
+    filters?: Filters;
   }): Promise<{ trees: Tree[]; hats: Hat[]; wearers: Wearer[] }> {
     const treeValidationRes = treeConfigSchema.safeParse(treeProps);
     if (treeValidationRes.success === false) {
@@ -397,14 +426,24 @@ export class HatsSubgraphClient {
     }
 
     const treeNormalizedProps = normalizeProps(treeProps);
-    const treeQueryFields = normalizedPropsToQueryFields(treeNormalizedProps);
+    const treeQueryFields = normalizedPropsToQueryFields(
+      treeNormalizedProps,
+      "Tree",
+      filters
+    );
 
     const hatNormalizedProps = normalizeProps(hatProps);
-    const hatQueryFields = normalizedPropsToQueryFields(hatNormalizedProps);
+    const hatQueryFields = normalizedPropsToQueryFields(
+      hatNormalizedProps,
+      "Hat",
+      filters
+    );
 
     const wearerNormalizedProps = normalizeProps(wearerProps);
     const wearerQueryFields = normalizedPropsToQueryFields(
-      wearerNormalizedProps
+      wearerNormalizedProps,
+      "Wearer",
+      filters
     );
 
     const query = gql`
@@ -427,8 +466,6 @@ export class HatsSubgraphClient {
       wearers: Wearer[];
     }>(chainId, query, {
       search: search.toLowerCase(),
-      numHats: 1000,
-      numWearers: 1000,
     });
 
     if (!respone.wearers || !respone.trees || !respone.hats) {

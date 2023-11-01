@@ -82,7 +82,7 @@ describe("Client Tests", () => {
             id
             prettyId
             eligibility
-            wearers(first: 1000) {
+            wearers {
               id
             }
             admin {
@@ -156,7 +156,7 @@ describe("Client Tests", () => {
             tree {
               id
             }
-            wearers(first: 1000) {
+            wearers {
               id
             }
             admin {
@@ -180,7 +180,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
             }
           }
@@ -353,11 +353,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            wearers(first: 1000) {
+            wearers {
               id
               currentHats {
                 id
@@ -385,7 +385,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -409,7 +409,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -466,7 +466,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -486,7 +486,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -510,7 +510,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -537,15 +537,112 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            events {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
               blockNumber
               timestamp
               transactionID
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        id: "0x0000000100020001000100000000000000000000000000000000000000000000",
+      })) as { hat: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hat));
+    }, 30000);
+
+    test("Scenario 4", async () => {
+      const res = await client.getHat({
+        chainId: 10,
+        hatId: BigInt(
+          "0x0000000100020001000100000000000000000000000000000000000000000000"
+        ),
+        props: {
+          prettyId: true,
+          status: true,
+          createdAt: true,
+          details: true,
+          maxSupply: true,
+          eligibility: true,
+          toggle: true,
+          mutable: true,
+          imageUri: true,
+          levelAtLocalTree: true,
+          currentSupply: true,
+          tree: {},
+          wearers: {},
+          admin: {},
+          badStandings: {},
+          claimableBy: {},
+          claimableForBy: {},
+          linkRequestFromTree: {},
+          subHats: {},
+          linkedTrees: {},
+          events: {},
+        },
+        filters: {
+          first: {
+            hat: {
+              wearers: 1,
+              subHats: 1,
+              events: 1,
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query getHat($id: ID!) {
+          hat(id: $id) {
+            id
+            prettyId
+            status
+            createdAt
+            details
+            maxSupply
+            eligibility
+            toggle
+            mutable
+            imageUri
+            levelAtLocalTree
+            currentSupply
+            tree {
+              id
+            }
+            wearers(first: 1) {
+              id
+            }
+            admin {
+              id
+            }
+            badStandings {
+              id
+            }
+            claimableBy {
+              id
+            }
+            claimableForBy {
+              id
+            }
+            linkRequestFromTree {
+              id
+            }
+            subHats(first: 1) {
+              id
+            }
+            linkedTrees {
+              id
+            }
+            events(orderBy: timestamp, orderDirection: desc, first: 1) {
+              id
             }
           }
         }
@@ -724,7 +821,7 @@ describe("Client Tests", () => {
             tree {
               id
             }
-            wearers(first: 1000) {
+            wearers {
               id
             }
             admin {
@@ -748,7 +845,7 @@ describe("Client Tests", () => {
             linkedTrees {
               id
             }
-            events {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
             }
           }
@@ -929,11 +1026,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            wearers(first: 1000) {
+            wearers {
               id
               currentHats {
                 id
@@ -961,7 +1058,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -985,7 +1082,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -1042,7 +1139,7 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -1062,7 +1159,7 @@ describe("Client Tests", () => {
               tree {
                 id
               }
-              wearers(first: 1000) {
+              wearers {
                 id
               }
               admin {
@@ -1086,7 +1183,7 @@ describe("Client Tests", () => {
               linkedTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
@@ -1113,11 +1210,11 @@ describe("Client Tests", () => {
               parentOfTrees {
                 id
               }
-              events {
+              events(orderBy: timestamp, orderDirection: desc) {
                 id
               }
             }
-            events {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
               blockNumber
               timestamp
@@ -1173,6 +1270,400 @@ describe("Client Tests", () => {
 
       const ref = (await gqlClient.request(query, {
         ids: [],
+      })) as { hats: any };
+
+      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hats));
+    }, 30000);
+
+    test("Scenario 5", async () => {
+      const res = await client.getHatsByIds({
+        chainId: 10,
+        hatIds: [
+          BigInt(
+            "0x0000000100020001000100000000000000000000000000000000000000000000"
+          ),
+          BigInt(
+            "0x0000000100020001000000000000000000000000000000000000000000000000"
+          ),
+        ],
+        props: {
+          prettyId: true,
+          status: true,
+          createdAt: true,
+          details: true,
+          maxSupply: true,
+          eligibility: true,
+          toggle: true,
+          mutable: true,
+          imageUri: true,
+          levelAtLocalTree: true,
+          currentSupply: true,
+          tree: {
+            hats: {},
+            childOfTree: {},
+            linkedToHat: {},
+            requestedLinkToTree: {},
+            requestedLinkToHat: {},
+            linkRequestFromTree: {},
+            parentOfTrees: {},
+            events: {},
+          },
+          wearers: {
+            currentHats: {},
+            mintEvent: {},
+            burnEvent: {},
+          },
+          admin: {
+            prettyId: true,
+            status: true,
+            createdAt: true,
+            details: true,
+            maxSupply: true,
+            eligibility: true,
+            toggle: true,
+            mutable: true,
+            imageUri: true,
+            levelAtLocalTree: true,
+            currentSupply: true,
+            tree: {},
+            wearers: {},
+            admin: {},
+            badStandings: {},
+            claimableBy: {},
+            claimableForBy: {},
+            linkRequestFromTree: {},
+            subHats: {},
+            linkedTrees: {},
+            events: {},
+          },
+          badStandings: {
+            currentHats: {},
+            mintEvent: {},
+            burnEvent: {},
+          },
+          claimableBy: {
+            claimableHats: {},
+            claimableForHats: {},
+          },
+          claimableForBy: {
+            claimableHats: {},
+            claimableForHats: {},
+          },
+          linkRequestFromTree: {
+            hats: {},
+            childOfTree: {},
+            linkedToHat: {},
+            requestedLinkToTree: {},
+            requestedLinkToHat: {},
+            linkRequestFromTree: {},
+            parentOfTrees: {},
+            events: {},
+          },
+          subHats: {
+            prettyId: true,
+            status: true,
+            createdAt: true,
+            details: true,
+            maxSupply: true,
+            eligibility: true,
+            toggle: true,
+            mutable: true,
+            imageUri: true,
+            levelAtLocalTree: true,
+            currentSupply: true,
+            tree: {},
+            wearers: {},
+            admin: {},
+            badStandings: {},
+            claimableBy: {},
+            claimableForBy: {},
+            linkRequestFromTree: {},
+            subHats: {},
+            linkedTrees: {},
+            events: {},
+          },
+          linkedTrees: {
+            hats: {},
+            childOfTree: {},
+            linkedToHat: {},
+            requestedLinkToTree: {},
+            requestedLinkToHat: {},
+            linkRequestFromTree: {},
+            parentOfTrees: {},
+            events: {},
+          },
+          events: {
+            blockNumber: true,
+            timestamp: true,
+            transactionID: true,
+          },
+        },
+        filters: {
+          first: {
+            hat: {
+              wearers: 2,
+              subHats: 3,
+              events: 4,
+            },
+            wearer: {
+              currentHats: 5,
+              mintEvent: 6,
+              burnEvent: 7,
+            },
+            tree: {
+              hats: 8,
+              events: 9,
+            },
+            claimsHatter: {
+              claimableHats: 10,
+              claimableForHats: 11,
+            },
+          },
+        },
+      });
+
+      const query = gql`
+        query getHat($ids: [ID!]!) {
+          hats(where: { id_in: $ids }) {
+            id
+            prettyId
+            status
+            createdAt
+            details
+            maxSupply
+            eligibility
+            toggle
+            mutable
+            imageUri
+            levelAtLocalTree
+            currentSupply
+            tree {
+              id
+              hats(first: 8) {
+                id
+              }
+              childOfTree {
+                id
+              }
+              linkedToHat {
+                id
+              }
+              requestedLinkToTree {
+                id
+              }
+              requestedLinkToHat {
+                id
+              }
+              linkRequestFromTree {
+                id
+              }
+              parentOfTrees {
+                id
+              }
+              events(orderBy: timestamp, orderDirection: desc, first: 9) {
+                id
+              }
+            }
+            wearers(first: 2) {
+              id
+              currentHats(first: 5) {
+                id
+              }
+              mintEvent(first: 6) {
+                id
+              }
+              burnEvent(first: 7) {
+                id
+              }
+            }
+            admin {
+              id
+              prettyId
+              status
+              createdAt
+              details
+              maxSupply
+              eligibility
+              toggle
+              mutable
+              imageUri
+              levelAtLocalTree
+              currentSupply
+              tree {
+                id
+              }
+              wearers(first: 2) {
+                id
+              }
+              admin {
+                id
+              }
+              badStandings {
+                id
+              }
+              claimableBy {
+                id
+              }
+              claimableForBy {
+                id
+              }
+              linkRequestFromTree {
+                id
+              }
+              subHats(first: 3) {
+                id
+              }
+              linkedTrees {
+                id
+              }
+              events(orderBy: timestamp, orderDirection: desc, first: 4) {
+                id
+              }
+            }
+            badStandings {
+              id
+              currentHats(first: 5) {
+                id
+              }
+              mintEvent(first: 6) {
+                id
+              }
+              burnEvent(first: 7) {
+                id
+              }
+            }
+            claimableBy {
+              id
+              claimableHats(first: 10) {
+                id
+              }
+              claimableForHats(first: 11) {
+                id
+              }
+            }
+            claimableForBy {
+              id
+              claimableHats(first: 10) {
+                id
+              }
+              claimableForHats(first: 11) {
+                id
+              }
+            }
+            linkRequestFromTree {
+              id
+              hats(first: 8) {
+                id
+              }
+              childOfTree {
+                id
+              }
+              linkedToHat {
+                id
+              }
+              requestedLinkToTree {
+                id
+              }
+              requestedLinkToHat {
+                id
+              }
+              linkRequestFromTree {
+                id
+              }
+              parentOfTrees {
+                id
+              }
+              events(orderBy: timestamp, orderDirection: desc, first: 9) {
+                id
+              }
+            }
+            subHats(first: 3) {
+              id
+              prettyId
+              status
+              createdAt
+              details
+              maxSupply
+              eligibility
+              toggle
+              mutable
+              imageUri
+              levelAtLocalTree
+              currentSupply
+              tree {
+                id
+              }
+              wearers(first: 2) {
+                id
+              }
+              admin {
+                id
+              }
+              badStandings {
+                id
+              }
+              claimableBy {
+                id
+              }
+              claimableForBy {
+                id
+              }
+              linkRequestFromTree {
+                id
+              }
+              subHats(first: 3) {
+                id
+              }
+              linkedTrees {
+                id
+              }
+              events(orderBy: timestamp, orderDirection: desc, first: 4) {
+                id
+              }
+            }
+            linkedTrees {
+              id
+              hats(first: 8) {
+                id
+              }
+              childOfTree {
+                id
+              }
+              linkedToHat {
+                id
+              }
+              requestedLinkToTree {
+                id
+              }
+              requestedLinkToHat {
+                id
+              }
+              linkRequestFromTree {
+                id
+              }
+              parentOfTrees {
+                id
+              }
+              events(orderBy: timestamp, orderDirection: desc, first: 9) {
+                id
+              }
+            }
+            events(orderBy: timestamp, orderDirection: desc, first: 4) {
+              id
+              blockNumber
+              timestamp
+              transactionID
+            }
+          }
+        }
+      `;
+      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const ref = (await gqlClient.request(query, {
+        ids: [
+          "0x0000000100020001000100000000000000000000000000000000000000000000",
+          "0x0000000100020001000000000000000000000000000000000000000000000000",
+        ],
       })) as { hats: any };
 
       expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hats));
@@ -1238,7 +1729,7 @@ describe("Client Tests", () => {
         query getTree($id: ID!) {
           tree(id: $id) {
             id
-            hats(first: 1000) {
+            hats {
               id
               prettyId
               admin {
@@ -1299,7 +1790,7 @@ describe("Client Tests", () => {
             parentOfTrees {
               id
             }
-            events {
+            events(orderBy: timestamp, orderDirection: desc) {
               id
             }
           }
@@ -1389,7 +1880,6 @@ describe("Client Tests", () => {
           },
           page: 3,
           perPage: 10,
-          numHatsPerTree: 1,
         });
       }).rejects.toThrow(InputValidationError);
     });
@@ -1407,14 +1897,13 @@ describe("Client Tests", () => {
         },
         page: 3,
         perPage: 10,
-        numHatsPerTree: 1,
       });
 
       const query = gql`
         query getPaginatedTrees($skip: Int!, $first: Int!) {
           trees(skip: $skip, first: $first) {
             id
-            hats(first: 1) {
+            hats {
               id
               prettyId
               admin {
@@ -1446,46 +1935,6 @@ describe("Client Tests", () => {
             },
           },
         },
-        page: 3,
-        perPage: 10,
-      });
-
-      const query = gql`
-        query getPaginatedTrees($skip: Int!, $first: Int!) {
-          trees(skip: $skip, first: $first) {
-            id
-            hats(first: 1000) {
-              id
-              prettyId
-              admin {
-                id
-                prettyId
-              }
-            }
-          }
-        }
-      `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
-
-      const ref = (await gqlClient.request(query, {
-        skip: 30,
-        first: 10,
-      })) as { trees: any };
-
-      expect(JSON.stringify(res)).toBe(JSON.stringify(ref.trees));
-    });
-
-    test("Scenario 3", async () => {
-      const res = await client.getTreesPaginated({
-        chainId: 10,
-        props: {
-          hats: {
-            prettyId: true,
-            admin: {
-              prettyId: true,
-            },
-          },
-        },
         page: 0,
         perPage: 100,
       });
@@ -1494,7 +1943,7 @@ describe("Client Tests", () => {
         query getPaginatedTrees($skip: Int!, $first: Int!) {
           trees(skip: $skip, first: $first) {
             id
-            hats(first: 1000) {
+            hats {
               id
               prettyId
               admin {
@@ -1600,11 +2049,11 @@ describe("Client Tests", () => {
         query getCurrentHatsForWearer($id: ID!) {
           wearer(id: $id) {
             id
-            currentHats(first: 1000) {
+            currentHats {
               id
-              wearers(first: 1000) {
+              wearers {
                 id
-                currentHats(first: 1000) {
+                currentHats {
                   id
                 }
               }
