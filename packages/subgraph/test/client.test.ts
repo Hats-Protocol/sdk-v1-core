@@ -1922,7 +1922,7 @@ describe("Client Tests", () => {
       })) as { trees: any };
 
       expect(JSON.stringify(res)).toBe(JSON.stringify(ref.trees));
-    });
+    }, 30000);
 
     test("Scenario 2", async () => {
       const res = await client.getTreesPaginated({

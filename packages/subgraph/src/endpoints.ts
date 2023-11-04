@@ -12,6 +12,13 @@ const ENDPOINT_PER_CHAIN: {
     "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-arbitrum",
 };
 
+/**
+ * Get a GraphQL client for a given chain ID
+ *
+ * @param chainId ID of the chain for which a GraphQL client will be returned for.
+ * @returns If the given chain ID is supported, returns a GraphQL client, using the 'graphql-request' package.
+ * If not supported, returns 'undefined'.
+ */
 export const getGraphqlClient = (
   chainId: number
 ): GraphQLClient | undefined => {
