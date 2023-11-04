@@ -25,10 +25,9 @@
     "prettier:fix": "prettier --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}' --write"
   },
   "dependencies": {
+    "@hatsprotocol/sdk-v1-subgraph": "workspace:*",
     "graphql": "^16.6.0",
-    "graphql-request": "^6.1.0",
-    "viem": "1.9.5",
-    "@hatsprotocol/sdk-v1-subgraph": "workspace:*"
+    "graphql-request": "^6.1.0"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.0.0",
@@ -45,9 +44,10 @@
     "rollup-plugin-typescript2": "^0.35.0",
     "ts-jest": "^29.1.0",
     "tslib": "^2.6.0",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.3",
+    "viem": "^1.0.0"
   },
   "peerDependencies": {
-    "viem": "1.9.5"
+    "viem": "^1.0.0"
   }
 }
