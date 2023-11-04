@@ -46,6 +46,22 @@ export class HatsSubgraphClient {
     return result;
   }
 
+  /**
+   * Get a Hat by its ID.
+   * The Hat's properties to fetch are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param hatId ID of the Hat to fetch.
+   * @param props Hat's properties to fetch, including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param filters Optional filters to include in the query.
+   * @returns A Hat object.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   *
+   * @throws SubgraphHatNotExistError
+   * Thrown if the Hat does not exist in the subgraph.
+   */
   async getHat({
     chainId,
     hatId,
@@ -92,6 +108,22 @@ export class HatsSubgraphClient {
     return respone.hat;
   }
 
+  /**
+   * Get Hats by their IDs.
+   * The properties to fetch for each Hat are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param hatIds IDs of the Hats to fetch.
+   * @param props Hat's properties to fetch, including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param filters Optional filters to include in the query.
+   * @returns An array of Hat objects.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   *
+   * @throws SubgraphHatNotExistError
+   * Thrown if one or more of the Hats do not exist in the subgraph.
+   */
   async getHatsByIds({
     chainId,
     hatIds,
@@ -142,6 +174,22 @@ export class HatsSubgraphClient {
     return respone.hats;
   }
 
+  /**
+   * Get a Tree by its ID.
+   * The Tree's properties to fetch are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param treeId ID of the Tree to fetch (the tree's top-hat domain - first 4 bytes of the top-hat ID).
+   * @param props Tree's properties to fetch, including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param filters Optional filters to include in the query.
+   * @returns A Tree object.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   *
+   * @throws SubgraphTreeNotExistError
+   * Thrown if the Tree does not exist in the subgraph.
+   */
   async getTree({
     chainId,
     treeId,
@@ -188,6 +236,22 @@ export class HatsSubgraphClient {
     return respone.tree;
   }
 
+  /**
+   * Get Trees by their IDs.
+   * The properties to fetch for each Tree are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param treeIds ID of the Trees to fetch (the tree's top-hat domain - first 4 bytes of the top-hat ID).
+   * @param props Tree's properties to fetch, including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param filters Optional filters to include in the query.
+   * @returns An array of Tree objects.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   *
+   * @throws SubgraphTreeNotExistError
+   * Thrown if one or more of the Trees do not exist in the subgraph.
+   */
   async getTreesByIds({
     chainId,
     treeIds,
@@ -238,6 +302,20 @@ export class HatsSubgraphClient {
     return respone.trees;
   }
 
+  /**
+   * Paginate over all existing Trees.
+   * The properties to fetch for each Tree are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param props Tree's properties to fetch, including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param page Number of page to fetch.
+   * @param perPage Number of Trees to fetch in each page.
+   * @param filters - Optional filters to include in the query.
+   * @returns An array of Tree objects.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   */
   async getTreesPaginated({
     chainId,
     props,
@@ -287,6 +365,22 @@ export class HatsSubgraphClient {
     return respone.trees;
   }
 
+  /**
+   * Get Wearer by its address.
+   * The properties to fetch for each Wearer are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param wearerAddress Address of the wearer.
+   * @param props Wearer's properties to fetch, including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param filters Optional filters to include in the query.
+   * @returns A Wearer object.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   *
+   * @throws SubgraphWearerNotExistError
+   * Thrown if the Wearer does not exist in the subgraph.
+   */
   async getWearer({
     chainId,
     wearerAddress,
@@ -337,6 +431,24 @@ export class HatsSubgraphClient {
     return respone.wearer;
   }
 
+  /**
+   * Paginate over the Wearers of a Hat.
+   * The properties to fetch for each Wearer are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param hatId ID of the Hat for which Wearers to fetch.
+   * @param props Wearer's properties to fetch, including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param page Number of page to fetch.
+   * @param perPage Number of Wearers to fetch in each page.
+   * @param filters Optional filters to include in the query.
+   * @returns A Wearer object.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   *
+   * @throws SubgraphHatNotExistError
+   * Thrown if the Hat does not exist in the subgraph.
+   */
   async getWearersOfHatPaginated({
     chainId,
     hatId,
@@ -395,6 +507,21 @@ export class HatsSubgraphClient {
     return respone.hat.wearers;
   }
 
+  /**
+   * Search Hat, Tree or Wearer by ID.
+   * The properties to fetch for each object are configurable, including nested objects.
+   *
+   * @param chainId Id of the chain to fetch from.
+   * @param search ID to search for (Hat ID or pretty ID, Tree ID or Wearer address).
+   * @param treeProps Tree's properties to fetch (if Tree was found), including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param hatProps Hat's properties to fetch (if Hat was found), including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param wearerProps Wearer's properties to fetch (if Wearer was found), including the properties of nested objects. Pass an empty object to include only the object's ID.
+   * @param filters Optional filters to include in the query.
+   * @returns An object containing the search result.
+   *
+   * @throws InputValidationError
+   * Thrown if the provided properties are invalid.
+   */
   async searchTreesHatsWearers({
     chainId,
     search,
