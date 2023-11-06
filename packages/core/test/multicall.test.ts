@@ -102,6 +102,13 @@ describe("createHat tests", () => {
           });
         }).rejects.toThrow(NotAdminError);
 
+        expect(async () => {
+          await hatsClient.multicallPreFlightCheck({
+            account: account2,
+            calls: [createHatData1_1, createHatData1_2],
+          });
+        }).rejects.toThrow(NotAdminError);
+
         const res = await hatsClient.multicall({
           account: account1,
           calls: [createHatData1_1, createHatData1_2],
@@ -140,6 +147,13 @@ describe("createHat tests", () => {
 
         expect(async () => {
           await hatsClient.multicall({
+            account: account2,
+            calls: [createHatCallData, mintHatCallData],
+          });
+        }).rejects.toThrow(NotAdminError);
+
+        expect(async () => {
+          await hatsClient.multicallPreFlightCheck({
             account: account2,
             calls: [createHatCallData, mintHatCallData],
           });

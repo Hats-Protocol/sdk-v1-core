@@ -2001,4 +2001,29 @@ export class HatsClient extends HatsCallDataClient {
       getError(err);
     }
   }
+
+  async multicallPreFlightCheck({
+    account,
+    calls,
+  }: {
+    account: Account | Address;
+    calls: {
+      functionName: string;
+      callData: Hex;
+    }[];
+  }) {
+    const callDatas = calls.map((call) => call.callData);
+
+    try {
+      await this._publicClient.simulateContract({
+        address: HATS_V1,
+        abi: HATS_ABI,
+        functionName: "multicall",
+        args: [callDatas],
+        account,
+      });
+    } catch (err) {
+      getError(err);
+    }
+  }
 }

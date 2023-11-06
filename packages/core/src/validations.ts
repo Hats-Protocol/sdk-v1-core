@@ -1,5 +1,3 @@
-import { HATS_ABI } from "./abi/Hats";
-import { HATS_V1 } from "./constants";
 import { BaseError, ContractFunctionRevertedError } from "viem";
 import {
   ZeroAddressError,
@@ -24,30 +22,6 @@ import {
   MaxLevelReachedError,
   InvalidUnlinkError,
 } from "./errors";
-
-import type { PublicClient, Account, Address } from "viem";
-
-export async function validateMulticall({
-  publicClient,
-  account,
-  calls,
-}: {
-  publicClient: PublicClient;
-  account: Account | Address;
-  calls: `0x${string}`[];
-}) {
-  try {
-    await publicClient.simulateContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "multicall",
-      args: [calls],
-      account,
-    });
-  } catch (err) {
-    getError(err);
-  }
-}
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
