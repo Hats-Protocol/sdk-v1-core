@@ -2,6 +2,13 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
+import {
+  ZeroAddressError,
+  NotAdminError,
+  InvalidMaxSupplyError,
+  ImmutableHatError,
+  StringTooLongError,
+} from "../src/errors";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
 
@@ -53,74 +60,70 @@ describe("mintHat tests", () => {
       let resCreateHat1: CreateHatResult;
       let resCreateHat2: CreateHatResult;
       beforeEach(async () => {
-        try {
-          resTopHat = await hatsClient.mintTopHat({
-            target: address1,
-            details: "Tophat SDK",
-            imageURI: "Tophat URI",
-            account: account1,
-          });
+        resTopHat = await hatsClient.mintTopHat({
+          target: address1,
+          details: "Tophat SDK",
+          imageURI: "Tophat URI",
+          account: account1,
+        });
 
-          topHatId = resTopHat.hatId;
+        topHatId = resTopHat.hatId;
 
-          resCreateHat1 = await hatsClient.createHat({
-            admin: topHatId,
-            maxSupply: 2,
-            eligibility: address1,
-            toggle: address1,
-            mutable: true,
-            details: "Hat details",
-            imageURI: "Hat URI",
-            account: account1,
-          });
+        resCreateHat1 = await hatsClient.createHat({
+          admin: topHatId,
+          maxSupply: 2,
+          eligibility: address1,
+          toggle: address1,
+          mutable: true,
+          details: "Hat details",
+          imageURI: "Hat URI",
+          account: account1,
+        });
 
-          childHatId1 = resCreateHat1.hatId;
+        childHatId1 = resCreateHat1.hatId;
 
-          resCreateHat2 = await hatsClient.createHat({
-            admin: topHatId,
-            maxSupply: 3,
-            eligibility: address1,
-            toggle: address1,
-            mutable: false,
-            details: "Hat details",
-            imageURI: "Hat URI",
-            account: account1,
-          });
+        resCreateHat2 = await hatsClient.createHat({
+          admin: topHatId,
+          maxSupply: 3,
+          eligibility: address1,
+          toggle: address1,
+          mutable: false,
+          details: "Hat details",
+          imageURI: "Hat URI",
+          account: account1,
+        });
 
-          childHatId2 = resCreateHat2.hatId;
-        } catch (err) {
-          console.log(err);
-        }
+        childHatId2 = resCreateHat2.hatId;
       }, 30000);
 
       test("Test hat details edit by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatDetails({
             hatId: childHatId1,
             newDetails: "new details",
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test hat details edit with too long string", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatDetails({
             hatId: childHatId1,
             newDetails: LONG_STRING,
             account: account1,
           });
-        }).rejects.toThrow("Details field max length is 7000");
+        }).rejects.toThrow(StringTooLongError);
       });
 
       test("Test immutable hat details edit", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatDetails({
             hatId: childHatId2,
             newDetails: "new details",
             account: account1,
           });
-        }).rejects.toThrow("Hat is immutable, edit is not allowed");
+        }).rejects.toThrow(ImmutableHatError);
       });
 
       test("Test tophat details edit", async () => {
@@ -135,93 +138,93 @@ describe("mintHat tests", () => {
       });
 
       test("Test eligibility edit with zero address", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatEligibility({
             hatId: childHatId1,
             newEligibility: "0x0000000000000000000000000000000000000000",
             account: account1,
           });
-        }).rejects.toThrow("Zero eligibility address not valid");
+        }).rejects.toThrow(ZeroAddressError);
       });
 
       test("Test eligibility edit by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatEligibility({
             hatId: childHatId1,
             newEligibility: address1,
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test eligibility edit of immutable hat", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatEligibility({
             hatId: childHatId2,
             newEligibility: address1,
-            account: account2,
+            account: account1,
           });
-        }).rejects.toThrow("Hat is immutable, editing is not allowed");
+        }).rejects.toThrow(ImmutableHatError);
       });
 
       test("Test toggle edit with zero address", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatToggle({
             hatId: childHatId1,
             newToggle: "0x0000000000000000000000000000000000000000",
             account: account1,
           });
-        }).rejects.toThrow("Zero toggle address not valid");
+        }).rejects.toThrow(ZeroAddressError);
       });
 
       test("Test toggle edit by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatToggle({
             hatId: childHatId1,
             newToggle: address1,
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test toggle edit of immutable hat", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatToggle({
             hatId: childHatId2,
             newToggle: address1,
-            account: account2,
+            account: account1,
           });
-        }).rejects.toThrow("Hat is immutable, editing is not allowed");
+        }).rejects.toThrow(ImmutableHatError);
       });
 
       test("Test hat image URI edit by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatImageURI({
             hatId: childHatId1,
             newImageURI: "new URI",
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test hat image URI edit with too long string", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatImageURI({
             hatId: childHatId1,
             newImageURI: LONG_STRING,
             account: account1,
           });
-        }).rejects.toThrow("Image URI field max length is 7000");
+        }).rejects.toThrow(StringTooLongError);
       });
 
       test("Test immutable hat image URI edit", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatImageURI({
             hatId: childHatId2,
             newImageURI: "new URI",
             account: account1,
           });
-        }).rejects.toThrow("Hat is immutable, edit is not allowed");
+        }).rejects.toThrow(ImmutableHatError);
       });
 
       test("Test tophat image URI edit", async () => {
@@ -236,23 +239,23 @@ describe("mintHat tests", () => {
       });
 
       test("Test max supply edit by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatMaxSupply({
             hatId: childHatId1,
             newMaxSupply: 10,
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test max supply edit of immutable hat", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatMaxSupply({
             hatId: childHatId2,
             newMaxSupply: 10,
             account: account1,
           });
-        }).rejects.toThrow("Hat is immutable, editing is not allowed");
+        }).rejects.toThrow(ImmutableHatError);
       });
 
       test("Test max supply edit of immutable hat", async () => {
@@ -268,33 +271,31 @@ describe("mintHat tests", () => {
           wearer: address2,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.changeHatMaxSupply({
             hatId: childHatId1,
             newMaxSupply: 1,
             account: account1,
           });
-        }).rejects.toThrow(
-          "New max supply cannot be lower than the current aupply of minted hats"
-        );
+        }).rejects.toThrow(InvalidMaxSupplyError);
       });
 
       test("Test make hat immutable by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.makeHatImmutable({
             hatId: childHatId1,
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test make hat immutable of already immutable", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.makeHatImmutable({
             hatId: childHatId2,
             account: account1,
           });
-        }).rejects.toThrow("Hat is immutable, editing is not allowed");
+        }).rejects.toThrow(ImmutableHatError);
       });
     });
   });

@@ -3,25 +3,19 @@ import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
-import { treeIdDecimalToHex } from "../src/client/utils";
+import { treeIdDecimalToHex } from "../src/utils";
 
 describe("copyTree tests", () => {
   let publicClient: PublicClient;
   let walletClient: WalletClient;
   let hatsClient: HatsClient;
   let address1: Address;
-  let address2: Address;
   let account1: PrivateKeyAccount;
-  let account2: PrivateKeyAccount;
 
   describe("Hats client is initialized", () => {
     beforeAll(() => {
-      address1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-      address2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+      address1 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
       account1 = privateKeyToAccount(
-        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-      );
-      account2 = privateKeyToAccount(
         "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
       );
 
@@ -48,10 +42,10 @@ describe("copyTree tests", () => {
       beforeAll(async () => {
         try {
           const resMintTopHat = await hatsClient.mintTopHat({
-            target: address2,
+            target: address1,
             details: "Target 1 details",
             imageURI: "Target 1 URI",
-            account: account2,
+            account: account1,
           });
           topHatIdTarget = resMintTopHat.hatId;
         } catch (err) {
@@ -70,7 +64,7 @@ describe("copyTree tests", () => {
         });
 
         await hatsClient.multicall({
-          account: account2,
+          account: account1,
           calls,
         });
 

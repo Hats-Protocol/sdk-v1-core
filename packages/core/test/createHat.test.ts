@@ -1,11 +1,16 @@
 import { HatsClient } from "../src/index";
+import {
+  NotAdminError,
+  InvalidAdminError,
+  ZeroAddressError,
+} from "../src/errors";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
+import { HATS_V1 } from "../src/constants";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
-import { HATS_V1 } from "../src/constants";
 
 describe("createHat tests", () => {
   let publicClient: PublicClient;
@@ -68,8 +73,8 @@ describe("createHat tests", () => {
     });
 
     describe("Hat is created with zero eligibility", () => {
-      test("Test createHat throws", () => {
-        expect(async () => {
+      test("Test createHat throws", async () => {
+        await expect(async () => {
           await hatsClient.createHat({
             admin: topHatId,
             maxSupply: 3,
@@ -80,13 +85,13 @@ describe("createHat tests", () => {
             imageURI: "1.1 URI",
             account: account1,
           });
-        }).rejects.toThrow("Zero eligibility address not valid");
+        }).rejects.toThrow(ZeroAddressError);
       });
     });
 
     describe("Hat is created with zero toggle", () => {
-      test("Test createHat throws", () => {
-        expect(async () => {
+      test("Test createHat throws", async () => {
+        await expect(async () => {
           await hatsClient.createHat({
             admin: topHatId,
             maxSupply: 3,
@@ -97,13 +102,13 @@ describe("createHat tests", () => {
             imageURI: "1.1 URI",
             account: account1,
           });
-        }).rejects.toThrow("Zero toggle address not valid");
+        }).rejects.toThrow(ZeroAddressError);
       });
     });
 
     describe("Hat is created with invalid admin ID", () => {
-      test("Test createHat throws", () => {
-        expect(async () => {
+      test("Test createHat throws", async () => {
+        await expect(async () => {
           await hatsClient.createHat({
             admin: BigInt(
               "0x0000000100000010000000000000000000000000000000000000000000000000"
@@ -116,13 +121,13 @@ describe("createHat tests", () => {
             imageURI: "1.1 URI",
             account: account1,
           });
-        }).rejects.toThrow("Invalid admin ID");
+        }).rejects.toThrow(InvalidAdminError);
       });
     });
 
     describe("Hat is created by a non admin", () => {
-      test("Test createHat throws", () => {
-        expect(async () => {
+      test("Test createHat throws", async () => {
+        await expect(async () => {
           await hatsClient.createHat({
             admin: topHatId,
             maxSupply: 3,
@@ -133,7 +138,7 @@ describe("createHat tests", () => {
             imageURI: "1.1 URI",
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
     });
 

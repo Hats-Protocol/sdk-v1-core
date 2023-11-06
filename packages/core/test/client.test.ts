@@ -36,9 +36,6 @@ describe("Basic tests", () => {
   let account1: PrivateKeyAccount;
   let account2: PrivateKeyAccount;
 
-  let publicClientGoerli: PublicClient;
-  let hatsClientGoerli: HatsClient;
-
   let topHatId_1: bigint;
   let topHatId_2: bigint;
   let topHatDomain_1: number;
@@ -72,18 +69,6 @@ describe("Basic tests", () => {
         chainId: goerli.id,
         publicClient: publicClient,
         walletClient: walletClient,
-      });
-
-      publicClientGoerli = createPublicClient({
-        chain: goerli,
-        transport: http(
-          "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9"
-        ),
-      });
-
-      hatsClientGoerli = new HatsClient({
-        chainId: goerli.id,
-        publicClient: publicClientGoerli,
       });
     }, 30000);
 

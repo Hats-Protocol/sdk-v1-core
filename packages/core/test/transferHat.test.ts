@@ -2,6 +2,14 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
+import {
+  ImmutableHatError,
+  NotAdminError,
+  NotEligibleError,
+  NotActiveError,
+  AlreadyWearingError,
+  NotWearerError,
+} from "../src/errors";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
 
@@ -100,14 +108,14 @@ describe("mintHat tests", () => {
           wearer: address1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.transferHat({
             hatId: childHatId2,
             from: address1,
             to: address2,
             account: account1,
           });
-        }).rejects.toThrow("Hat is immutable, transfer is not allowed");
+        }).rejects.toThrow(ImmutableHatError);
       });
 
       test("Test transfer by non admin", async () => {
@@ -117,14 +125,14 @@ describe("mintHat tests", () => {
           wearer: address1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.transferHat({
             hatId: childHatId1,
             from: address1,
             to: address2,
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test transfer to non eligible wearer", async () => {
@@ -142,14 +150,14 @@ describe("mintHat tests", () => {
           standing: false,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.transferHat({
             hatId: childHatId1,
             from: address1,
             to: address2,
             account: account1,
           });
-        }).rejects.toThrow("New wearer is not eligible for the hat");
+        }).rejects.toThrow(NotEligibleError);
       });
 
       test("Test transfer non active hat", async () => {
@@ -165,14 +173,14 @@ describe("mintHat tests", () => {
           newStatus: false,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.transferHat({
             hatId: childHatId1,
             from: address1,
             to: address2,
             account: account1,
           });
-        }).rejects.toThrow("Hat is not active");
+        }).rejects.toThrow(NotActiveError);
       });
 
       test("Test transfer to address already wearing the hat", async () => {
@@ -182,14 +190,14 @@ describe("mintHat tests", () => {
           wearer: address1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.transferHat({
             hatId: childHatId1,
             from: address1,
             to: address1,
             account: account1,
           });
-        }).rejects.toThrow("New wearer is already wearing the hat");
+        }).rejects.toThrow(AlreadyWearingError);
       });
 
       test("Test transfer by someone not wearing the hat", async () => {
@@ -199,14 +207,14 @@ describe("mintHat tests", () => {
           wearer: address1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.transferHat({
             hatId: childHatId1,
             from: address2,
             to: address3,
             account: account1,
           });
-        }).rejects.toThrow("From address is not a wearer of the hat");
+        }).rejects.toThrow(NotWearerError);
       });
     });
   });

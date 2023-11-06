@@ -2,6 +2,7 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
+import { NotToggleError, NotEligibilityError } from "../src/errors";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
 
@@ -75,17 +76,17 @@ describe("mintHat tests", () => {
       }, 30000);
 
       test("Test set hat status by non toggle", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.setHatStatus({
             hatId: childHatId,
             newStatus: false,
             account: account2,
           });
-        }).rejects.toThrow("The calling account is not the hat toggle");
+        }).rejects.toThrow(NotToggleError);
       });
 
       test("Test set hat wearer status by non eligibility", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.setHatWearerStatus({
             hatId: childHatId,
             wearer: address1,
@@ -93,7 +94,7 @@ describe("mintHat tests", () => {
             standing: false,
             account: account2,
           });
-        }).rejects.toThrow("The calling account is not the hat eligibility");
+        }).rejects.toThrow(NotEligibilityError);
       });
     });
   });

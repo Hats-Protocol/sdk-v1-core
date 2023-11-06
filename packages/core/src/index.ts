@@ -7,7 +7,7 @@ import {
   hatIdDecimalToIp,
   treeIdToTopHatId,
   hatIdToTreeId,
-} from "./client/utils";
+} from "./utils";
 
 export {
   HatsClient,
