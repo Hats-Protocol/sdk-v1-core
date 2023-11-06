@@ -47,27 +47,6 @@ export class SubgraphNotUpportedError extends Error {
   }
 }
 
-export class TransactionRevertedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TransactionRevertedError";
-  }
-}
-
-export class ZeroEligibilityError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ZeroEligibilityError";
-  }
-}
-
-export class ZeroToggleError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ZeroToggleError";
-  }
-}
-
 export class ZeroAddressError extends Error {
   constructor(message: string) {
     super(message);

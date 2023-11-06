@@ -5,7 +5,6 @@ import {
   ChainIdMismatchError,
   MissingPublicClientError,
   MissingWalletClientError,
-  TransactionRevertedError,
   MaxLevelReachedError,
   MaxHatsInLevelReached,
 } from "./errors";
