@@ -1,13 +1,10 @@
-# Hats-Protocol V1 Core SDK
+# Hats-Protocol SDK
 
-## Install
+Developer tools for integrating with and/or building on top of Hats-Protocol.
 
-```bash
-yarn add @hatsprotocol/sdk-v1-core
+## Packages
+| Package                                                   | Description                                                                                                            |
+|-----------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------|
+| [Core](/packages/core)  | Core interactions with Hats-Protocol                                                                         |
+| [Subgraph](/packages/subgraph)      | Fetching from the Hats-Protocol Subgraphs                                                                    |
 
-npm install @hatsprotocol/sdk-v1-core
-```
-
-## Documentation
-
-Detailed documentation can be found [here](https://docs.hatsprotocol.xyz/for-developers/hats-protocol-sdk)
