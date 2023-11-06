@@ -1,10 +1,4 @@
-import {
-  decodeEventLog,
-  encodeEventTopics,
-  encodeFunctionData,
-  BaseError,
-  ContractFunctionRevertedError,
-} from "viem";
+import { decodeEventLog, encodeEventTopics, encodeFunctionData } from "viem";
 import { HatsSubgraphClient } from "@hatsprotocol/sdk-v1-subgraph";
 
 import { HATS_ABI } from "./abi/Hats";
@@ -13,40 +7,13 @@ import {
   MissingPublicClientError,
   MissingWalletClientError,
   TransactionRevertedError,
-  ZeroToggleError,
-  ZeroEligibilityError,
-  NotAdminError,
-  InvalidAdminError,
-  AlreadyWearingError,
-  NotActiveError,
-  NotEligibleError,
-  AllHatsWornError,
-  HatNotExistError,
-  NotToggleError,
-  NotEligibilityError,
-  NotWearerError,
-  ImmutableHatError,
-  StringTooLongError,
-  InvalidMaxSupplyError,
-  CrossLinkageError,
-  CircularLinkageError,
-  NotAdminOrWearerError,
-  NoLinkageRequestError,
-  BatchParamsError,
-  MultiCallError,
   MaxLevelReachedError,
   MaxHatsInLevelReached,
 } from "./errors";
 import { HATS_V1, MAX_LEVEL_HATS, MAX_LEVELS, ZERO_ADDRESS } from "./constants";
 import { treeIdDecimalToHex, hatIdHexToDecimal } from "./utils";
-import type {
-  PublicClient,
-  WalletClient,
-  Account,
-  Address,
-  Hex,
-  TransactionReceipt,
-} from "viem";
+import { getError } from "./validations";
+import type { PublicClient, WalletClient, Account, Address, Hex } from "viem";
 import type {
   CreateHatResult,
   MintTopHatResult,
@@ -299,7 +266,7 @@ export class HatsClient {
     const level = await this.getLocalHatLevel(admin);
     if (level === MAX_LEVELS) {
       throw new MaxLevelReachedError(
-        "The provided admin's hat level is on the maximul level"
+        "The provided admin's hat level is on the maximal level"
       );
     }
 
@@ -615,10 +582,9 @@ export class HatsClient {
         "Wallet client is required to perform this action"
       );
     }
-    await this._validateHatCreation({ account, admin, eligibility, toggle });
 
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "createHat",
@@ -632,8 +598,9 @@ export class HatsClient {
           imageURI === undefined ? "" : imageURI,
         ],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -652,7 +619,7 @@ export class HatsClient {
         hatId: event.args.id,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -716,30 +683,8 @@ export class HatsClient {
       );
     }
 
-    const length = admins.length;
-
-    if (
-      length !== details.length ||
-      length !== maxSupplies.length ||
-      length !== eligibilityModules.length ||
-      length !== toggleModules.length ||
-      length !== mutables.length ||
-      (imageURIs !== undefined && length !== imageURIs.length)
-    ) {
-      throw new BatchParamsError("Length mismatch");
-    }
-
-    for (let i = 0; i < admins.length; i++) {
-      await this._validateHatCreation({
-        account,
-        admin: admins[i],
-        eligibility: eligibilityModules[i],
-        toggle: toggleModules[i],
-      });
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "batchCreateHats",
@@ -753,8 +698,9 @@ export class HatsClient {
           imageURIs === undefined ? Array(admins.length).fill("") : imageURIs,
         ],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -779,7 +725,7 @@ export class HatsClient {
         hatIds: newHatIds,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -830,17 +776,17 @@ export class HatsClient {
         "Wallet client is required to perform this action"
       );
     }
-    await this._validateHatMinting({ account, hatId, wearer });
 
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "mintHat",
         args: [hatId, wearer],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -851,7 +797,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -906,27 +852,16 @@ export class HatsClient {
       );
     }
 
-    if (hatIds.length !== wearers.length) {
-      throw new BatchParamsError("Length mismatch");
-    }
-
-    for (let i = 0; i < hatIds.length; i++) {
-      await this._validateHatMinting({
-        account,
-        hatId: hatIds[i],
-        wearer: wearers[i],
-      });
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "batchMintHats",
         args: [hatIds, wearers],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -937,7 +872,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -973,26 +908,16 @@ export class HatsClient {
       );
     }
 
-    const hat = await this.viewHat(hatId);
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-    if (hat.toggle !== accountAddress) {
-      throw new NotToggleError("The calling account is not the hat toggle");
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "setHatStatus",
         args: [hatId, newStatus],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1003,7 +928,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1035,14 +960,15 @@ export class HatsClient {
     }
 
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "checkHatStatus",
         args: [hatId],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1069,7 +995,7 @@ export class HatsClient {
         };
       }
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1111,28 +1037,16 @@ export class HatsClient {
       );
     }
 
-    const hat = await this.viewHat(hatId);
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-    if (hat.eligibility !== accountAddress) {
-      throw new NotEligibilityError(
-        "The calling account is not the hat eligibility"
-      );
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "setHatWearerStatus",
         args: [hatId, wearer, eligible, standing],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1143,7 +1057,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1179,14 +1093,15 @@ export class HatsClient {
     }
 
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "checkHatWearerStatus",
         args: [hatId, wearer],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1254,7 +1169,7 @@ export class HatsClient {
         };
       }
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1285,14 +1200,15 @@ export class HatsClient {
     }
 
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "renounceHat",
         args: [hatId],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1303,7 +1219,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1357,17 +1273,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateHatTransfer({ account, hatId, from, to });
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "transferHat",
         args: [hatId, from, to],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1378,7 +1293,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1414,17 +1329,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateHatEdit({ account, hatId });
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "makeHatImmutable",
         args: [hatId],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1435,7 +1349,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1477,21 +1391,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateHatEditOrTophat({ account, hatId });
-
-    if (newDetails.length > 7000) {
-      throw new StringTooLongError("Details field max length is 7000");
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatDetails",
         args: [hatId, newDetails],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1502,7 +1411,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1544,21 +1453,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateHatEdit({ account, hatId });
-
-    if (newEligibility == ZERO_ADDRESS) {
-      throw new ZeroEligibilityError("Zero eligibility address not valid");
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatEligibility",
         args: [hatId, newEligibility],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1569,7 +1473,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1611,21 +1515,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateHatEdit({ account, hatId });
-
-    if (newToggle == ZERO_ADDRESS) {
-      throw new ZeroToggleError("Zero toggle address not valid");
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatToggle",
         args: [hatId, newToggle],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1636,7 +1535,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1678,21 +1577,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateHatEditOrTophat({ account, hatId });
-
-    if (newImageURI.length > 7000) {
-      throw new StringTooLongError("Image URI field max length is 7000");
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatImageURI",
         args: [hatId, newImageURI],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1703,7 +1597,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1745,17 +1639,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateMaxSupplyEdit({ account, hatId, newMaxSupply });
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "changeHatMaxSupply",
         args: [hatId, newMaxSupply],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1766,7 +1659,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1802,17 +1695,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateTopHatDomainAdmin({ account, topHatDomain });
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "requestLinkTopHatToTree",
         args: [topHatDomain, requestedAdminHat],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1823,7 +1715,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1886,23 +1778,8 @@ export class HatsClient {
       );
     }
 
-    const linkageRequestToHat = await this.getLinkageRequest(topHatDomain);
-    if (linkageRequestToHat !== newAdminHat) {
-      throw new NoLinkageRequestError(
-        "Linkage has not been requested to the admin hat"
-      );
-    }
-
-    await this._validateLinkage({
-      account,
-      topHatDomain,
-      newAdminHat,
-      newDetails,
-      newImageURI,
-    });
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "approveLinkTopHatToTree",
@@ -1915,8 +1792,9 @@ export class HatsClient {
           newImageURI === undefined ? "" : newImageURI,
         ],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1927,7 +1805,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -1966,23 +1844,16 @@ export class HatsClient {
       );
     }
 
-    await this._validateTopHatDomainAdmin({ account, topHatDomain });
-
-    const topHatId = BigInt(treeIdDecimalToHex(topHatDomain).padEnd(66, "0"));
-    const isWearer = await this.isWearerOfHat({ wearer, hatId: topHatId });
-    if (wearer === ZERO_ADDRESS || !isWearer) {
-      throw new NotWearerError("Wearer is not wearing the tophat");
-    }
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "unlinkTopHatFromTree",
         args: [topHatDomain, wearer],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -1993,7 +1864,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -2054,18 +1925,8 @@ export class HatsClient {
       throw new Error("Wallet client is required to perform this action");
     }
 
-    await this._validateTopHatDomainAdmin({ account, topHatDomain });
-
-    await this._validateLinkage({
-      account,
-      topHatDomain,
-      newAdminHat,
-      newDetails,
-      newImageURI,
-    });
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "relinkTopHatWithinTree",
@@ -2078,8 +1939,9 @@ export class HatsClient {
           newImageURI === undefined ? "" : newImageURI,
         ],
         account,
-        chain: this._walletClient.chain,
       });
+
+      const hash = await this._walletClient.writeContract(request);
 
       const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
@@ -2090,7 +1952,7 @@ export class HatsClient {
         transactionHash: receipt.transactionHash,
       };
     } catch (err) {
-      throw new Error("Transaction reverted");
+      getError(err);
     }
   }
 
@@ -2123,118 +1985,106 @@ export class HatsClient {
       );
     }
 
-    const callDatas = calls.map((call) => call.callData);
-
-    //try {
-    //  await this._publicClient.estimateContractGas({
-    //    address: HATS_V1,
-    //    abi: HATS_ABI,
-    //    functionName: "multicall",
-    //    args: [callDatas],
-    //    account,
-    //  });
-    //} catch (err) {
-    //  throw new MultiCallError("One or more of the calls will revert");
-    //}
-
-    await this._validateMulticallWithSimulation({ account, calls: callDatas });
-
-    let receipt: TransactionReceipt;
-
     try {
-      const hash = await this._walletClient.writeContract({
+      const callDatas = calls.map((call) => call.callData);
+
+      const { request } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "multicall",
         args: [callDatas],
         account,
-        chain: this._walletClient.chain,
       });
 
-      receipt = await this._publicClient.waitForTransactionReceipt({
+      const hash = await this._walletClient.writeContract(request);
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
         hash,
       });
-    } catch (err) {
-      throw new TransactionRevertedError("Transaction reverted");
-    }
 
-    const hatsCreated: bigint[] = [];
-    const hatsMinted: {
-      hatId: bigint;
-      wearer: `0x${string}`;
-    }[] = [];
-    const hatsBurned: {
-      hatId: bigint;
-      wearer: `0x${string}`;
-    }[] = [];
-    const hatStatusChanges: {
-      hatId: bigint;
-      newStatus: "active" | "inactive";
-    }[] = [];
-    const wearerStandingChanges: {
-      hatId: bigint;
-      wearer: `0x${string}`;
-      newStanding: "good" | "bad";
-    }[] = [];
+      const hatsCreated: bigint[] = [];
+      const hatsMinted: {
+        hatId: bigint;
+        wearer: `0x${string}`;
+      }[] = [];
+      const hatsBurned: {
+        hatId: bigint;
+        wearer: `0x${string}`;
+      }[] = [];
+      const hatStatusChanges: {
+        hatId: bigint;
+        newStatus: "active" | "inactive";
+      }[] = [];
+      const wearerStandingChanges: {
+        hatId: bigint;
+        wearer: `0x${string}`;
+        newStanding: "good" | "bad";
+      }[] = [];
 
-    for (let i = 0; i < receipt.logs.length; i++) {
-      const log = receipt.logs[i];
-      try {
-        const event = decodeEventLog({
-          abi: HATS_ABI,
-          data: log.data,
-          topics: log.topics,
-        });
+      for (let i = 0; i < receipt.logs.length; i++) {
+        const log = receipt.logs[i];
+        try {
+          const event = decodeEventLog({
+            abi: HATS_ABI,
+            data: log.data,
+            topics: log.topics,
+          });
 
-        switch (event.eventName) {
-          case "HatCreated": {
-            hatsCreated.push(event.args.id);
-            break;
-          }
-          case "TransferSingle": {
-            if (event.args.to !== ZERO_ADDRESS) {
-              hatsMinted.push({ hatId: event.args.id, wearer: event.args.to });
+          switch (event.eventName) {
+            case "HatCreated": {
+              hatsCreated.push(event.args.id);
+              break;
             }
-            if (event.args.from !== ZERO_ADDRESS) {
-              hatsBurned.push({
-                hatId: event.args.id,
-                wearer: event.args.from,
+            case "TransferSingle": {
+              if (event.args.to !== ZERO_ADDRESS) {
+                hatsMinted.push({
+                  hatId: event.args.id,
+                  wearer: event.args.to,
+                });
+              }
+              if (event.args.from !== ZERO_ADDRESS) {
+                hatsBurned.push({
+                  hatId: event.args.id,
+                  wearer: event.args.from,
+                });
+              }
+              break;
+            }
+            case "HatStatusChanged": {
+              hatStatusChanges.push({
+                hatId: event.args.hatId,
+                newStatus: event.args.newStatus ? "active" : "inactive",
               });
+              break;
             }
-            break;
+            case "WearerStandingChanged": {
+              wearerStandingChanges.push({
+                hatId: event.args.hatId,
+                wearer: event.args.wearer,
+                newStanding: event.args.wearerStanding ? "good" : "bad",
+              });
+              break;
+            }
           }
-          case "HatStatusChanged": {
-            hatStatusChanges.push({
-              hatId: event.args.hatId,
-              newStatus: event.args.newStatus ? "active" : "inactive",
-            });
-            break;
-          }
-          case "WearerStandingChanged": {
-            wearerStandingChanges.push({
-              hatId: event.args.hatId,
-              wearer: event.args.wearer,
-              newStanding: event.args.wearerStanding ? "good" : "bad",
-            });
-            break;
-          }
+        } catch (err) {
+          console.log("Non Hats event encountered");
+          continue;
         }
-      } catch (err) {
-        console.log("Non Hats event encountered");
-        continue;
       }
-    }
 
-    return {
-      status: receipt.status,
-      transactionHash: receipt.transactionHash,
-      gasUsed: receipt.gasUsed,
-      hatsCreated,
-      hatsMinted,
-      hatsBurned,
-      hatStatusChanges,
-      wearerStandingChanges,
-    };
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+        gasUsed: receipt.gasUsed,
+        hatsCreated,
+        hatsMinted,
+        hatsBurned,
+        hatStatusChanges,
+        wearerStandingChanges,
+      };
+    } catch (err) {
+      getError(err);
+    }
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -2952,435 +2802,5 @@ export class HatsClient {
     });
 
     return res;
-  }
-
-  /*//////////////////////////////////////////////////////////////
-                        Validation Functions
-      //////////////////////////////////////////////////////////////*/
-
-  protected async _validateHatCreation({
-    account,
-    admin,
-    eligibility,
-    toggle,
-  }: {
-    account: Account | Address;
-    admin: bigint;
-    eligibility: Address;
-    toggle: Address;
-  }) {
-    if (eligibility === ZERO_ADDRESS) {
-      throw new ZeroEligibilityError("Zero eligibility address not valid");
-    }
-    if (toggle === ZERO_ADDRESS) {
-      throw new ZeroToggleError("Zero toggle address not valid");
-    }
-
-    const validHatId = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isValidHatId",
-      args: [admin],
-    });
-    if (!validHatId) {
-      throw new InvalidAdminError("Invalid admin ID");
-    }
-
-    const nextHatId = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "getNextId",
-      args: [admin],
-    });
-
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId: nextHatId,
-    });
-    if (!isAdmin) {
-      throw new NotAdminError("Not Admin");
-    }
-  }
-
-  protected async _validateHatMinting({
-    account,
-    hatId,
-    wearer,
-  }: {
-    account: Account | Address;
-    hatId: bigint;
-    wearer: Address;
-  }) {
-    const hat = await this.viewHat(hatId);
-    if (hat.maxSupply === 0) {
-      throw new HatNotExistError("Hat does not exist");
-    }
-    if (hat.supply >= hat.maxSupply) {
-      throw new AllHatsWornError("All hats are worn");
-    }
-
-    const isWearerEligible = await this.isEligible({ wearer, hatId });
-    if (!isWearerEligible) {
-      throw new NotEligibleError("Wearer is not eligible");
-    }
-
-    const isHatActive = await this.isActive(hatId);
-    if (!isHatActive) {
-      throw new NotActiveError("Hat is not active");
-    }
-
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId,
-    });
-    if (!isAdmin) {
-      throw new NotAdminError("Not Admin");
-    }
-
-    const isAlreadyWearing = await this.isWearerOfHat({ wearer, hatId });
-    if (isAlreadyWearing) {
-      throw new AlreadyWearingError("Already wearing the hat");
-    }
-  }
-
-  protected async _validateHatTransfer({
-    account,
-    hatId,
-    from,
-    to,
-  }: {
-    account: Account | Address;
-    hatId: bigint;
-    from: Address;
-    to: Address;
-  }) {
-    const hat = await this.viewHat(hatId);
-    const isTopHat = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isTopHat",
-      args: [hatId],
-    });
-    if (!isTopHat && !hat.mutable) {
-      throw new ImmutableHatError("Hat is immutable, transfer is not allowed");
-    }
-
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId,
-    });
-    if (!isAdmin) {
-      throw new NotAdminError("Not Admin");
-    }
-
-    const isNewWearerEligible = await this.isEligible({ wearer: to, hatId });
-    if (!isNewWearerEligible) {
-      throw new NotEligibleError("New wearer is not eligible for the hat");
-    }
-
-    const isHatActive = await this.isActive(hatId);
-    if (!isHatActive) {
-      throw new NotActiveError("Hat is not active");
-    }
-
-    const isAlreadyWearing = await this.isWearerOfHat({ wearer: to, hatId });
-    if (isAlreadyWearing) {
-      throw new AlreadyWearingError("New wearer is already wearing the hat");
-    }
-
-    const isCurrentWearerEligible = await this.isEligible({
-      wearer: from,
-      hatId,
-    });
-    const isCurrentWearer = await this.isWearerOfHat({ wearer: from, hatId });
-    if (isCurrentWearerEligible && !isCurrentWearer) {
-      throw new NotWearerError("From address is not a wearer of the hat");
-    }
-  }
-
-  protected async _validateHatEdit({
-    account,
-    hatId,
-  }: {
-    account: Account | Address;
-    hatId: bigint;
-  }) {
-    const hat = await this.viewHat(hatId);
-    if (!hat.mutable) {
-      throw new ImmutableHatError("Hat is immutable, editing is not allowed");
-    }
-
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId,
-    });
-    if (!isAdmin) {
-      throw new NotAdminError("Not Admin");
-    }
-  }
-
-  protected async _validateHatEditOrTophat({
-    account,
-    hatId,
-  }: {
-    account: Account | Address;
-    hatId: bigint;
-  }) {
-    const hat = await this.viewHat(hatId);
-    const isTopHat = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isTopHat",
-      args: [hatId],
-    });
-    if (!isTopHat && !hat.mutable) {
-      throw new ImmutableHatError("Hat is immutable, edit is not allowed");
-    }
-
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId,
-    });
-    if (!isAdmin) {
-      throw new NotAdminError("Not Admin");
-    }
-  }
-
-  protected async _validateMaxSupplyEdit({
-    account,
-    hatId,
-    newMaxSupply,
-  }: {
-    account: Account | Address;
-    hatId: bigint;
-    newMaxSupply: number;
-  }) {
-    const hat = await this.viewHat(hatId);
-    if (!hat.mutable) {
-      throw new ImmutableHatError("Hat is immutable, editing is not allowed");
-    }
-
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId,
-    });
-    if (!isAdmin) {
-      throw new NotAdminError("Not Admin");
-    }
-
-    if (newMaxSupply < hat.supply) {
-      throw new InvalidMaxSupplyError(
-        "New max supply cannot be lower than the current aupply of minted hats"
-      );
-    }
-  }
-
-  protected async _validateTopHatDomainAdmin({
-    account,
-    topHatDomain,
-  }: {
-    account: Account | Address;
-    topHatDomain: number;
-  }) {
-    const topHatId = BigInt(treeIdDecimalToHex(topHatDomain).padEnd(66, "0"));
-
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId: topHatId,
-    });
-    if (!isAdmin) {
-      throw new NotAdminError("Not Admin");
-    }
-  }
-
-  protected async _validateLinkage({
-    account,
-    topHatDomain,
-    newAdminHat,
-    newDetails,
-    newImageURI,
-  }: {
-    account: Account | Address;
-    topHatDomain: number;
-    newAdminHat: bigint;
-    newDetails?: string;
-    newImageURI?: string;
-  }) {
-    let accountAddress: Address;
-    if (typeof account === "object") {
-      accountAddress = account.address;
-    } else {
-      accountAddress = account;
-    }
-
-    const isAdmin = await this.isAdminOfHat({
-      user: accountAddress,
-      hatId: newAdminHat,
-    });
-    const isWearer = await this.isWearerOfHat({
-      wearer: accountAddress,
-      hatId: newAdminHat,
-    });
-    if (!isAdmin && !isWearer) {
-      throw new NotAdminOrWearerError("Not admin or wearer");
-    }
-
-    const noCircularLinkage = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "noCircularLinkage",
-      args: [topHatDomain, newAdminHat],
-    });
-    if (!noCircularLinkage) {
-      throw new CircularLinkageError("Circular linkage not allowed");
-    }
-
-    const linkedAdmin = await this.getLinkedTreeAdmin(topHatDomain);
-    if (linkedAdmin > 0) {
-      const tippyTopHatDomain = await this.getTippyTopHatDomain(topHatDomain);
-      const tippyTopHatId = BigInt(
-        treeIdDecimalToHex(tippyTopHatDomain).padEnd(66, "0")
-      );
-
-      const isWearerTippy = await this.isWearerOfHat({
-        wearer: accountAddress,
-        hatId: tippyTopHatId,
-      });
-      if (!isWearerTippy) {
-        const destLocalTopHatDomain = await this._publicClient.readContract({
-          address: HATS_V1,
-          abi: HATS_ABI,
-          functionName: "getTopHatDomain",
-          args: [newAdminHat],
-        });
-        const destLocalTopHatId = BigInt(
-          treeIdDecimalToHex(destLocalTopHatDomain).padEnd(66, "0")
-        );
-
-        const originalLocalTopHatDomain = await this._publicClient.readContract(
-          {
-            address: HATS_V1,
-            abi: HATS_ABI,
-            functionName: "getTopHatDomain",
-            args: [linkedAdmin],
-          }
-        );
-        const originalLocalTopHatId = BigInt(
-          treeIdDecimalToHex(originalLocalTopHatDomain).padEnd(66, "0")
-        );
-
-        if (
-          destLocalTopHatId !== originalLocalTopHatId &&
-          destLocalTopHatId !== tippyTopHatId
-        ) {
-          throw new CrossLinkageError("Cross tree linkage not allowed");
-        }
-      } else {
-        const sameTippyTophat = await this._publicClient.readContract({
-          address: HATS_V1,
-          abi: HATS_ABI,
-          functionName: "sameTippyTopHatDomain",
-          args: [topHatDomain, newAdminHat],
-        });
-
-        if (!sameTippyTophat) {
-          throw new CrossLinkageError("Cross tree linkage not allowed");
-        }
-      }
-    }
-
-    if (newDetails !== undefined && newDetails.length > 7000) {
-      throw new StringTooLongError("Details field max length is 7000");
-    }
-
-    if (newImageURI !== undefined && newImageURI.length > 7000) {
-      throw new StringTooLongError("Image URI field max length is 7000");
-    }
-  }
-
-  protected async _validateMulticallWithSimulation({
-    account,
-    calls,
-  }: {
-    account: Account | Address;
-    calls: `0x${string}`[];
-  }) {
-    try {
-      await this._publicClient.simulateContract({
-        address: HATS_V1,
-        abi: HATS_ABI,
-        functionName: "multicall",
-        args: [calls],
-        account,
-      });
-    } catch (err) {
-      if (err instanceof BaseError) {
-        const revertError = err.walk(
-          (err) => err instanceof ContractFunctionRevertedError
-        );
-        if (revertError instanceof ContractFunctionRevertedError) {
-          const errorName = revertError.data?.errorName ?? "";
-          console.log(errorName);
-          console.log(revertError.data?.args);
-          switch (errorName) {
-            case "NotAdmin": {
-              console.log(revertError.data?.args);
-              break;
-            }
-          }
-        }
-      } else {
-        throw new MultiCallError("One or more of the calls will revert");
-      }
-    }
   }
 }

@@ -68,6 +68,13 @@ export class ZeroToggleError extends Error {
   }
 }
 
+export class ZeroAddressError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ZeroAddressError";
+  }
+}
+
 export class InvalidAdminError extends Error {
   constructor(message: string) {
     super(message);
@@ -212,5 +219,12 @@ export class MaxHatsInLevelReached extends Error {
   constructor(message: string) {
     super(message);
     this.name = "MaxHatsInLevelReached";
+  }
+}
+
+export class InvalidUnlinkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidUnlinkError";
   }
 }

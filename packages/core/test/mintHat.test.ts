@@ -3,9 +3,17 @@ import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
+import { HATS_V1 } from "../src/constants";
+import {
+  HatNotExistError,
+  AllHatsWornError,
+  NotEligibleError,
+  NotActiveError,
+  NotAdminError,
+  AlreadyWearingError,
+} from "../src/errors";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
-import { HATS_V1 } from "../src/constants";
 
 describe("mintHat tests", () => {
   let publicClient: PublicClient;
@@ -88,13 +96,13 @@ describe("mintHat tests", () => {
           args: [topHatId],
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.mintHat({
             hatId: nextHatId,
             wearer: address1,
             account: account1,
           });
-        }).rejects.toThrow("Hat does not exist");
+        }).rejects.toThrow(HatNotExistError);
       });
 
       test("Test mint when max supply reached", async () => {
@@ -110,13 +118,13 @@ describe("mintHat tests", () => {
           account: account1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.mintHat({
             hatId: childHatId,
             wearer: address3,
             account: account1,
           });
-        }).rejects.toThrow("All hats are worn");
+        }).rejects.toThrow(AllHatsWornError);
       });
 
       test("Test mint for non eligible address", async () => {
@@ -128,13 +136,13 @@ describe("mintHat tests", () => {
           standing: false,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.mintHat({
             hatId: childHatId,
             wearer: address1,
             account: account1,
           });
-        }).rejects.toThrow("Wearer is not eligible");
+        }).rejects.toThrow(NotEligibleError);
       });
 
       test("Test mint for non active hat", async () => {
@@ -144,23 +152,23 @@ describe("mintHat tests", () => {
           newStatus: false,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.mintHat({
             hatId: childHatId,
             wearer: address1,
             account: account1,
           });
-        }).rejects.toThrow("Hat is not active");
+        }).rejects.toThrow(NotActiveError);
       });
 
       test("Test mint for by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.mintHat({
             hatId: childHatId,
             wearer: address1,
             account: account2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test mint to someone already wearing", async () => {
@@ -170,13 +178,13 @@ describe("mintHat tests", () => {
           wearer: address1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.mintHat({
             account: account1,
             hatId: childHatId,
             wearer: address1,
           });
-        }).rejects.toThrow("Already wearing the hat");
+        }).rejects.toThrow(AlreadyWearingError);
       });
     });
   });

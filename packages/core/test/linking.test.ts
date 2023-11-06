@@ -2,6 +2,14 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
+import {
+  NotAdminError,
+  NoLinkageRequestError,
+  CircularLinkageError,
+  StringTooLongError,
+  InvalidUnlinkError,
+  CrossLinkageError,
+} from "../src/errors";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
 
@@ -72,100 +80,96 @@ describe("mintHat tests", () => {
       let resCreateHat2: CreateHatResult;
 
       beforeEach(async () => {
-        try {
-          resTopHat1 = await hatsClient.mintTopHat({
-            target: address1,
-            details: "Tophat SDK 1",
-            imageURI: "Tophat URI 1",
-            account: account1,
-          });
+        resTopHat1 = await hatsClient.mintTopHat({
+          target: address1,
+          details: "Tophat SDK 1",
+          imageURI: "Tophat URI 1",
+          account: account1,
+        });
 
-          topHatId1 = resTopHat1.hatId;
-          topHatDomain1 = await hatsClient.getTopHatDomain(topHatId1);
+        topHatId1 = resTopHat1.hatId;
+        topHatDomain1 = await hatsClient.getTopHatDomain(topHatId1);
 
-          resTopHat2 = await hatsClient.mintTopHat({
-            target: address2,
-            details: "Tophat SDK 2",
-            imageURI: "Tophat URI 2",
-            account: account2,
-          });
+        resTopHat2 = await hatsClient.mintTopHat({
+          target: address2,
+          details: "Tophat SDK 2",
+          imageURI: "Tophat URI 2",
+          account: account2,
+        });
 
-          topHatId2 = resTopHat2.hatId;
-          topHatDomain2 = await hatsClient.getTopHatDomain(topHatId2);
+        topHatId2 = resTopHat2.hatId;
+        topHatDomain2 = await hatsClient.getTopHatDomain(topHatId2);
 
-          resTopHat3 = await hatsClient.mintTopHat({
-            target: address1,
-            details: "Tophat SDK 3",
-            imageURI: "Tophat URI 3",
-            account: account2,
-          });
+        resTopHat3 = await hatsClient.mintTopHat({
+          target: address1,
+          details: "Tophat SDK 3",
+          imageURI: "Tophat URI 3",
+          account: account2,
+        });
 
-          topHatId3 = resTopHat3.hatId;
+        topHatId3 = resTopHat3.hatId;
 
-          resTopHat4 = await hatsClient.mintTopHat({
-            target: address3,
-            details: "Tophat SDK 3",
-            imageURI: "Tophat URI 3",
-            account: account2,
-          });
+        resTopHat4 = await hatsClient.mintTopHat({
+          target: address3,
+          details: "Tophat SDK 3",
+          imageURI: "Tophat URI 3",
+          account: account2,
+        });
 
-          topHatId4 = resTopHat4.hatId;
-          topHatDomain4 = await hatsClient.getTopHatDomain(topHatId4);
+        topHatId4 = resTopHat4.hatId;
+        topHatDomain4 = await hatsClient.getTopHatDomain(topHatId4);
 
-          resCreateHat1 = await hatsClient.createHat({
-            admin: topHatId1,
-            maxSupply: 3,
-            eligibility: address1,
-            toggle: address1,
-            mutable: true,
-            details: "Hat details",
-            imageURI: "Hat URI",
-            account: account1,
-          });
+        resCreateHat1 = await hatsClient.createHat({
+          admin: topHatId1,
+          maxSupply: 3,
+          eligibility: address1,
+          toggle: address1,
+          mutable: true,
+          details: "Hat details",
+          imageURI: "Hat URI",
+          account: account1,
+        });
 
-          childHatId1 = resCreateHat1.hatId;
+        childHatId1 = resCreateHat1.hatId;
 
-          resCreateHat2 = await hatsClient.createHat({
-            admin: topHatId1,
-            maxSupply: 3,
-            eligibility: address1,
-            toggle: address1,
-            mutable: false,
-            details: "Hat details",
-            imageURI: "Hat URI",
-            account: account1,
-          });
+        resCreateHat2 = await hatsClient.createHat({
+          admin: topHatId1,
+          maxSupply: 3,
+          eligibility: address1,
+          toggle: address1,
+          mutable: false,
+          details: "Hat details",
+          imageURI: "Hat URI",
+          account: account1,
+        });
 
-          childHatId2 = resCreateHat2.hatId;
+        childHatId2 = resCreateHat2.hatId;
 
-          await hatsClient.mintHat({
-            account: account1,
-            hatId: childHatId2,
-            wearer: address3,
-          });
-        } catch (err) {
-          console.log(err);
-        }
+        await hatsClient.mintHat({
+          account: account1,
+          hatId: childHatId2,
+          wearer: address3,
+        });
       }, 30000);
 
       test("Test linakage request by non admin", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.requestLinkTopHatToTree({
             topHatDomain: topHatDomain2,
             requestedAdminHat: childHatId1,
             account: account1,
           });
-        }).rejects.toThrow("Not Admin");
-      });
+        }).rejects.toThrow(NotAdminError);
+      }, 30000);
 
       test("Test approve request when no request happened", async () => {
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.approveLinkTopHatToTree({
             topHatDomain: topHatDomain2,
             newAdminHat: childHatId1,
             account: account1,
           });
-        }).rejects.toThrow("Linkage has not been requested to the admin hat");
+        }).rejects.toThrow(NoLinkageRequestError);
       });
 
       test("Test approve request by non admin", async () => {
@@ -175,13 +179,13 @@ describe("mintHat tests", () => {
           account: account2,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.approveLinkTopHatToTree({
             topHatDomain: topHatDomain2,
             newAdminHat: childHatId1,
             account: account2,
           });
-        }).rejects.toThrow("Not admin or wearer");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test approve request with circular linkage", async () => {
@@ -203,13 +207,13 @@ describe("mintHat tests", () => {
           account: account1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.approveLinkTopHatToTree({
             topHatDomain: topHatDomain1,
             newAdminHat: topHatId2,
             account: account2,
           });
-        }).rejects.toThrow("Circular linkage not allowed");
+        }).rejects.toThrow(CircularLinkageError);
       });
 
       test("Test approve request with too long new details", async () => {
@@ -219,14 +223,14 @@ describe("mintHat tests", () => {
           account: account2,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.approveLinkTopHatToTree({
             topHatDomain: topHatDomain2,
             newAdminHat: childHatId1,
             newDetails: LONG_STRING,
             account: account1,
           });
-        }).rejects.toThrow("Details field max length is 7000");
+        }).rejects.toThrow(StringTooLongError);
       });
 
       test("Test approve request with too long new image URI", async () => {
@@ -236,14 +240,14 @@ describe("mintHat tests", () => {
           account: account2,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.approveLinkTopHatToTree({
             topHatDomain: topHatDomain2,
             newAdminHat: childHatId1,
             newImageURI: LONG_STRING,
             account: account1,
           });
-        }).rejects.toThrow("Image URI field max length is 7000");
+        }).rejects.toThrow(StringTooLongError);
       });
 
       test("Test unlink by non admin", async () => {
@@ -259,13 +263,13 @@ describe("mintHat tests", () => {
           account: account1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.unlinkTopHatFromTree({
             topHatDomain: topHatDomain2,
             account: account2,
             wearer: address2,
           });
-        }).rejects.toThrow("Not Admin");
+        }).rejects.toThrow(NotAdminError);
       });
 
       test("Test unlink with wrong wearer", async () => {
@@ -281,13 +285,13 @@ describe("mintHat tests", () => {
           account: account1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.unlinkTopHatFromTree({
             topHatDomain: topHatDomain2,
             account: account1,
             wearer: address1,
           });
-        }).rejects.toThrow("Wearer is not wearing the tophat");
+        }).rejects.toThrow(InvalidUnlinkError);
       });
 
       test("Test relink to different tree", async () => {
@@ -303,13 +307,13 @@ describe("mintHat tests", () => {
           account: account1,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.relinkTopHatWithinTree({
             topHatDomain: topHatDomain2,
             newAdminHat: topHatId3,
             account: account1,
           });
-        }).rejects.toThrow("Cross tree linkage not allowed");
+        }).rejects.toThrow(CrossLinkageError);
       });
 
       test("Test relink to non local tree", async () => {
@@ -337,13 +341,13 @@ describe("mintHat tests", () => {
           account: account3,
         });
 
-        expect(async () => {
+        await expect(async () => {
           await hatsClient.relinkTopHatWithinTree({
             topHatDomain: topHatDomain2,
             newAdminHat: topHatId4,
             account: account3,
           });
-        }).rejects.toThrow("Cross tree linkage not allowed");
+        }).rejects.toThrow(CrossLinkageError);
       });
     });
   });

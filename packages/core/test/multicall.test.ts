@@ -2,9 +2,10 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
+import { NotAdminError } from "../src/errors";
+import { hatIdDecimalToHex } from "../src/utils";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { MintTopHatResult } from "../src/types";
-import { hatIdDecimalToHex } from "../src/client/utils";
 
 describe("createHat tests", () => {
   let publicClient: PublicClient;
@@ -99,7 +100,7 @@ describe("createHat tests", () => {
             account: account2,
             calls: [createHatData1_1, createHatData1_2],
           });
-        }).rejects.toThrow("One or more of the calls will revert");
+        }).rejects.toThrow(NotAdminError);
 
         const res = await hatsClient.multicall({
           account: account1,
@@ -142,7 +143,7 @@ describe("createHat tests", () => {
             account: account2,
             calls: [createHatCallData, mintHatCallData],
           });
-        }).rejects.toThrow("One or more of the calls will revert");
+        }).rejects.toThrow(NotAdminError);
 
         const res = await hatsClient.multicall({
           account: account1,
