@@ -2,7 +2,7 @@ export interface Hat {
   id: string;
   prettyId?: string;
   status?: boolean;
-  createdAt?: string;
+  createdAt?: string | null;
   details?: string;
   maxSupply?: string;
   eligibility?: `0x${string}`;
@@ -63,12 +63,12 @@ export interface WearerConfig {
 export interface Tree {
   id: number;
   hats?: Hat[];
-  childOfTree?: Tree;
+  childOfTree?: Tree | null;
   parentOfTrees?: Tree[];
-  linkedToHat?: Hat;
+  linkedToHat?: Hat | null;
   linkRequestFromTree?: Tree[];
-  requestedLinkToTree?: Tree;
-  requestedLinkToHat?: Hat;
+  requestedLinkToTree?: Tree | null;
+  requestedLinkToHat?: Hat | null;
   events?: HatsEvent[];
 }
 
