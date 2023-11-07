@@ -85,7 +85,7 @@ export interface TreeConfig {
 
 export interface HatsEvent {
   id: string;
-  timestamp?: bigint;
+  timestamp?: string;
   blockNumber?: number;
   transactionID?: string;
   hat?: Hat;
