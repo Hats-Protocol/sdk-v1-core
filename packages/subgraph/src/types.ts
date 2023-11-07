@@ -5,8 +5,8 @@ export interface Hat {
   createdAt?: string | null;
   details?: string;
   maxSupply?: string;
-  eligibility?: `0x${string}`;
-  toggle?: `0x${string}`;
+  eligibility?: string;
+  toggle?: string;
   mutable?: boolean;
   imageUri?: string;
   levelAtLocalTree?: number;
@@ -61,7 +61,7 @@ export interface WearerConfig {
 }
 
 export interface Tree {
-  id: number;
+  id: string;
   hats?: Hat[];
   childOfTree?: Tree | null;
   parentOfTrees?: Tree[];
