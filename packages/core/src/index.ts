@@ -7,6 +7,7 @@ import {
   hatIdDecimalToIp,
   treeIdToTopHatId,
   hatIdToTreeId,
+  hatIdIpToDecimal,
 } from "./utils";
 
 export {
@@ -18,6 +19,7 @@ export {
   hatIdDecimalToIp,
   treeIdToTopHatId,
   hatIdToTreeId,
+  hatIdIpToDecimal,
 };
 
 export type {

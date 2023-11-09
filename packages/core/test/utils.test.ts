@@ -6,6 +6,7 @@ import {
   treeIdToTopHatId,
   hatIdToTreeId,
   hatIdDecimalToIp,
+  hatIdIpToDecimal,
 } from "../src/index";
 
 describe("Utils tests", () => {
@@ -135,5 +136,39 @@ describe("Utils tests", () => {
     expect(hatIdDecimalToIp(id3)).toBe("1112");
     expect(hatIdDecimalToIp(id4)).toBe("1.1.1");
     expect(hatIdDecimalToIp(id5)).toBe("1.1.1.1.1.1.1.1.1.1.1.1.1.1.1");
+  });
+
+  test("Test hatIdIpToDecimal", () => {
+    const id1 = "1.1";
+    const id2 = "1";
+    const id3 = "16";
+    const id4 = "1.1.16";
+    const id5 = "2.3.4.5.6.7.10";
+
+    expect(hatIdIpToDecimal(id1)).toBe(
+      BigInt(
+        "0x0000000100010000000000000000000000000000000000000000000000000000"
+      )
+    );
+    expect(hatIdIpToDecimal(id2)).toBe(
+      BigInt(
+        "0x0000000100000000000000000000000000000000000000000000000000000000"
+      )
+    );
+    expect(hatIdIpToDecimal(id3)).toBe(
+      BigInt(
+        "0x0000001000000000000000000000000000000000000000000000000000000000"
+      )
+    );
+    expect(hatIdIpToDecimal(id4)).toBe(
+      BigInt(
+        "0x0000000100010010000000000000000000000000000000000000000000000000"
+      )
+    );
+    expect(hatIdIpToDecimal(id5)).toBe(
+      BigInt(
+        "0x0000000200030004000500060007000a00000000000000000000000000000000"
+      )
+    );
   });
 });
