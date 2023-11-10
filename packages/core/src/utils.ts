@@ -107,7 +107,7 @@ export function HatIpToHex(hatIp: string): string {
  * @param hatIp Full IP of a hat.
  * @returns the base tree IP of the hat as a number.
  */
-export function treeIpFromIp(hatIp: string): Number {
+export function TreeIpFromIp(hatIp: string): Number {
   let treeIp;
 
   //If hatIp is the tree IP
