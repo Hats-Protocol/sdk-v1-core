@@ -27,6 +27,18 @@ export function hatIdDecimalToIp(hatId: bigint): string {
   return ip;
 }
 
+export function hatIdIpToDecimal(hatId: string): bigint {
+  const domains = hatId.split(".");
+
+  let hatIdHex = parseInt(domains[0]).toString(16).padStart(8, "0");
+  for (let i = 1; i < domains.length; i++) {
+    hatIdHex = hatIdHex + parseInt(domains[i]).toString(16).padStart(4, "0");
+  }
+  hatIdHex = "0x" + hatIdHex.padEnd(64, "0");
+
+  return BigInt(hatIdHex);
+}
+
 export function treeIdToTopHatId(treeId: number): bigint {
   return BigInt(treeIdDecimalToHex(treeId).padEnd(66, "0"));
 }
