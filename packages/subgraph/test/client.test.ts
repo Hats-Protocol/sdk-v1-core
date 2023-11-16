@@ -182,6 +182,57 @@ describe("Client Tests", () => {
             }
             events(orderBy: timestamp, orderDirection: desc) {
               id
+              __typename
+              ... on HatCreatedEvent {
+                hatDetails
+                hatMaxSupply
+                hatEligibility
+                hatToggle
+                hatMutable
+                hatImageUri
+              }
+              ... on HatMintedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatBurnedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatStatusChangedEvent {
+                hatNewStatus
+              }
+              ... on HatDetailsChangedEvent {
+                hatNewDetails
+              }
+              ... on HatEligibilityChangedEvent {
+                hatNewEligibility
+              }
+              ... on HatToggleChangedEvent {
+                hatNewToggle
+              }
+              ... on HatMaxSupplyChangedEvent {
+                hatNewMaxSupply
+              }
+              ... on HatImageURIChangedEvent {
+                hatNewImageURI
+              }
+              ... on TopHatLinkRequestedEvent {
+                newAdmin
+              }
+              ... on TopHatLinkedEvent {
+                newAdmin
+              }
+              ... on WearerStandingChangedEvent {
+                wearer {
+                  id
+                }
+                wearerStanding
+              }
             }
           }
         }
@@ -355,6 +406,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             wearers {
@@ -411,6 +513,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             badStandings {
@@ -468,6 +621,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             subHats {
@@ -512,6 +716,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             linkedTrees {
@@ -539,6 +794,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             events(orderBy: timestamp, orderDirection: desc) {
@@ -546,6 +852,57 @@ describe("Client Tests", () => {
               blockNumber
               timestamp
               transactionID
+              __typename
+              ... on HatCreatedEvent {
+                hatDetails
+                hatMaxSupply
+                hatEligibility
+                hatToggle
+                hatMutable
+                hatImageUri
+              }
+              ... on HatMintedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatBurnedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatStatusChangedEvent {
+                hatNewStatus
+              }
+              ... on HatDetailsChangedEvent {
+                hatNewDetails
+              }
+              ... on HatEligibilityChangedEvent {
+                hatNewEligibility
+              }
+              ... on HatToggleChangedEvent {
+                hatNewToggle
+              }
+              ... on HatMaxSupplyChangedEvent {
+                hatNewMaxSupply
+              }
+              ... on HatImageURIChangedEvent {
+                hatNewImageURI
+              }
+              ... on TopHatLinkRequestedEvent {
+                newAdmin
+              }
+              ... on TopHatLinkedEvent {
+                newAdmin
+              }
+              ... on WearerStandingChangedEvent {
+                wearer {
+                  id
+                }
+                wearerStanding
+              }
             }
           }
         }
@@ -643,6 +1000,57 @@ describe("Client Tests", () => {
             }
             events(orderBy: timestamp, orderDirection: desc, first: 1) {
               id
+              __typename
+              ... on HatCreatedEvent {
+                hatDetails
+                hatMaxSupply
+                hatEligibility
+                hatToggle
+                hatMutable
+                hatImageUri
+              }
+              ... on HatMintedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatBurnedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatStatusChangedEvent {
+                hatNewStatus
+              }
+              ... on HatDetailsChangedEvent {
+                hatNewDetails
+              }
+              ... on HatEligibilityChangedEvent {
+                hatNewEligibility
+              }
+              ... on HatToggleChangedEvent {
+                hatNewToggle
+              }
+              ... on HatMaxSupplyChangedEvent {
+                hatNewMaxSupply
+              }
+              ... on HatImageURIChangedEvent {
+                hatNewImageURI
+              }
+              ... on TopHatLinkRequestedEvent {
+                newAdmin
+              }
+              ... on TopHatLinkedEvent {
+                newAdmin
+              }
+              ... on WearerStandingChangedEvent {
+                wearer {
+                  id
+                }
+                wearerStanding
+              }
             }
           }
         }
@@ -847,6 +1255,57 @@ describe("Client Tests", () => {
             }
             events(orderBy: timestamp, orderDirection: desc) {
               id
+              __typename
+              ... on HatCreatedEvent {
+                hatDetails
+                hatMaxSupply
+                hatEligibility
+                hatToggle
+                hatMutable
+                hatImageUri
+              }
+              ... on HatMintedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatBurnedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatStatusChangedEvent {
+                hatNewStatus
+              }
+              ... on HatDetailsChangedEvent {
+                hatNewDetails
+              }
+              ... on HatEligibilityChangedEvent {
+                hatNewEligibility
+              }
+              ... on HatToggleChangedEvent {
+                hatNewToggle
+              }
+              ... on HatMaxSupplyChangedEvent {
+                hatNewMaxSupply
+              }
+              ... on HatImageURIChangedEvent {
+                hatNewImageURI
+              }
+              ... on TopHatLinkRequestedEvent {
+                newAdmin
+              }
+              ... on TopHatLinkedEvent {
+                newAdmin
+              }
+              ... on WearerStandingChangedEvent {
+                wearer {
+                  id
+                }
+                wearerStanding
+              }
             }
           }
         }
@@ -1028,6 +1487,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             wearers {
@@ -1084,6 +1594,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             badStandings {
@@ -1141,6 +1702,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             subHats {
@@ -1185,6 +1797,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             linkedTrees {
@@ -1212,6 +1875,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             events(orderBy: timestamp, orderDirection: desc) {
@@ -1219,6 +1933,57 @@ describe("Client Tests", () => {
               blockNumber
               timestamp
               transactionID
+              __typename
+              ... on HatCreatedEvent {
+                hatDetails
+                hatMaxSupply
+                hatEligibility
+                hatToggle
+                hatMutable
+                hatImageUri
+              }
+              ... on HatMintedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatBurnedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatStatusChangedEvent {
+                hatNewStatus
+              }
+              ... on HatDetailsChangedEvent {
+                hatNewDetails
+              }
+              ... on HatEligibilityChangedEvent {
+                hatNewEligibility
+              }
+              ... on HatToggleChangedEvent {
+                hatNewToggle
+              }
+              ... on HatMaxSupplyChangedEvent {
+                hatNewMaxSupply
+              }
+              ... on HatImageURIChangedEvent {
+                hatNewImageURI
+              }
+              ... on TopHatLinkRequestedEvent {
+                newAdmin
+              }
+              ... on TopHatLinkedEvent {
+                newAdmin
+              }
+              ... on WearerStandingChangedEvent {
+                wearer {
+                  id
+                }
+                wearerStanding
+              }
             }
           }
         }
@@ -1462,6 +2227,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc, first: 9) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             wearers(first: 2) {
@@ -1518,6 +2334,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc, first: 4) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             badStandings {
@@ -1575,6 +2442,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc, first: 9) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             subHats(first: 3) {
@@ -1619,6 +2537,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc, first: 4) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             linkedTrees {
@@ -1646,6 +2615,57 @@ describe("Client Tests", () => {
               }
               events(orderBy: timestamp, orderDirection: desc, first: 9) {
                 id
+                __typename
+                ... on HatCreatedEvent {
+                  hatDetails
+                  hatMaxSupply
+                  hatEligibility
+                  hatToggle
+                  hatMutable
+                  hatImageUri
+                }
+                ... on HatMintedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatBurnedEvent {
+                  wearer {
+                    id
+                  }
+                  operator
+                }
+                ... on HatStatusChangedEvent {
+                  hatNewStatus
+                }
+                ... on HatDetailsChangedEvent {
+                  hatNewDetails
+                }
+                ... on HatEligibilityChangedEvent {
+                  hatNewEligibility
+                }
+                ... on HatToggleChangedEvent {
+                  hatNewToggle
+                }
+                ... on HatMaxSupplyChangedEvent {
+                  hatNewMaxSupply
+                }
+                ... on HatImageURIChangedEvent {
+                  hatNewImageURI
+                }
+                ... on TopHatLinkRequestedEvent {
+                  newAdmin
+                }
+                ... on TopHatLinkedEvent {
+                  newAdmin
+                }
+                ... on WearerStandingChangedEvent {
+                  wearer {
+                    id
+                  }
+                  wearerStanding
+                }
               }
             }
             events(orderBy: timestamp, orderDirection: desc, first: 4) {
@@ -1653,6 +2673,57 @@ describe("Client Tests", () => {
               blockNumber
               timestamp
               transactionID
+              __typename
+              ... on HatCreatedEvent {
+                hatDetails
+                hatMaxSupply
+                hatEligibility
+                hatToggle
+                hatMutable
+                hatImageUri
+              }
+              ... on HatMintedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatBurnedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatStatusChangedEvent {
+                hatNewStatus
+              }
+              ... on HatDetailsChangedEvent {
+                hatNewDetails
+              }
+              ... on HatEligibilityChangedEvent {
+                hatNewEligibility
+              }
+              ... on HatToggleChangedEvent {
+                hatNewToggle
+              }
+              ... on HatMaxSupplyChangedEvent {
+                hatNewMaxSupply
+              }
+              ... on HatImageURIChangedEvent {
+                hatNewImageURI
+              }
+              ... on TopHatLinkRequestedEvent {
+                newAdmin
+              }
+              ... on TopHatLinkedEvent {
+                newAdmin
+              }
+              ... on WearerStandingChangedEvent {
+                wearer {
+                  id
+                }
+                wearerStanding
+              }
             }
           }
         }
@@ -1792,6 +2863,57 @@ describe("Client Tests", () => {
             }
             events(orderBy: timestamp, orderDirection: desc) {
               id
+              __typename
+              ... on HatCreatedEvent {
+                hatDetails
+                hatMaxSupply
+                hatEligibility
+                hatToggle
+                hatMutable
+                hatImageUri
+              }
+              ... on HatMintedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatBurnedEvent {
+                wearer {
+                  id
+                }
+                operator
+              }
+              ... on HatStatusChangedEvent {
+                hatNewStatus
+              }
+              ... on HatDetailsChangedEvent {
+                hatNewDetails
+              }
+              ... on HatEligibilityChangedEvent {
+                hatNewEligibility
+              }
+              ... on HatToggleChangedEvent {
+                hatNewToggle
+              }
+              ... on HatMaxSupplyChangedEvent {
+                hatNewMaxSupply
+              }
+              ... on HatImageURIChangedEvent {
+                hatNewImageURI
+              }
+              ... on TopHatLinkRequestedEvent {
+                newAdmin
+              }
+              ... on TopHatLinkedEvent {
+                newAdmin
+              }
+              ... on WearerStandingChangedEvent {
+                wearer {
+                  id
+                }
+                wearerStanding
+              }
             }
           }
         }

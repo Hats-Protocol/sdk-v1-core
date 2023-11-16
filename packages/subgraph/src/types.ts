@@ -83,23 +83,6 @@ export interface TreeConfig {
   events?: HatsEventConfig;
 }
 
-export interface HatsEvent {
-  id: string;
-  timestamp?: string;
-  blockNumber?: number;
-  transactionID?: string;
-  hat?: Hat;
-  tree?: Tree;
-}
-
-export interface HatsEventConfig {
-  timestamp?: boolean;
-  blockNumber?: boolean;
-  transactionID?: boolean;
-  hat?: HatConfig;
-  tree?: TreeConfig;
-}
-
 export interface ClaimsHatter {
   id: string;
   claimableHats?: Hat[];
@@ -139,6 +122,117 @@ export interface Filters {
       claimableForHats?: number;
     };
   };
+}
+
+export interface HatsEventBase {
+  id: string;
+  timestamp?: string;
+  blockNumber?: number;
+  transactionID?: string;
+  hat?: Hat;
+  tree?: Tree;
+}
+
+export interface HatCreatedEvent extends HatsEventBase {
+  __typename: "HatCreatedEvent";
+  hatDetails: string;
+  hatMaxSupply: string;
+  hatEligibility: string;
+  hatToggle: string;
+  hatMutable: boolean;
+  hatImageUri: string;
+}
+
+export interface HatMintedEvent extends HatsEventBase {
+  __typename: "HatMintedEvent";
+  wearer: {
+    id: string;
+  };
+  operator: string;
+}
+
+export interface HatBurnedEvent extends HatsEventBase {
+  __typename: "HatBurnedEvent";
+  wearer: {
+    id: string;
+  };
+  operator: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface HatMutabilityChangedEvent extends HatsEventBase {
+  __typename: "HatMutabilityChangedEvent";
+}
+
+export interface HatStatusChangedEvent extends HatsEventBase {
+  __typename: "HatStatusChangedEvent";
+  hatNewStatus: boolean;
+}
+
+export interface HatDetailsChangedEvent extends HatsEventBase {
+  __typename: "HatDetailsChangedEvent";
+  hatNewDetails: string;
+}
+
+export interface HatEligibilityChangedEvent extends HatsEventBase {
+  __typename: "HatEligibilityChangedEvent";
+  hatNewEligibility: string;
+}
+
+export interface HatToggleChangedEvent extends HatsEventBase {
+  __typename: "HatToggleChangedEvent";
+  hatNewToggle: string;
+}
+
+export interface HatMaxSupplyChangedEvent extends HatsEventBase {
+  __typename: "HatMaxSupplyChangedEvent";
+  hatNewMaxSupply: string;
+}
+
+export interface HatImageURIChangedEvent extends HatsEventBase {
+  __typename: "HatImageURIChangedEvent";
+  hatNewImageURI: string;
+}
+
+export interface TopHatLinkRequestedEvent extends HatsEventBase {
+  __typename: "TopHatLinkRequestedEvent";
+  newAdmin: string;
+}
+
+export interface TopHatLinkedEvent extends HatsEventBase {
+  __typename: "TopHatLinkedEvent";
+  newAdmin: string;
+}
+
+export interface WearerStandingChangedEvent extends HatsEventBase {
+  __typename: "WearerStandingChangedEvent";
+  wearer: {
+    id: string;
+  };
+  wearerStanding: boolean;
+}
+
+export type HatsEvent =
+  | HatCreatedEvent
+  | HatMintedEvent
+  | HatBurnedEvent
+  | HatMutabilityChangedEvent
+  | HatStatusChangedEvent
+  | HatDetailsChangedEvent
+  | HatEligibilityChangedEvent
+  | HatToggleChangedEvent
+  | HatMaxSupplyChangedEvent
+  | HatImageURIChangedEvent
+  | TopHatLinkRequestedEvent
+  | TopHatLinkedEvent
+  | WearerStandingChangedEvent;
+
+export interface HatsEventConfig {
+  timestamp?: boolean;
+  blockNumber?: boolean;
+  transactionID?: boolean;
+  hat?: HatConfig;
+  tree?: TreeConfig;
 }
 
 export type GqlObjType =

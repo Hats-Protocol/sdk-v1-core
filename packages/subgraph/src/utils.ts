@@ -88,7 +88,7 @@ export function normalizedPropsToQueryFields(
               elem[elemKey],
               nextObjType(currentObjType, elemKey),
               filters
-            )} }`;
+            )} __typename ... on HatCreatedEvent { hatDetails hatMaxSupply hatEligibility hatToggle hatMutable hatImageUri } ... on HatMintedEvent { wearer { id } operator } ... on HatBurnedEvent { wearer { id } operator } ... on HatStatusChangedEvent { hatNewStatus } ... on HatDetailsChangedEvent { hatNewDetails } ... on HatEligibilityChangedEvent { hatNewEligibility } ... on HatToggleChangedEvent { hatNewToggle } ... on HatMaxSupplyChangedEvent { hatNewMaxSupply } ... on HatImageURIChangedEvent { hatNewImageURI } ... on TopHatLinkRequestedEvent { newAdmin } ... on TopHatLinkedEvent { newAdmin } ... on WearerStandingChangedEvent { wearer { id } wearerStanding } }`;
         } else {
           fields =
             fields +
@@ -102,11 +102,12 @@ export function normalizedPropsToQueryFields(
         if (elemKey === "events") {
           fields =
             fields +
-            `${elemKey} (orderBy: timestamp, orderDirection: desc) { ${normalizedPropsToQueryFields(
-              elem[elemKey],
-              nextObjType(currentObjType, elemKey),
-              filters
-            )} }`;
+            `${elemKey} (orderBy: timestamp, orderDirection: desc) { 
+              ${normalizedPropsToQueryFields(
+                elem[elemKey],
+                nextObjType(currentObjType, elemKey),
+                filters
+              )} __typename ... on HatCreatedEvent { hatDetails hatMaxSupply hatEligibility hatToggle hatMutable hatImageUri } ... on HatMintedEvent { wearer { id } operator } ... on HatBurnedEvent { wearer { id } operator } ... on HatStatusChangedEvent { hatNewStatus } ... on HatDetailsChangedEvent { hatNewDetails } ... on HatEligibilityChangedEvent { hatNewEligibility } ... on HatToggleChangedEvent { hatNewToggle } ... on HatMaxSupplyChangedEvent { hatNewMaxSupply } ... on HatImageURIChangedEvent { hatNewImageURI } ... on TopHatLinkRequestedEvent { newAdmin } ... on TopHatLinkedEvent { newAdmin } ... on WearerStandingChangedEvent { wearer { id } wearerStanding } }`;
         } else {
           fields =
             fields +
