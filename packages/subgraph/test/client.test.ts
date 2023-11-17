@@ -2777,7 +2777,7 @@ describe("Client Tests", () => {
       expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hats));
     }, 30000);
   });
-  /*
+
   describe("getTree Tests", () => {
     test("Test tree not exist", () => {
       expect(async () => {
@@ -2785,7 +2785,7 @@ describe("Client Tests", () => {
           chainId: 10,
           treeId: 0,
           props: {
-            hats: {},
+            hats: { props: {} },
           },
         });
       }).rejects.toThrow(SubgraphTreeNotExistError);
@@ -2825,9 +2825,11 @@ describe("Client Tests", () => {
         treeId: 1,
         props: {
           hats: {
-            prettyId: true,
-            admin: {
+            props: {
               prettyId: true,
+              admin: {
+                prettyId: true,
+              },
             },
           },
         },
@@ -2862,14 +2864,14 @@ describe("Client Tests", () => {
         chainId: 10,
         treeId: 1,
         props: {
-          hats: {},
+          hats: { props: {} },
           childOfTree: {},
           linkedToHat: {},
           requestedLinkToTree: {},
           requestedLinkToHat: {},
-          linkRequestFromTree: {},
-          parentOfTrees: {},
-          events: {},
+          linkRequestFromTree: { props: {} },
+          parentOfTrees: { props: {} },
+          events: { props: {} },
         },
       });
 
@@ -2994,9 +2996,11 @@ describe("Client Tests", () => {
         chainId: 10,
         props: {
           hats: {
-            prettyId: true,
-            admin: {
+            props: {
               prettyId: true,
+              admin: {
+                prettyId: true,
+              },
             },
           },
         },
@@ -3048,9 +3052,11 @@ describe("Client Tests", () => {
         chainId: 10,
         props: {
           hats: {
-            prettyId: true,
-            admin: {
+            props: {
               prettyId: true,
+              admin: {
+                prettyId: true,
+              },
             },
           },
         },
@@ -3088,9 +3094,11 @@ describe("Client Tests", () => {
         chainId: 10,
         props: {
           hats: {
-            prettyId: true,
-            admin: {
+            props: {
               prettyId: true,
+              admin: {
+                prettyId: true,
+              },
             },
           },
         },
@@ -3153,11 +3161,15 @@ describe("Client Tests", () => {
         chainId: 10,
         props: {
           currentHats: {
-            prettyId: true,
+            props: {
+              prettyId: true,
+            },
           },
           mintEvent: {
-            hat: {
-              prettyId: true,
+            props: {
+              hat: {
+                prettyId: true,
+              },
             },
           },
         },
@@ -3196,8 +3208,14 @@ describe("Client Tests", () => {
         chainId: 10,
         props: {
           currentHats: {
-            wearers: {
-              currentHats: {},
+            props: {
+              wearers: {
+                props: {
+                  currentHats: {
+                    props: {},
+                  },
+                },
+              },
             },
           },
         },
@@ -3534,5 +3552,4 @@ describe("Client Tests", () => {
       expect(JSON.stringify(res)).toBe(JSON.stringify(ref));
     });
   });
-  */
 });
