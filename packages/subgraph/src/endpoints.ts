@@ -10,6 +10,9 @@ const ENDPOINT_PER_CHAIN: {
   137: "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-polygon",
   42161:
     "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-arbitrum",
+  424: "https://api.goldsky.com/api/public/project_clp1niaem0pe001qjhju6b9sz/subgraphs/hats-v1-pgn/1.0.0/gn",
+  11155111:
+    "https://api.studio.thegraph.com/query/55784/hats-v1-sepolia/version/latest",
 };
 
 /**
