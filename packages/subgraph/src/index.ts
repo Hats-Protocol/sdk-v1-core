@@ -6,11 +6,11 @@ import type {
   Wearer,
   HatsEvent,
   ClaimsHatter,
-  HatConfig,
-  TreeConfig,
-  WearerConfig,
-  HatsEventConfig,
-  ClaimsHatterConfig,
+  HatPropsConfig,
+  TreePropsConfig,
+  WearerPropsConfig,
+  HatsEventPropsConfig,
+  ClaimsHatterPropsConfig,
 } from "./types";
 
 export { HatsSubgraphClient, getGraphqlClient };
@@ -20,9 +20,9 @@ export type {
   Wearer,
   HatsEvent,
   ClaimsHatter,
-  HatConfig,
-  TreeConfig,
-  WearerConfig,
-  HatsEventConfig,
-  ClaimsHatterConfig,
+  HatPropsConfig,
+  TreePropsConfig,
+  WearerPropsConfig,
+  HatsEventPropsConfig,
+  ClaimsHatterPropsConfig,
 };

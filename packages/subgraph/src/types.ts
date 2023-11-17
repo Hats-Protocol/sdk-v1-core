@@ -23,7 +23,7 @@ export interface Hat {
   events?: HatsEvent[];
 }
 
-export interface HatConfig {
+export interface HatPropsConfig {
   prettyId?: boolean;
   status?: boolean;
   createdAt?: boolean;
@@ -35,16 +35,23 @@ export interface HatConfig {
   imageUri?: boolean;
   levelAtLocalTree?: boolean;
   currentSupply?: boolean;
-  tree?: TreeConfig;
-  wearers?: WearerConfig;
-  badStandings?: WearerConfig;
-  admin?: HatConfig;
-  subHats?: HatConfig;
-  linkRequestFromTree?: TreeConfig;
-  linkedTrees?: TreeConfig;
-  claimableBy?: ClaimsHatterConfig;
-  claimableForBy?: ClaimsHatterConfig;
-  events?: HatsEventConfig;
+  tree?: TreePropsConfig;
+  wearers?: WearersConfig;
+  badStandings?: WearersConfig;
+  admin?: HatPropsConfig;
+  subHats?: HatsConfig;
+  linkRequestFromTree?: TreesConfig;
+  linkedTrees?: TreesConfig;
+  claimableBy?: ClaimsHattersConfig;
+  claimableForBy?: ClaimsHattersConfig;
+  events?: HatsEventsConfig;
+}
+
+export interface HatsConfig {
+  props: HatPropsConfig;
+  filters?: {
+    first?: number;
+  };
 }
 
 export interface Wearer {
@@ -54,10 +61,17 @@ export interface Wearer {
   burnEvent?: HatsEvent[];
 }
 
-export interface WearerConfig {
-  currentHats?: HatConfig;
-  mintEvent?: HatsEventConfig;
-  burnEvent?: HatsEventConfig;
+export interface WearerPropsConfig {
+  currentHats?: HatsConfig;
+  mintEvent?: HatsEventsConfig;
+  burnEvent?: HatsEventsConfig;
+}
+
+export interface WearersConfig {
+  props: WearerPropsConfig;
+  filters?: {
+    first?: number;
+  };
 }
 
 export interface Tree {
@@ -72,15 +86,22 @@ export interface Tree {
   events?: HatsEvent[];
 }
 
-export interface TreeConfig {
-  hats?: HatConfig;
-  childOfTree?: TreeConfig;
-  parentOfTrees?: TreeConfig;
-  linkedToHat?: HatConfig;
-  linkRequestFromTree?: TreeConfig;
-  requestedLinkToTree?: TreeConfig;
-  requestedLinkToHat?: HatConfig;
-  events?: HatsEventConfig;
+export interface TreePropsConfig {
+  hats?: HatsConfig;
+  childOfTree?: TreePropsConfig;
+  parentOfTrees?: TreesConfig;
+  linkedToHat?: HatPropsConfig;
+  linkRequestFromTree?: TreesConfig;
+  requestedLinkToTree?: TreePropsConfig;
+  requestedLinkToHat?: HatPropsConfig;
+  events?: HatsEventsConfig;
+}
+
+export interface TreesConfig {
+  props: TreePropsConfig;
+  filters?: {
+    first?: number;
+  };
 }
 
 export interface ClaimsHatter {
@@ -89,38 +110,15 @@ export interface ClaimsHatter {
   claimableForHats?: Hat[];
 }
 
-export interface ClaimsHatterConfig {
-  claimableHats?: HatConfig;
-  claimableForHats?: HatConfig;
+export interface ClaimsHatterPropsConfig {
+  claimableHats?: HatsConfig;
+  claimableForHats?: HatsConfig;
 }
 
-export interface Filters {
-  first?: {
-    hat?: {
-      wearers?: number;
-      badStandings?: number;
-      subHats?: number;
-      linkRequestFromTree?: number;
-      linkedTrees?: number;
-      claimableBy?: number;
-      claimableForBy?: number;
-      events?: number;
-    };
-    wearer?: {
-      currentHats?: number;
-      mintEvent?: number;
-      burnEvent?: number;
-    };
-    tree?: {
-      hats?: number;
-      parentOfTrees?: number;
-      linkRequestFromTree?: number;
-      events?: number;
-    };
-    claimsHatter?: {
-      claimableHats?: number;
-      claimableForHats?: number;
-    };
+export interface ClaimsHattersConfig {
+  props: ClaimsHatterPropsConfig;
+  filters?: {
+    first?: number;
   };
 }
 
@@ -227,12 +225,19 @@ export type HatsEvent =
   | TopHatLinkedEvent
   | WearerStandingChangedEvent;
 
-export interface HatsEventConfig {
+export interface HatsEventPropsConfig {
   timestamp?: boolean;
   blockNumber?: boolean;
   transactionID?: boolean;
-  hat?: HatConfig;
-  tree?: TreeConfig;
+  hat?: HatPropsConfig;
+  tree?: HatPropsConfig;
+}
+
+export interface HatsEventsConfig {
+  props: HatsEventPropsConfig;
+  filters?: {
+    first?: number;
+  };
 }
 
 export type GqlObjType =

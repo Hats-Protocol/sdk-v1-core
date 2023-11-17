@@ -14,18 +14,17 @@ import {
   InputValidationError,
 } from "./errors";
 import {
-  hatConfigSchema,
-  treeConfigSchema,
-  wearerConfigSchema,
+  hatPropsConfigSchema,
+  treePropsConfigSchema,
+  wearerPropsConfigSchema,
 } from "./schemas";
 import type {
   Hat,
   Tree,
-  HatConfig,
-  TreeConfig,
-  WearerConfig,
+  HatPropsConfig,
+  TreePropsConfig,
+  WearerPropsConfig,
   Wearer,
-  Filters,
 } from "./types";
 
 export class HatsSubgraphClient {
@@ -66,14 +65,12 @@ export class HatsSubgraphClient {
     chainId,
     hatId,
     props,
-    filters,
   }: {
     chainId: number;
     hatId: bigint;
-    props: HatConfig;
-    filters?: Filters;
+    props: HatPropsConfig;
   }): Promise<Hat> {
-    const validationRes = hatConfigSchema.safeParse(props);
+    const validationRes = hatPropsConfigSchema.safeParse(props);
     if (validationRes.success === false) {
       throw new InputValidationError(validationRes.error.message);
     }
@@ -81,11 +78,7 @@ export class HatsSubgraphClient {
     const hatIdHex = hatIdDecimalToHex(hatId);
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(
-      normalizedProps,
-      "Hat",
-      filters
-    );
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
       query getHat($id: ID!) {
@@ -128,14 +121,12 @@ export class HatsSubgraphClient {
     chainId,
     hatIds,
     props,
-    filters,
   }: {
     chainId: number;
     hatIds: bigint[];
-    props: HatConfig;
-    filters?: Filters;
+    props: HatPropsConfig;
   }): Promise<Hat[]> {
-    const validationRes = hatConfigSchema.safeParse(props);
+    const validationRes = hatPropsConfigSchema.safeParse(props);
     if (validationRes.success === false) {
       throw new InputValidationError(validationRes.error.message);
     }
@@ -143,11 +134,7 @@ export class HatsSubgraphClient {
     const hatIdsHex: string[] = hatIds.map((id) => hatIdDecimalToHex(id));
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(
-      normalizedProps,
-      "Hat",
-      filters
-    );
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
       query getHatsByIds($ids: [ID!]!) {
@@ -194,14 +181,12 @@ export class HatsSubgraphClient {
     chainId,
     treeId,
     props,
-    filters,
   }: {
     chainId: number;
     treeId: number;
-    props: TreeConfig;
-    filters?: Filters;
+    props: TreePropsConfig;
   }): Promise<Tree> {
-    const validationRes = treeConfigSchema.safeParse(props);
+    const validationRes = treePropsConfigSchema.safeParse(props);
     if (validationRes.success === false) {
       throw new InputValidationError(validationRes.error.message);
     }
@@ -209,11 +194,7 @@ export class HatsSubgraphClient {
     const treeIdHex = treeIdDecimalToHex(treeId);
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(
-      normalizedProps,
-      "Tree",
-      filters
-    );
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
       query getTree($id: ID!) {
@@ -256,14 +237,12 @@ export class HatsSubgraphClient {
     chainId,
     treeIds,
     props,
-    filters,
   }: {
     chainId: number;
     treeIds: number[];
-    props: TreeConfig;
-    filters?: Filters;
+    props: TreePropsConfig;
   }): Promise<Tree[]> {
-    const validationRes = treeConfigSchema.safeParse(props);
+    const validationRes = treePropsConfigSchema.safeParse(props);
     if (validationRes.success === false) {
       throw new InputValidationError(validationRes.error.message);
     }
@@ -271,11 +250,7 @@ export class HatsSubgraphClient {
     const treeIdsHex = treeIds.map((treeId) => treeIdDecimalToHex(treeId));
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(
-      normalizedProps,
-      "Tree",
-      filters
-    );
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
     query getTreesById($ids: [ID!]!) {
@@ -321,25 +296,19 @@ export class HatsSubgraphClient {
     props,
     page,
     perPage,
-    filters,
   }: {
     chainId: number;
-    props: TreeConfig;
+    props: TreePropsConfig;
     page: number;
     perPage: number;
-    filters?: Filters;
   }): Promise<Tree[]> {
-    const validationRes = treeConfigSchema.safeParse(props);
+    const validationRes = treePropsConfigSchema.safeParse(props);
     if (validationRes.success === false) {
       throw new InputValidationError(validationRes.error.message);
     }
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(
-      normalizedProps,
-      "Tree",
-      filters
-    );
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
     query getPaginatedTrees($skip: Int!, $first: Int!) {
@@ -385,14 +354,12 @@ export class HatsSubgraphClient {
     chainId,
     wearerAddress,
     props,
-    filters,
   }: {
     chainId: number;
     wearerAddress: `0x${string}`;
-    props: WearerConfig;
-    filters?: Filters;
+    props: WearerPropsConfig;
   }): Promise<Wearer> {
-    const validationRes = wearerConfigSchema.safeParse(props);
+    const validationRes = wearerPropsConfigSchema.safeParse(props);
     if (validationRes.success === false) {
       throw new InputValidationError(validationRes.error.message);
     }
@@ -400,11 +367,7 @@ export class HatsSubgraphClient {
     const wearerAddressLowerCase = wearerAddress.toLowerCase();
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(
-      normalizedProps,
-      "Wearer",
-      filters
-    );
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
       query getCurrentHatsForWearer($id: ID!) {
@@ -455,16 +418,14 @@ export class HatsSubgraphClient {
     props,
     page,
     perPage,
-    filters,
   }: {
     chainId: number;
     hatId: bigint;
-    props: WearerConfig;
+    props: WearerPropsConfig;
     page: number;
     perPage: number;
-    filters?: Filters;
   }): Promise<Wearer[]> {
-    const validationRes = wearerConfigSchema.safeParse(props);
+    const validationRes = wearerPropsConfigSchema.safeParse(props);
     if (validationRes.success === false) {
       throw new InputValidationError(validationRes.error.message);
     }
@@ -472,11 +433,7 @@ export class HatsSubgraphClient {
     const hatIdHex = hatIdDecimalToHex(hatId);
 
     const normalizedProps = normalizeProps(props);
-    const queryFields = normalizedPropsToQueryFields(
-      normalizedProps,
-      "Wearer",
-      filters
-    );
+    const queryFields = normalizedPropsToQueryFields(normalizedProps);
 
     const query = gql`
       query getPaginatedWearersForHat($hatId: ID!, $first: Int!, $skip: Int!) {
@@ -528,49 +485,37 @@ export class HatsSubgraphClient {
     treeProps,
     hatProps,
     wearerProps,
-    filters,
   }: {
     chainId: number;
     search: string;
-    treeProps: TreeConfig;
-    hatProps: HatConfig;
-    wearerProps: WearerConfig;
-    filters?: Filters;
+    treeProps: TreePropsConfig;
+    hatProps: HatPropsConfig;
+    wearerProps: WearerPropsConfig;
   }): Promise<{ trees: Tree[]; hats: Hat[]; wearers: Wearer[] }> {
-    const treeValidationRes = treeConfigSchema.safeParse(treeProps);
+    const treeValidationRes = treePropsConfigSchema.safeParse(treeProps);
     if (treeValidationRes.success === false) {
       throw new InputValidationError(treeValidationRes.error.message);
     }
 
-    const hatValidationRes = hatConfigSchema.safeParse(hatProps);
+    const hatValidationRes = hatPropsConfigSchema.safeParse(hatProps);
     if (hatValidationRes.success === false) {
       throw new InputValidationError(hatValidationRes.error.message);
     }
 
-    const wearerValidationRes = wearerConfigSchema.safeParse(wearerProps);
+    const wearerValidationRes = wearerPropsConfigSchema.safeParse(wearerProps);
     if (wearerValidationRes.success === false) {
       throw new InputValidationError(wearerValidationRes.error.message);
     }
 
     const treeNormalizedProps = normalizeProps(treeProps);
-    const treeQueryFields = normalizedPropsToQueryFields(
-      treeNormalizedProps,
-      "Tree",
-      filters
-    );
+    const treeQueryFields = normalizedPropsToQueryFields(treeNormalizedProps);
 
     const hatNormalizedProps = normalizeProps(hatProps);
-    const hatQueryFields = normalizedPropsToQueryFields(
-      hatNormalizedProps,
-      "Hat",
-      filters
-    );
+    const hatQueryFields = normalizedPropsToQueryFields(hatNormalizedProps);
 
     const wearerNormalizedProps = normalizeProps(wearerProps);
     const wearerQueryFields = normalizedPropsToQueryFields(
-      wearerNormalizedProps,
-      "Wearer",
-      filters
+      wearerNormalizedProps
     );
 
     const query = gql`
