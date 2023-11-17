@@ -3331,7 +3331,7 @@ describe("Client Tests", () => {
       })) as { hat: { wearers: any } };
 
       expect(JSON.stringify(res)).toBe(JSON.stringify(ref.hat.wearers));
-    });
+    }, 30000);
 
     test("Scenario 4", async () => {
       const res = await client.getWearersOfHatPaginated({
