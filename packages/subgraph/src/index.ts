@@ -11,6 +11,7 @@ import type {
   WearerPropsConfig,
   HatsEventPropsConfig,
   ClaimsHatterPropsConfig,
+  EndpointsConfig,
 } from "./types";
 
 export { HatsSubgraphClient, DEFAULT_ENDPOINTS_CONFIG };
@@ -25,4 +26,5 @@ export type {
   WearerPropsConfig,
   HatsEventPropsConfig,
   ClaimsHatterPropsConfig,
+  EndpointsConfig,
 };
