@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { gql } from "graphql-request";
-import { HatsSubgraphClient } from "../src/index";
-import { getGraphqlClient } from "../src/endpoints";
+import { HatsSubgraphClient, DEFAULT_ENDPOINTS_CONFIG } from "../src/index";
 import {
   SubgraphNotUpportedError,
   SubgraphHatNotExistError,
@@ -9,13 +8,13 @@ import {
   SubgraphWearerNotExistError,
   InputValidationError,
 } from "../src/errors";
-import type { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from "graphql-request";
 
 describe("Client Tests", () => {
   let client: HatsSubgraphClient;
 
   beforeAll(() => {
-    client = new HatsSubgraphClient();
+    client = new HatsSubgraphClient({});
   });
 
   test("Test unsupported chain ID", async () => {
@@ -100,7 +99,9 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
@@ -255,7 +256,9 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
@@ -943,7 +946,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
@@ -1085,7 +1091,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
@@ -1193,7 +1202,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         ids: [
@@ -1340,7 +1352,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         ids: [
@@ -2030,7 +2045,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         ids: [
@@ -2075,7 +2093,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         ids: [],
@@ -2765,7 +2786,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         ids: [
@@ -2850,7 +2874,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0x00000001",
@@ -2957,7 +2984,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0x00000001",
@@ -3022,7 +3052,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         ids: ["0x00000001", "0x00000002"],
@@ -3079,7 +3112,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         skip: 30,
@@ -3121,7 +3157,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         skip: 0,
@@ -3194,7 +3233,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c".toLowerCase(),
@@ -3238,7 +3280,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         id: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c".toLowerCase(),
@@ -3304,7 +3349,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         hatId:
@@ -3340,7 +3388,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         hatId:
@@ -3376,7 +3427,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         hatId:
@@ -3412,7 +3466,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         hatId:
@@ -3449,7 +3506,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         search:
@@ -3481,7 +3541,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         search: "0x00000001000200010001",
@@ -3512,7 +3575,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         search: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c".toLowerCase(),
@@ -3543,7 +3609,10 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = getGraphqlClient(10) as GraphQLClient;
+
+      const gqlClient = new GraphQLClient(
+        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
+      );
 
       const ref = (await gqlClient.request(query, {
         search: "0x11111111000200010001",

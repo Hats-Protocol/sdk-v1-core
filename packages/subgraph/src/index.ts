@@ -1,5 +1,5 @@
 import { HatsSubgraphClient } from "./client";
-import { getGraphqlClient } from "./endpoints";
+import { DEFAULT_ENDPOINTS_CONFIG } from "./endpoints";
 import type {
   Hat,
   Tree,
@@ -13,7 +13,7 @@ import type {
   ClaimsHatterPropsConfig,
 } from "./types";
 
-export { HatsSubgraphClient, getGraphqlClient };
+export { HatsSubgraphClient, DEFAULT_ENDPOINTS_CONFIG };
 export type {
   Hat,
   Tree,

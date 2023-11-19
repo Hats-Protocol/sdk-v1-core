@@ -4,8 +4,8 @@ import {
   normalizeProps,
   normalizedPropsToQueryFields,
 } from "./utils";
-import { gql, Variables } from "graphql-request";
-import { getGraphqlClient } from "./endpoints";
+import { gql, Variables, GraphQLClient } from "graphql-request";
+import { DEFAULT_ENDPOINTS_CONFIG } from "./endpoints";
 import {
   SubgraphNotUpportedError,
   SubgraphHatNotExistError,
@@ -25,20 +25,31 @@ import type {
   TreePropsConfig,
   WearerPropsConfig,
   Wearer,
+  EndpointsConfig,
 } from "./types";
 
 export class HatsSubgraphClient {
+  protected readonly _config: EndpointsConfig;
+
+  constructor({ config }: { config?: EndpointsConfig }) {
+    if (config === undefined) {
+      this._config = DEFAULT_ENDPOINTS_CONFIG;
+    } else {
+      this._config = config;
+    }
+  }
+
   protected async _makeGqlRequest<ResponseType>(
     chainId: number,
     query: string,
     variables?: Variables
   ): Promise<ResponseType> {
-    const client = getGraphqlClient(chainId);
-    if (client === undefined) {
+    if (this._config[chainId] === undefined) {
       throw new SubgraphNotUpportedError(
         `No subgraph support for network id ${chainId}`
       );
     }
+    const client = new GraphQLClient(this._config[chainId].endpoint);
 
     const result = (await client.request(query, variables)) as ResponseType;
 
