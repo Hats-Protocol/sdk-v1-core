@@ -248,5 +248,5 @@ export type GqlObjType =
   | "ClaimsHatter";
 
 export interface EndpointsConfig {
-  [chainId: number]: { endpoint: string; apiKey?: string; providers?: string };
+  [chainId: number]: { endpoint: string };
 }
