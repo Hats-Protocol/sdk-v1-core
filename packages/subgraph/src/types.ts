@@ -246,3 +246,7 @@ export type GqlObjType =
   | "Wearer"
   | "HatsEvent"
   | "ClaimsHatter";
+
+export interface EndpointsConfig {
+  [chainId: number]: { endpoint: string; apiKey?: string; providers?: string };
+}
