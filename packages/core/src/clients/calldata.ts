@@ -1,15 +1,13 @@
 import { encodeFunctionData } from "viem";
 import { HatsSubgraphClient } from "@hatsprotocol/sdk-v1-subgraph";
 
-import { HATS_ABI } from "./abi/Hats";
-import { ChainIdMismatchError, MissingPublicClientError } from "./errors";
-import { ZERO_ADDRESS } from "./constants";
-import { treeIdDecimalToHex, hatIdHexToDecimal } from "./utils";
+import { HATS_ABI } from "../abi/Hats";
+import { HatsReadClient } from "./read";
+import { ZERO_ADDRESS } from "../constants";
+import { treeIdDecimalToHex, hatIdHexToDecimal } from "../utils";
 import type { PublicClient, Address, Hex } from "viem";
 
-export class HatsCallDataClient {
-  readonly chainId: number;
-  protected readonly _publicClient: PublicClient;
+export class HatsCallDataClient extends HatsReadClient {
   protected readonly _graphqlClient: HatsSubgraphClient | undefined;
 
   /**
@@ -32,19 +30,9 @@ export class HatsCallDataClient {
     chainId: number;
     publicClient: PublicClient;
   }) {
-    if (publicClient === undefined) {
-      throw new MissingPublicClientError("Public client is required");
-    }
+    super({ chainId, publicClient });
 
-    if (publicClient.chain?.id !== chainId) {
-      throw new ChainIdMismatchError(
-        "Provided chain id should match the public client chain id"
-      );
-    }
-
-    this.chainId = chainId;
     this._graphqlClient = new HatsSubgraphClient({});
-    this._publicClient = publicClient;
   }
 
   /**

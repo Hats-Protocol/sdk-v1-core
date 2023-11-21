@@ -1,4 +1,4 @@
-import { HatsClient } from "./client";
+import { HatsClient } from "./clients";
 import {
   hatIdDecimalToHex,
   treeIdDecimalToHex,
