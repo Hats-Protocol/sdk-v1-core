@@ -43,7 +43,7 @@ export class HatsCallDataClient {
     }
 
     this.chainId = chainId;
-    this._graphqlClient = new HatsSubgraphClient();
+    this._graphqlClient = new HatsSubgraphClient({});
     this._publicClient = publicClient;
   }
 
@@ -708,21 +708,23 @@ export class HatsCallDataClient {
       treeId: sourceTree,
       props: {
         hats: {
-          details: true,
-          maxSupply: true,
-          imageUri: true,
-          currentSupply: true,
-          levelAtLocalTree: true,
-          eligibility: true,
-          toggle: true,
-          mutable: true,
-          createdAt: true,
-          wearers: {},
-          admin: {},
+          props: {
+            details: true,
+            maxSupply: true,
+            imageUri: true,
+            currentSupply: true,
+            levelAtLocalTree: true,
+            eligibility: true,
+            toggle: true,
+            mutable: true,
+            createdAt: true,
+            wearers: { props: {} },
+            admin: {},
+          },
         },
         childOfTree: {},
         linkedToHat: {},
-        parentOfTrees: {},
+        parentOfTrees: { props: {} },
       },
     });
 
