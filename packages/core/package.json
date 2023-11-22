@@ -30,6 +30,7 @@
     "graphql-request": "^6.1.0"
   },
   "devDependencies": {
+    "@hatsprotocol/modules-sdk": "0.14.1",
     "@rollup/plugin-json": "^6.0.0",
     "@types/jest": "^29.5.2",
     "@typescript-eslint/eslint-plugin": "^5.59.8",

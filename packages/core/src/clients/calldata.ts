@@ -8,7 +8,7 @@ import { treeIdDecimalToHex, hatIdHexToDecimal } from "../utils";
 import type { PublicClient, Address, Hex } from "viem";
 
 export class HatsCallDataClient extends HatsReadClient {
-  protected readonly _graphqlClient: HatsSubgraphClient | undefined;
+  protected readonly _graphqlClient: HatsSubgraphClient;
 
   /**
    * Initialize a HatsClient.

@@ -1,10 +1,12 @@
 import { decodeEventLog, encodeEventTopics } from "viem";
 
 import { HATS_ABI } from "../abi/Hats";
+import { CLAIMS_HATTER_ABI } from "../abi/ClaimsHatter";
 import {
   ChainIdMismatchError,
   MissingPublicClientError,
   MissingWalletClientError,
+  HatNotClaimableError,
 } from "../errors";
 import { HATS_V1, ZERO_ADDRESS } from "../constants";
 import { getError } from "../validations";
@@ -33,7 +35,9 @@ import type {
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
   MultiCallResult,
+  ClaimResult,
 } from "../types";
+import type { Hat, ClaimsHatter } from "@hatsprotocol/sdk-v1-subgraph";
 
 export class HatsClient extends HatsCallDataClient {
   private readonly _walletClient: WalletClient | undefined;
@@ -1646,6 +1650,147 @@ export class HatsClient extends HatsCallDataClient {
         args: [callDatas],
         account,
       });
+    } catch (err) {
+      getError(err);
+    }
+  }
+
+  async isClaimableBy({
+    hatId,
+    wearer,
+  }: {
+    hatId: bigint;
+    wearer: Address;
+  }): Promise<boolean> {
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableBy: ClaimsHatter[] };
+
+    if (hat.claimableBy.length == 0) {
+      return false;
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableBy[0];
+    const canClaim = await this._publicClient.readContract({
+      address: claimsHatterAddress as Address,
+      abi: CLAIMS_HATTER_ABI,
+      functionName: "accountCanClaim",
+      args: [wearer, hatId],
+    });
+
+    return canClaim;
+  }
+
+  async claimHat({
+    account,
+    hatId,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+  }): Promise<ClaimResult> {
+    if (this._walletClient === undefined) {
+      throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableBy: ClaimsHatter[] };
+
+    if (hat.claimableBy.length == 0) {
+      throw new HatNotClaimableError(
+        `Error: attempting to claim hat ${hatId.toString()}, which is not claimable`
+      );
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableBy[0];
+
+    try {
+      const { request } = await this._publicClient.simulateContract({
+        address: claimsHatterAddress as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "claimHat",
+        args: [hatId],
+        account,
+      });
+
+      const hash = await this._walletClient.writeContract(request);
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      getError(err);
+    }
+  }
+
+  async claimHatFor({
+    account,
+    hatId,
+    wearer,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearer: Address;
+  }): Promise<ClaimResult> {
+    if (this._walletClient === undefined) {
+      throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableForBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableForBy: ClaimsHatter[] };
+
+    if (hat.claimableForBy.length == 0) {
+      throw new Error();
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+
+    try {
+      const { request } = await this._publicClient.simulateContract({
+        address: claimsHatterAddress as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "claimHatFor",
+        args: [hatId, wearer],
+        account,
+      });
+
+      const hash = await this._walletClient.writeContract(request);
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
     } catch (err) {
       getError(err);
     }

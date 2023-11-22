@@ -21,6 +21,9 @@ import {
   BatchParamsError,
   MaxLevelReachedError,
   InvalidUnlinkError,
+  NotExplicitlyEligibleError,
+  HatNotClaimableError,
+  HatNotClaimableForError,
 } from "./errors";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -137,6 +140,31 @@ export function getError(err: unknown): never {
         case "StringTooLong": {
           throw new StringTooLongError(
             `Error: attempting to change a hat's details or imageURI to a string with over 7000 bytes (~characters)`
+          );
+        }
+        case "MultiClaimsHatter_ArrayLengthMismatch": {
+          throw new BatchParamsError(
+            `Error: array arguments to a batch function have mismatching lengths`
+          );
+        }
+        case "MultiClaimsHatter_NotAdminOfHat": {
+          throw new NotAdminError(
+            `Error: address ${errorArgs[0]} is attempting to set the claimability of hat ${errorArgs[1]} but is not wearing one of its admin hats`
+          );
+        }
+        case "MultiClaimsHatter_NotExplicitlyEligible": {
+          throw new NotExplicitlyEligibleError(
+            `Error: address ${errorArgs[0]} is not explicitly eligible for hat ${errorArgs[1]}`
+          );
+        }
+        case "MultiClaimsHatter_HatNotClaimable": {
+          throw new HatNotClaimableError(
+            `Error: attempting to claim hat ${errorArgs[0]}, which is not claimable`
+          );
+        }
+        case "MultiClaimsHatter_HatNotClaimableFor": {
+          throw new HatNotClaimableForError(
+            `Error: attempting to claim hat ${errorArgs[0]} on behalf of an account, but the hat is not claimable-for`
           );
         }
         default: {

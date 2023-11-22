@@ -60,6 +60,8 @@ export interface UnlinkTopHatFromTreeResult extends TransactionResult {}
 
 export interface RelinkTopHatWithinTreeResult extends TransactionResult {}
 
+export interface ClaimResult extends TransactionResult {}
+
 export interface MultiCallResult extends TransactionResult {
   gasUsed: bigint;
   hatsCreated: bigint[];
