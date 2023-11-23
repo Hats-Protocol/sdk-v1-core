@@ -46,4 +46,6 @@ export type {
   ApproveLinkTopHatToTreeResult,
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
+  ClaimResult,
+  MultiCallResult,
 } from "./types";
