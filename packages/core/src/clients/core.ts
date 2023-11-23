@@ -8,6 +8,7 @@ import {
   MissingWalletClientError,
   HatNotClaimableError,
   HatNotClaimableForError,
+  NotAdminError,
 } from "../errors";
 import { HATS_V1, ZERO_ADDRESS } from "../constants";
 import { getError } from "../validations";
@@ -1469,7 +1470,9 @@ export class HatsClient extends HatsCallDataClient {
     newImageURI?: string;
   }): Promise<RelinkTopHatWithinTreeResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     try {
@@ -1631,6 +1634,12 @@ export class HatsClient extends HatsCallDataClient {
     }
   }
 
+  /**
+   * Check if a multicall operation will succeed with given calls. Reverts if not, otherwise returns without a return value.
+   *
+   * @param account - A Viem account.
+   * @param calls - Array of call objects, containing the call data and the function name
+   */
   async multicallPreFlightCheck({
     account,
     calls,
@@ -1656,6 +1665,13 @@ export class HatsClient extends HatsCallDataClient {
     }
   }
 
+  /**
+   * Check whether an account can claim a given hat.
+   *
+   * @param hatId - The hat ID to claim.
+   * @param account - The claiming account's address.
+   * @returns 'true' if can claim, 'false' otherwise.
+   */
   async accountCanClaim({
     hatId,
     account,
@@ -1678,9 +1694,26 @@ export class HatsClient extends HatsCallDataClient {
       return false;
     }
 
-    const { id: claimsHatterAddress } = hat.claimableBy[0];
+    let claimsHatterToUse;
+    for (let i = 0; i < hat.claimableBy.length; i++) {
+      const claimsHatter = hat.claimableBy[i];
+      const wearsAdmin = await this._publicClient.readContract({
+        address: claimsHatter.id as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "wearsAdmin",
+        args: [hatId],
+      });
+      if (wearsAdmin) {
+        claimsHatterToUse = claimsHatter;
+      }
+    }
+
+    if (claimsHatterToUse === undefined) {
+      return false;
+    }
+
     const canClaim = await this._publicClient.readContract({
-      address: claimsHatterAddress as Address,
+      address: claimsHatterToUse.id as Address,
       abi: CLAIMS_HATTER_ABI,
       functionName: "accountCanClaim",
       args: [account, hatId],
@@ -1689,6 +1722,13 @@ export class HatsClient extends HatsCallDataClient {
     return canClaim;
   }
 
+  /**
+   * Check whether a hat can be claimed on behalf of a given account.
+   *
+   * @param hatId - The hat ID to claim-for.
+   * @param account - The account address to claim on behalf of.
+   * @returns 'true' if can claim-for, 'false' otherwise.
+   */
   async canClaimForAccount({
     hatId,
     account,
@@ -1707,13 +1747,26 @@ export class HatsClient extends HatsCallDataClient {
       },
     })) as { id: string; claimableForBy: ClaimsHatter[] };
 
-    if (hat.claimableForBy.length == 0) {
+    let claimsHatterToUse;
+    for (let i = 0; i < hat.claimableForBy.length; i++) {
+      const claimsHatter = hat.claimableForBy[i];
+      const wearsAdmin = await this._publicClient.readContract({
+        address: claimsHatter.id as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "wearsAdmin",
+        args: [hatId],
+      });
+      if (wearsAdmin) {
+        claimsHatterToUse = claimsHatter;
+      }
+    }
+
+    if (claimsHatterToUse === undefined) {
       return false;
     }
 
-    const { id: claimsHatterAddress } = hat.claimableForBy[0];
     const canClaim = await this._publicClient.readContract({
-      address: claimsHatterAddress as Address,
+      address: claimsHatterToUse.id as Address,
       abi: CLAIMS_HATTER_ABI,
       functionName: "canClaimForAccount",
       args: [account, hatId],
@@ -1722,6 +1775,25 @@ export class HatsClient extends HatsCallDataClient {
     return canClaim;
   }
 
+  /**
+   * Claim a hat for the calling account.
+   *
+   * @param account - A Viem account.
+   * @param hatId - ID of the hat to claim.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Thrown if no wallet client was provided in the hats client initialization.
+   *
+   * @throws HatNotClaimableError
+   * Thrown if the hat is not claimable.
+   *
+   * @throws NotExplicitlyEligibleError
+   * Thrown if the wearer is not explicitly eligible for the hat.
+   *
+   * @throws NotAdminError
+   * Thrown if there is no multi claims hatter instance that is the hat's admin.
+   */
   async claimHat({
     account,
     hatId,
@@ -1730,7 +1802,9 @@ export class HatsClient extends HatsCallDataClient {
     hatId: bigint;
   }): Promise<ClaimResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     const hat = (await this._graphqlClient.getHat({
@@ -1750,11 +1824,29 @@ export class HatsClient extends HatsCallDataClient {
       );
     }
 
-    const { id: claimsHatterAddress } = hat.claimableBy[0];
+    let claimsHatterToUse;
+    for (let i = 0; i < hat.claimableBy.length; i++) {
+      const claimsHatter = hat.claimableBy[i];
+      const wearsAdmin = await this._publicClient.readContract({
+        address: claimsHatter.id as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "wearsAdmin",
+        args: [hatId],
+      });
+      if (wearsAdmin) {
+        claimsHatterToUse = claimsHatter;
+      }
+    }
+
+    if (claimsHatterToUse === undefined) {
+      throw new NotAdminError(
+        "Error: attempting to claim a hat which does not have a claims hatter instance as admin"
+      );
+    }
 
     try {
       const { request } = await this._publicClient.simulateContract({
-        address: claimsHatterAddress as Address,
+        address: claimsHatterToUse.id as Address,
         abi: CLAIMS_HATTER_ABI,
         functionName: "claimHat",
         args: [hatId],
@@ -1776,6 +1868,26 @@ export class HatsClient extends HatsCallDataClient {
     }
   }
 
+  /**
+   * Claim a hat on behalf of a chosen account.
+   *
+   * @param account - A Viem account.
+   * @param hatId - ID of the hat to claim-for.
+   * @param wearer -  Address for which to claim the hat for.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Thrown if no wallet client was provided in the hats client initialization.
+   *
+   * @throws HatNotClaimableForError
+   * Thrown if the hat is not claimable-for.
+   *
+   * @throws NotExplicitlyEligibleError
+   * Thrown if the wearer is not explicitly eligible for the hat.
+   *
+   * @throws NotAdminError
+   * Thrown if there is no multi claims hatter instance that is the hat's admin.
+   */
   async claimHatFor({
     account,
     hatId,
@@ -1786,7 +1898,9 @@ export class HatsClient extends HatsCallDataClient {
     wearer: Address;
   }): Promise<ClaimResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     const hat = (await this._graphqlClient.getHat({
@@ -1806,11 +1920,29 @@ export class HatsClient extends HatsCallDataClient {
       );
     }
 
-    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+    let claimsHatterToUse;
+    for (let i = 0; i < hat.claimableForBy.length; i++) {
+      const claimsHatter = hat.claimableForBy[i];
+      const wearsAdmin = await this._publicClient.readContract({
+        address: claimsHatter.id as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "wearsAdmin",
+        args: [hatId],
+      });
+      if (wearsAdmin) {
+        claimsHatterToUse = claimsHatter;
+      }
+    }
+
+    if (claimsHatterToUse === undefined) {
+      throw new NotAdminError(
+        "Error: attempting to claim a hat which does not have a claims hatter instance as admin"
+      );
+    }
 
     try {
       const { request } = await this._publicClient.simulateContract({
-        address: claimsHatterAddress as Address,
+        address: claimsHatterToUse.id as Address,
         abi: CLAIMS_HATTER_ABI,
         functionName: "claimHatFor",
         args: [hatId, wearer],
@@ -1832,6 +1964,26 @@ export class HatsClient extends HatsCallDataClient {
     }
   }
 
+  /**
+   * Claim a hat on behalf of multiple accounts.
+   *
+   * @param account - A Viem account.
+   * @param hatId - ID of the hat to claim-for.
+   * @param wearers -  Addresses for which to claim the hat for.
+   * @returns An object containing the status of the call and the transaction hash.
+   *
+   * @throws MissingWalletClientError
+   * Thrown if no wallet client was provided in the hats client initialization.
+   *
+   * @throws HatNotClaimableForError
+   * Thrown if the hat is not claimable-for.
+   *
+   * @throws NotExplicitlyEligibleError
+   * Thrown if one of the wearers is not explicitly eligible for the hat.
+   *
+   * @throws NotAdminError
+   * Thrown if there is no multi claims hatter instance that is the hat's admin.
+   */
   async multiClaimHatFor({
     account,
     hatId,
@@ -1842,7 +1994,9 @@ export class HatsClient extends HatsCallDataClient {
     wearers: Address[];
   }): Promise<ClaimResult> {
     if (this._walletClient === undefined) {
-      throw new Error("Wallet client is required to perform this action");
+      throw new MissingWalletClientError(
+        "Wallet client is required to perform this action"
+      );
     }
 
     const hat = (await this._graphqlClient.getHat({
@@ -1862,14 +2016,32 @@ export class HatsClient extends HatsCallDataClient {
       );
     }
 
-    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+    let claimsHatterToUse;
+    for (let i = 0; i < hat.claimableForBy.length; i++) {
+      const claimsHatter = hat.claimableForBy[i];
+      const wearsAdmin = await this._publicClient.readContract({
+        address: claimsHatter.id as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "wearsAdmin",
+        args: [hatId],
+      });
+      if (wearsAdmin) {
+        claimsHatterToUse = claimsHatter;
+      }
+    }
+
+    if (claimsHatterToUse === undefined) {
+      throw new NotAdminError(
+        "Error: attempting to claim a hat which does not have a claims hatter instance as admin"
+      );
+    }
 
     let hatIdsArray = new Array<bigint>(wearers.length);
     hatIdsArray = hatIdsArray.fill(hatId);
 
     try {
       const { request } = await this._publicClient.simulateContract({
-        address: claimsHatterAddress as Address,
+        address: claimsHatterToUse.id as Address,
         abi: CLAIMS_HATTER_ABI,
         functionName: "claimHatsFor",
         args: [hatIdsArray, wearers],
