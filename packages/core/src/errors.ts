@@ -89,6 +89,13 @@ export class NotEligibleError extends Error {
   }
 }
 
+export class NotExplicitlyEligibleError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotExplicitlyEligibleError";
+  }
+}
+
 export class NotActiveError extends Error {
   constructor(message: string) {
     super(message);
@@ -205,5 +212,19 @@ export class InvalidUnlinkError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "InvalidUnlinkError";
+  }
+}
+
+export class HatNotClaimableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "HatNotClaimableError";
+  }
+}
+
+export class HatNotClaimableForError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "HatNotClaimableForError";
   }
 }

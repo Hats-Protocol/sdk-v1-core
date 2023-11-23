@@ -1,15 +1,16 @@
 import { decodeEventLog, encodeEventTopics } from "viem";
 
-import { HATS_ABI } from "./abi/Hats";
+import { HATS_ABI } from "../abi/Hats";
+import { CLAIMS_HATTER_ABI } from "../abi/ClaimsHatter";
 import {
   ChainIdMismatchError,
   MissingPublicClientError,
   MissingWalletClientError,
-  MaxLevelReachedError,
-  MaxHatsInLevelReached,
-} from "./errors";
-import { HATS_V1, MAX_LEVEL_HATS, MAX_LEVELS, ZERO_ADDRESS } from "./constants";
-import { getError } from "./validations";
+  HatNotClaimableError,
+  HatNotClaimableForError,
+} from "../errors";
+import { HATS_V1, ZERO_ADDRESS } from "../constants";
+import { getError } from "../validations";
 import { HatsCallDataClient } from "./calldata";
 import type { PublicClient, WalletClient, Account, Address, Hex } from "viem";
 import type {
@@ -35,7 +36,9 @@ import type {
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
   MultiCallResult,
-} from "./types";
+  ClaimResult,
+} from "../types";
+import type { ClaimsHatter } from "@hatsprotocol/sdk-v1-subgraph";
 
 export class HatsClient extends HatsCallDataClient {
   private readonly _walletClient: WalletClient | undefined;
@@ -82,379 +85,6 @@ export class HatsClient extends HatsCallDataClient {
 
     this._walletClient = walletClient;
   }
-
-  /*//////////////////////////////////////////////////////////////
-                        Onchain Read Functions
-      //////////////////////////////////////////////////////////////*/
-
-  /**
-   * Get a hat's properties.
-   *
-   * @param hatId - The hat ID.
-   * @returns An object containing the hat's properties.
-   */
-  async viewHat(hatId: bigint): Promise<{
-    details: string;
-    maxSupply: number;
-    supply: number;
-    eligibility: Address;
-    toggle: Address;
-    imageUri: string;
-    numChildren: number;
-    mutable: boolean;
-    active: boolean;
-  }> {
-    const result = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "viewHat",
-      args: [BigInt(hatId)],
-    });
-
-    return {
-      details: result[0],
-      maxSupply: result[1],
-      supply: result[2],
-      eligibility: result[3],
-      toggle: result[4],
-      imageUri: result[5],
-      numChildren: result[6],
-      mutable: result[7],
-      active: result[8],
-    };
-  }
-
-  /**
-   * Check if an address is a wearer of a specific hat.
-   *
-   * @param wearer - Address to check.
-   * @param hatId - The hat ID.
-   * @returns True if the address weares the hat, false otherwise.
-   */
-  async isWearerOfHat({
-    wearer,
-    hatId,
-  }: {
-    wearer: Address;
-    hatId: bigint;
-  }): Promise<boolean> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isWearerOfHat",
-      args: [wearer, hatId],
-    });
-
-    return res;
-  }
-
-  /**
-   * Check if an address is an admin of a specific hat.
-   *
-   * @param user - The address to check.
-   * @param hatId - The hat ID.
-   * @returns True is the address is an admin of the hat, false otherwise.
-   */
-  async isAdminOfHat({
-    user,
-    hatId,
-  }: {
-    user: Address;
-    hatId: bigint;
-  }): Promise<boolean> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isAdminOfHat",
-      args: [user, hatId],
-    });
-
-    return res;
-  }
-
-  /**
-   * Check if a hat is active.
-   *
-   * @param hatId - The hat ID.
-   * @returns True if active, false otherwise.
-   */
-  async isActive(hatId: bigint): Promise<boolean> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isActive",
-      args: [hatId],
-    });
-
-    return res;
-  }
-
-  /**
-   * Check if a wearer is in good standing.
-   *
-   * @param wearer - The address of the wearer.
-   * @param hatID - The hat ID.
-   * @returns True if the wearer is in good standing, false otherwise.
-   */
-  async isInGoodStanding({
-    wearer,
-    hatId,
-  }: {
-    wearer: Address;
-    hatId: bigint;
-  }): Promise<boolean> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isInGoodStanding",
-      args: [wearer, hatId],
-    });
-
-    return res;
-  }
-
-  /**
-   * Check if an address is eligible for a specific hat.
-   *
-   * @param wearer - The Address to check.
-   * @param hatId - THe hat ID.
-   * @returns True if eligible, false otherwise.
-   */
-  async isEligible({
-    wearer,
-    hatId,
-  }: {
-    wearer: Address;
-    hatId: bigint;
-  }): Promise<boolean> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "isEligible",
-      args: [wearer, hatId],
-    });
-
-    return res;
-  }
-
-  async predictNextChildrenHatIDs({
-    admin,
-    numChildren,
-  }: {
-    admin: bigint;
-    numChildren: number;
-  }): Promise<bigint[]> {
-    const res: bigint[] = [];
-    if (numChildren < 1) {
-      return res;
-    }
-
-    const adminHat = await this.viewHat(admin);
-    if (adminHat.numChildren + numChildren > MAX_LEVEL_HATS) {
-      throw new MaxHatsInLevelReached(
-        "Maximum amount of hats per level is 65535"
-      );
-    }
-
-    const level = await this.getLocalHatLevel(admin);
-    if (level === MAX_LEVELS) {
-      throw new MaxLevelReachedError(
-        "The provided admin's hat level is on the maximal level"
-      );
-    }
-
-    const contractDetails = {
-      address: HATS_V1 as Address,
-      abi: HATS_ABI,
-    };
-
-    const calls = [];
-    for (let i = 0; i < numChildren; i++) {
-      calls.push({
-        ...contractDetails,
-        functionName: "buildHatId",
-        args: [admin, adminHat.numChildren + i + 1],
-      });
-    }
-    const childHats = await this._publicClient.multicall({
-      contracts: calls,
-    });
-    childHats.forEach((hat) => {
-      if (hat.result !== undefined) {
-        res.push(hat.result as bigint);
-      }
-    });
-
-    return res;
-  }
-
-  /**
-   * Get the number of trees.
-   *
-   * @returns The number of already created trees.
-   */
-  async getTreesCount(): Promise<number> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "lastTopHatId",
-    });
-
-    return res;
-  }
-
-  /**
-   * Get the linkage request of a tree.
-   *
-   * @param topHatDomain - The tree domain. The tree domain is the first four bytes of the tophat ID.
-   * @returns If request exists, returns the requested new admin hat ID. If not, returns zero.
-   */
-  async getLinkageRequest(topHatDomain: number): Promise<bigint> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "linkedTreeRequests",
-      args: [topHatDomain],
-    });
-
-    return res;
-  }
-
-  /**
-   * Get the admin of a linked tree.
-   *
-   * @param topHatDomain - The tree domain. The tree domain is the first four bytes of the tophat ID.
-   * @returns If tree is linked, returns the admin hat ID of the linked tree. If not, returns zero.
-   */
-  async getLinkedTreeAdmin(topHatDomain: number): Promise<bigint> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "linkedTreeAdmins",
-      args: [topHatDomain],
-    });
-
-    return res;
-  }
-
-  /**
-   * Get a hat's level. If the tree is linked, level is calulated in the global tree (formed of all linked trees).
-   * @param hatId - The hat ID.
-   * @returns The hat's level in the global tree.
-   */
-  async getHatLevel(hatId: bigint): Promise<number> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "getHatLevel",
-      args: [hatId],
-    });
-
-    return res;
-  }
-
-  /**
-   * Get a hat's level in its local tree (without considering linked trees).
-   * @param hatId - The hat ID.
-   * @returns The hat's local level.
-   */
-  async getLocalHatLevel(hatId: bigint): Promise<number> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "getLocalHatLevel",
-      args: [hatId],
-    });
-
-    return res;
-  }
-
-  /**
-   * Get a hat's tree domain.
-   *
-   * @param hatId - The hat ID.
-   * @returns The tree domain of the hat. The tree domain is the first four bytes of the tophat ID.
-   */
-  async getTopHatDomain(hatId: bigint): Promise<number> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "getTopHatDomain",
-      args: [hatId],
-    });
-
-    return res;
-  }
-
-  /**
-   * Get the tree domain of the global's tree tophat (tippy top hat), which the provided tree is included in.
-   *
-   * @param topHatDomain The tree domain. The tree domain is the first four bytes of the tophat ID.
-   * @returns The tree domain of the tippy top hat.
-   */
-  async getTippyTopHatDomain(topHatDomain: number): Promise<number> {
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "getTippyTopHatDomain",
-      args: [topHatDomain],
-    });
-
-    return res;
-  }
-
-  /**
-   * Get the direct admin of a hat (its parent).
-   * @param hatId- The hat ID.
-   * @returns The admin's hat ID. If the provided hat is an unlinked tophat, then this top hat is returned, as it is
-   * the admin of itself.
-   */
-  async getAdmin(hatId: bigint): Promise<bigint> {
-    const hatLevel = await this.getHatLevel(hatId);
-    if (hatLevel === 0) {
-      return hatId;
-    }
-
-    const res = await this._publicClient.readContract({
-      address: HATS_V1,
-      abi: HATS_ABI,
-      functionName: "getAdminAtLevel",
-      args: [hatId, hatLevel - 1],
-    });
-
-    return res;
-  }
-
-  /**
-   * Get the children hats of a hat.
-   *
-   * @param hatId - The hat ID.
-   * @returns An array of all children hats IDs.
-   */
-  async getChildrenHats(hatId: bigint): Promise<bigint[]> {
-    const res: bigint[] = [];
-    const hat = await this.viewHat(hatId);
-
-    if (hat.numChildren === 0) {
-      return res;
-    }
-
-    for (let i = 0; i < hat.numChildren; i++) {
-      const childHatId = await this._publicClient.readContract({
-        address: HATS_V1,
-        abi: HATS_ABI,
-        functionName: "buildHatId",
-        args: [hatId, i + 1],
-      });
-      res.push(childHatId);
-    }
-
-    return res;
-  }
-
-  /*//////////////////////////////////////////////////////////////
-                        Write Functions
-      //////////////////////////////////////////////////////////////*/
 
   /**
    * Create a new tophat (new tree).
@@ -2021,6 +1651,241 @@ export class HatsClient extends HatsCallDataClient {
         args: [callDatas],
         account,
       });
+    } catch (err) {
+      getError(err);
+    }
+  }
+
+  async accountCanClaim({
+    hatId,
+    account,
+  }: {
+    hatId: bigint;
+    account: Address;
+  }): Promise<boolean> {
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableBy: ClaimsHatter[] };
+
+    if (hat.claimableBy.length == 0) {
+      return false;
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableBy[0];
+    const canClaim = await this._publicClient.readContract({
+      address: claimsHatterAddress as Address,
+      abi: CLAIMS_HATTER_ABI,
+      functionName: "accountCanClaim",
+      args: [account, hatId],
+    });
+
+    return canClaim;
+  }
+
+  async canClaimForAccount({
+    hatId,
+    account,
+  }: {
+    hatId: bigint;
+    account: Address;
+  }): Promise<boolean> {
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableForBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableForBy: ClaimsHatter[] };
+
+    if (hat.claimableForBy.length == 0) {
+      return false;
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+    const canClaim = await this._publicClient.readContract({
+      address: claimsHatterAddress as Address,
+      abi: CLAIMS_HATTER_ABI,
+      functionName: "canClaimForAccount",
+      args: [account, hatId],
+    });
+
+    return canClaim;
+  }
+
+  async claimHat({
+    account,
+    hatId,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+  }): Promise<ClaimResult> {
+    if (this._walletClient === undefined) {
+      throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableBy: ClaimsHatter[] };
+
+    if (hat.claimableBy.length == 0) {
+      throw new HatNotClaimableError(
+        `Error: attempting to claim hat ${hatId.toString()}, which is not claimable`
+      );
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableBy[0];
+
+    try {
+      const { request } = await this._publicClient.simulateContract({
+        address: claimsHatterAddress as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "claimHat",
+        args: [hatId],
+        account,
+      });
+
+      const hash = await this._walletClient.writeContract(request);
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      getError(err);
+    }
+  }
+
+  async claimHatFor({
+    account,
+    hatId,
+    wearer,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearer: Address;
+  }): Promise<ClaimResult> {
+    if (this._walletClient === undefined) {
+      throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableForBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableForBy: ClaimsHatter[] };
+
+    if (hat.claimableForBy.length == 0) {
+      throw new HatNotClaimableForError(
+        `Error: attempting to claim-for hat ${hatId.toString()}, which is not claimable-for`
+      );
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+
+    try {
+      const { request } = await this._publicClient.simulateContract({
+        address: claimsHatterAddress as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "claimHatFor",
+        args: [hatId, wearer],
+        account,
+      });
+
+      const hash = await this._walletClient.writeContract(request);
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      getError(err);
+    }
+  }
+
+  async multiClaimHatFor({
+    account,
+    hatId,
+    wearers,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearers: Address[];
+  }): Promise<ClaimResult> {
+    if (this._walletClient === undefined) {
+      throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableForBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableForBy: ClaimsHatter[] };
+
+    if (hat.claimableForBy.length == 0) {
+      throw new HatNotClaimableForError(
+        `Error: attempting to claim-for hat ${hatId.toString()}, which is not claimable-for`
+      );
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+
+    let hatIdsArray = new Array<bigint>(wearers.length);
+    hatIdsArray = hatIdsArray.fill(hatId);
+
+    try {
+      const { request } = await this._publicClient.simulateContract({
+        address: claimsHatterAddress as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "claimHatsFor",
+        args: [hatIdsArray, wearers],
+        account,
+      });
+
+      const hash = await this._walletClient.writeContract(request);
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
     } catch (err) {
       getError(err);
     }

@@ -2,8 +2,10 @@ import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
+import { createAnvil } from "@viem/anvil";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import { treeIdDecimalToHex } from "../src/utils";
+import type { Anvil } from "@viem/anvil";
 
 describe("copyTree tests", () => {
   let publicClient: PublicClient;
@@ -12,8 +14,16 @@ describe("copyTree tests", () => {
   let address1: Address;
   let account1: PrivateKeyAccount;
 
+  let anvil: Anvil;
+
   describe("Hats client is initialized", () => {
-    beforeAll(() => {
+    beforeAll(async () => {
+      anvil = createAnvil({
+        forkUrl: "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9",
+        startTimeout: 20000,
+      });
+      await anvil.start();
+
       address1 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
       account1 = privateKeyToAccount(
         "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
@@ -34,6 +44,10 @@ describe("copyTree tests", () => {
         publicClient: publicClient,
         walletClient: walletClient,
       });
+    }, 30000);
+
+    afterAll(async () => {
+      await anvil.stop();
     }, 30000);
 
     describe("Tree 1", () => {

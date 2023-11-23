@@ -1,4 +1,5 @@
-import { HatsClient } from "./client";
+import { HatsClient } from "./clients";
+import { HATS_ABI } from "./abi/Hats";
 import {
   hatIdDecimalToHex,
   treeIdDecimalToHex,
@@ -12,6 +13,7 @@ import {
 
 export {
   HatsClient,
+  HATS_ABI,
   hatIdDecimalToHex,
   treeIdDecimalToHex,
   hatIdHexToDecimal,
@@ -44,4 +46,6 @@ export type {
   ApproveLinkTopHatToTreeResult,
   UnlinkTopHatFromTreeResult,
   RelinkTopHatWithinTreeResult,
+  ClaimResult,
+  MultiCallResult,
 } from "./types";

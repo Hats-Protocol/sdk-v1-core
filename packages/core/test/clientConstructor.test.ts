@@ -1,8 +1,24 @@
 import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http } from "viem";
 import { mainnet, goerli } from "viem/chains";
+import { createAnvil } from "@viem/anvil";
+import type { Anvil } from "@viem/anvil";
 
 describe("client Constructor tests", () => {
+  let anvil: Anvil;
+
+  beforeAll(async () => {
+    anvil = createAnvil({
+      forkUrl: "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9",
+      startTimeout: 20000,
+    });
+    await anvil.start();
+  });
+
+  afterAll(async () => {
+    await anvil.stop();
+  }, 30000);
+
   describe("Hats client is initialized", () => {
     test("Client non matching chain to public client", () => {
       const publicClient = createPublicClient({

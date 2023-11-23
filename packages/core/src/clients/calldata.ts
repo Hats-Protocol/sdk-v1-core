@@ -1,16 +1,14 @@
 import { encodeFunctionData } from "viem";
 import { HatsSubgraphClient } from "@hatsprotocol/sdk-v1-subgraph";
 
-import { HATS_ABI } from "./abi/Hats";
-import { ChainIdMismatchError, MissingPublicClientError } from "./errors";
-import { ZERO_ADDRESS } from "./constants";
-import { treeIdDecimalToHex, hatIdHexToDecimal } from "./utils";
+import { HATS_ABI } from "../abi/Hats";
+import { HatsReadClient } from "./read";
+import { ZERO_ADDRESS } from "../constants";
+import { treeIdDecimalToHex, hatIdHexToDecimal } from "../utils";
 import type { PublicClient, Address, Hex } from "viem";
 
-export class HatsCallDataClient {
-  readonly chainId: number;
-  protected readonly _publicClient: PublicClient;
-  protected readonly _graphqlClient: HatsSubgraphClient | undefined;
+export class HatsCallDataClient extends HatsReadClient {
+  protected readonly _graphqlClient: HatsSubgraphClient;
 
   /**
    * Initialize a HatsClient.
@@ -32,19 +30,9 @@ export class HatsCallDataClient {
     chainId: number;
     publicClient: PublicClient;
   }) {
-    if (publicClient === undefined) {
-      throw new MissingPublicClientError("Public client is required");
-    }
+    super({ chainId, publicClient });
 
-    if (publicClient.chain?.id !== chainId) {
-      throw new ChainIdMismatchError(
-        "Provided chain id should match the public client chain id"
-      );
-    }
-
-    this.chainId = chainId;
-    this._graphqlClient = new HatsSubgraphClient();
-    this._publicClient = publicClient;
+    this._graphqlClient = new HatsSubgraphClient({});
   }
 
   /**
@@ -708,21 +696,23 @@ export class HatsCallDataClient {
       treeId: sourceTree,
       props: {
         hats: {
-          details: true,
-          maxSupply: true,
-          imageUri: true,
-          currentSupply: true,
-          levelAtLocalTree: true,
-          eligibility: true,
-          toggle: true,
-          mutable: true,
-          createdAt: true,
-          wearers: {},
-          admin: {},
+          props: {
+            details: true,
+            maxSupply: true,
+            imageUri: true,
+            currentSupply: true,
+            levelAtLocalTree: true,
+            eligibility: true,
+            toggle: true,
+            mutable: true,
+            createdAt: true,
+            wearers: { props: {} },
+            admin: {},
+          },
         },
         childOfTree: {},
         linkedToHat: {},
-        parentOfTrees: {},
+        parentOfTrees: { props: {} },
       },
     });
 
