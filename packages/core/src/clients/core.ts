@@ -7,6 +7,7 @@ import {
   MissingPublicClientError,
   MissingWalletClientError,
   HatNotClaimableError,
+  HatNotClaimableForError,
 } from "../errors";
 import { HATS_V1, ZERO_ADDRESS } from "../constants";
 import { getError } from "../validations";
@@ -37,7 +38,7 @@ import type {
   MultiCallResult,
   ClaimResult,
 } from "../types";
-import type { Hat, ClaimsHatter } from "@hatsprotocol/sdk-v1-subgraph";
+import type { ClaimsHatter } from "@hatsprotocol/sdk-v1-subgraph";
 
 export class HatsClient extends HatsCallDataClient {
   private readonly _walletClient: WalletClient | undefined;
@@ -1767,7 +1768,9 @@ export class HatsClient extends HatsCallDataClient {
     })) as { id: string; claimableForBy: ClaimsHatter[] };
 
     if (hat.claimableForBy.length == 0) {
-      throw new Error();
+      throw new HatNotClaimableForError(
+        `Error: attempting to claim-for hat ${hatId.toString()}, which is not claimable-for`
+      );
     }
 
     const { id: claimsHatterAddress } = hat.claimableForBy[0];
@@ -1778,6 +1781,65 @@ export class HatsClient extends HatsCallDataClient {
         abi: CLAIMS_HATTER_ABI,
         functionName: "claimHatFor",
         args: [hatId, wearer],
+        account,
+      });
+
+      const hash = await this._walletClient.writeContract(request);
+
+      const receipt = await this._publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      return {
+        status: receipt.status,
+        transactionHash: receipt.transactionHash,
+      };
+    } catch (err) {
+      getError(err);
+    }
+  }
+
+  async multiClaimHatFor({
+    account,
+    hatId,
+    wearers,
+  }: {
+    account: Account | Address;
+    hatId: bigint;
+    wearers: Address[];
+  }): Promise<ClaimResult> {
+    if (this._walletClient === undefined) {
+      throw new Error("Wallet client is required to perform this action");
+    }
+
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableForBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableForBy: ClaimsHatter[] };
+
+    if (hat.claimableForBy.length == 0) {
+      throw new HatNotClaimableForError(
+        `Error: attempting to claim-for hat ${hatId.toString()}, which is not claimable-for`
+      );
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+
+    let hatIdsArray = new Array<bigint>(wearers.length);
+    hatIdsArray = hatIdsArray.fill(hatId);
+
+    try {
+      const { request } = await this._publicClient.simulateContract({
+        address: claimsHatterAddress as Address,
+        abi: CLAIMS_HATTER_ABI,
+        functionName: "claimHatsFor",
+        args: [hatIdsArray, wearers],
         account,
       });
 

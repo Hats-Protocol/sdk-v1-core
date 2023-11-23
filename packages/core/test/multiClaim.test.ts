@@ -1,6 +1,5 @@
 import { HatsClient } from "../src/index";
 import {
-  HatNotClaimableError,
   HatNotClaimableForError,
   NotExplicitlyEligibleError,
 } from "../src/errors";
@@ -21,7 +20,6 @@ describe("Claiming Tests", () => {
   let address2: Address;
   let address3: Address;
   let account1: PrivateKeyAccount;
-  let account2: PrivateKeyAccount;
 
   let claimableHatId: bigint;
   let claimableForHatId: bigint;
@@ -33,7 +31,6 @@ describe("Claiming Tests", () => {
     anvil = createAnvil({
       forkUrl: "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9",
       startTimeout: 20000,
-      port: 8545,
     });
     await anvil.start();
 
@@ -42,9 +39,6 @@ describe("Claiming Tests", () => {
       "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
     );
     address2 = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8";
-    account2 = privateKeyToAccount(
-      "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
-    );
     address3 = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
 
     publicClient = createPublicClient({
@@ -100,76 +94,52 @@ describe("Claiming Tests", () => {
         9462941691552290999965019515050021795207471604411809704706797069139968n;
       claimableForHatId =
         9462941691558568101700406195813857584630679270827912060151261103652864n;
+
+      await hatsClient.changeHatMaxSupply({
+        account: account1,
+        hatId: claimableForHatId,
+        newMaxSupply: 5,
+      });
     }, 30000);
 
-    describe("Single Claiming Tests", () => {
+    describe("Multi Claiming For Tests", () => {
       beforeAll(async () => {
-        await hatsClient.claimHat({
-          account: account2,
-          hatId: claimableHatId,
+        await hatsClient.multiClaimHatFor({
+          account: account1,
+          hatId: claimableForHatId,
+          wearers: [address2, address3],
         });
       }, 30000);
 
       test("Test claim successful", async () => {
-        const isWearer = await hatsClient.isWearerOfHat({
+        const isWearerAddress2 = await hatsClient.isWearerOfHat({
           wearer: address2,
-          hatId: claimableHatId,
+          hatId: claimableForHatId,
         });
-        expect(isWearer).toBe(true);
+        const isWearerAddress3 = await hatsClient.isWearerOfHat({
+          wearer: address3,
+          hatId: claimableForHatId,
+        });
+        expect(isWearerAddress2).toBe(true);
+        expect(isWearerAddress3).toBe(true);
       }, 30000);
 
       test("Test claim reverts for non explicitly eligible account", async () => {
         await expect(async () => {
-          await hatsClient.claimHat({
-            account: account1,
-            hatId: claimableHatId,
-          });
-        }).rejects.toThrow(NotExplicitlyEligibleError);
-      }, 30000);
-
-      test("Test claim reverts for a non claimable hat", async () => {
-        await expect(async () => {
-          await hatsClient.claimHat({
-            account: account1,
-            hatId: eligibilityConditionHatId,
-          });
-        }).rejects.toThrow(HatNotClaimableError);
-      }, 30000);
-    });
-
-    describe("Single Claiming-For Tests", () => {
-      beforeAll(async () => {
-        await hatsClient.claimHatFor({
-          account: account1,
-          hatId: claimableForHatId,
-          wearer: address3,
-        });
-      }, 30000);
-
-      test("Test claim successful", async () => {
-        const isWearer = await hatsClient.isWearerOfHat({
-          wearer: address3,
-          hatId: claimableForHatId,
-        });
-        expect(isWearer).toBe(true);
-      }, 30000);
-
-      test("Test claim-for reverts for non explicitly eligible account", async () => {
-        await expect(async () => {
-          await hatsClient.claimHatFor({
+          await hatsClient.multiClaimHatFor({
             account: account1,
             hatId: claimableForHatId,
-            wearer: address1,
+            wearers: [address1, address3],
           });
         }).rejects.toThrow(NotExplicitlyEligibleError);
       }, 30000);
 
-      test("Test claim-for reverts for a non claimable-for hat", async () => {
+      test("Test claim reverts for a non claimable-for hat", async () => {
         await expect(async () => {
-          await hatsClient.claimHatFor({
+          await hatsClient.multiClaimHatFor({
             account: account1,
-            hatId: eligibilityConditionHatId,
-            wearer: address3,
+            hatId: claimableHatId,
+            wearers: [address2, address3],
           });
         }).rejects.toThrow(HatNotClaimableForError);
       }, 30000);
