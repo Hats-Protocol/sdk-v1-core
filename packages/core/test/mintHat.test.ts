@@ -12,8 +12,10 @@ import {
   NotAdminError,
   AlreadyWearingError,
 } from "../src/errors";
+import { createAnvil } from "@viem/anvil";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
+import type { Anvil } from "@viem/anvil";
 
 describe("mintHat tests", () => {
   let publicClient: PublicClient;
@@ -28,8 +30,16 @@ describe("mintHat tests", () => {
   let topHatId: bigint;
   let childHatId: bigint;
 
+  let anvil: Anvil;
+
   describe("Hats client is initialized", () => {
-    beforeAll(() => {
+    beforeAll(async () => {
+      anvil = createAnvil({
+        forkUrl: "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9",
+        startTimeout: 20000,
+      });
+      await anvil.start();
+
       address1 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
       address2 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
       address3 = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
@@ -55,6 +65,10 @@ describe("mintHat tests", () => {
         publicClient: publicClient,
         walletClient: walletClient,
       });
+    }, 30000);
+
+    afterAll(async () => {
+      await anvil.stop();
     }, 30000);
 
     describe("Tree and Hat are created", () => {
