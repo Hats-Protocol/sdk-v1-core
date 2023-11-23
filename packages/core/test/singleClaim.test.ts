@@ -103,14 +103,20 @@ describe("Claiming Tests", () => {
     }, 30000);
 
     describe("Single Claiming Tests", () => {
-      beforeAll(async () => {
+      test("Test account can claim", async () => {
+        const canClaim = await hatsClient.accountCanClaim({
+          hatId: claimableHatId,
+          account: account2.address,
+        });
+        expect(canClaim).toBe(true);
+      });
+
+      test("Test claim successful", async () => {
         await hatsClient.claimHat({
           account: account2,
           hatId: claimableHatId,
         });
-      }, 30000);
 
-      test("Test claim successful", async () => {
         const isWearer = await hatsClient.isWearerOfHat({
           wearer: address2,
           hatId: claimableHatId,
@@ -119,6 +125,12 @@ describe("Claiming Tests", () => {
       }, 30000);
 
       test("Test claim reverts for non explicitly eligible account", async () => {
+        const canClaim = await hatsClient.accountCanClaim({
+          hatId: claimableHatId,
+          account: account1.address,
+        });
+        expect(canClaim).toBe(false);
+
         await expect(async () => {
           await hatsClient.claimHat({
             account: account1,
@@ -128,6 +140,12 @@ describe("Claiming Tests", () => {
       }, 30000);
 
       test("Test claim reverts for a non claimable hat", async () => {
+        const canClaim = await hatsClient.accountCanClaim({
+          hatId: eligibilityConditionHatId,
+          account: account1.address,
+        });
+        expect(canClaim).toBe(false);
+
         await expect(async () => {
           await hatsClient.claimHat({
             account: account1,
@@ -138,15 +156,21 @@ describe("Claiming Tests", () => {
     });
 
     describe("Single Claiming-For Tests", () => {
-      beforeAll(async () => {
+      test("test can claim for account", async () => {
+        const canClaimFor = await hatsClient.canClaimForAccount({
+          hatId: claimableForHatId,
+          account: address3,
+        });
+        expect(canClaimFor).toBe(true);
+      });
+
+      test("Test claim successful", async () => {
         await hatsClient.claimHatFor({
           account: account1,
           hatId: claimableForHatId,
           wearer: address3,
         });
-      }, 30000);
 
-      test("Test claim successful", async () => {
         const isWearer = await hatsClient.isWearerOfHat({
           wearer: address3,
           hatId: claimableForHatId,
@@ -155,6 +179,12 @@ describe("Claiming Tests", () => {
       }, 30000);
 
       test("Test claim-for reverts for non explicitly eligible account", async () => {
+        const canClaimFor = await hatsClient.canClaimForAccount({
+          hatId: claimableForHatId,
+          account: address1,
+        });
+        expect(canClaimFor).toBe(false);
+
         await expect(async () => {
           await hatsClient.claimHatFor({
             account: account1,
@@ -165,6 +195,12 @@ describe("Claiming Tests", () => {
       }, 30000);
 
       test("Test claim-for reverts for a non claimable-for hat", async () => {
+        const canClaimFor = await hatsClient.canClaimForAccount({
+          hatId: eligibilityConditionHatId,
+          account: address3,
+        });
+        expect(canClaimFor).toBe(false);
+
         await expect(async () => {
           await hatsClient.claimHatFor({
             account: account1,

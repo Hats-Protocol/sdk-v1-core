@@ -1656,12 +1656,12 @@ export class HatsClient extends HatsCallDataClient {
     }
   }
 
-  async isClaimableBy({
+  async accountCanClaim({
     hatId,
-    wearer,
+    account,
   }: {
     hatId: bigint;
-    wearer: Address;
+    account: Address;
   }): Promise<boolean> {
     const hat = (await this._graphqlClient.getHat({
       chainId: this.chainId,
@@ -1683,7 +1683,40 @@ export class HatsClient extends HatsCallDataClient {
       address: claimsHatterAddress as Address,
       abi: CLAIMS_HATTER_ABI,
       functionName: "accountCanClaim",
-      args: [wearer, hatId],
+      args: [account, hatId],
+    });
+
+    return canClaim;
+  }
+
+  async canClaimForAccount({
+    hatId,
+    account,
+  }: {
+    hatId: bigint;
+    account: Address;
+  }): Promise<boolean> {
+    const hat = (await this._graphqlClient.getHat({
+      chainId: this.chainId,
+      hatId,
+      props: {
+        claimableForBy: {
+          props: {},
+          filters: { first: 1 },
+        },
+      },
+    })) as { id: string; claimableForBy: ClaimsHatter[] };
+
+    if (hat.claimableForBy.length == 0) {
+      return false;
+    }
+
+    const { id: claimsHatterAddress } = hat.claimableForBy[0];
+    const canClaim = await this._publicClient.readContract({
+      address: claimsHatterAddress as Address,
+      abi: CLAIMS_HATTER_ABI,
+      functionName: "canClaimForAccount",
+      args: [account, hatId],
     });
 
     return canClaim;
