@@ -1,9 +1,11 @@
-export function hatIdDecimalToHex(hatId: bigint): string {
-  return "0x" + BigInt(hatId).toString(16).padStart(64, "0");
+import type { Hex } from "viem";
+
+export function hatIdDecimalToHex(hatId: bigint): Hex {
+  return ("0x" + BigInt(hatId).toString(16).padStart(64, "0")) as Hex;
 }
 
-export function treeIdDecimalToHex(treeId: number): string {
-  return "0x" + treeId.toString(16).padStart(8, "0");
+export function treeIdDecimalToHex(treeId: number): Hex {
+  return ("0x" + treeId.toString(16).padStart(8, "0")) as Hex;
 }
 
 export function hatIdHexToDecimal(hatId: string): bigint {

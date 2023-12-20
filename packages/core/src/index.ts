@@ -10,6 +10,13 @@ import {
   hatIdToTreeId,
   hatIdIpToDecimal,
 } from "./utils";
+import {
+  HATS_V1,
+  MAX_LEVELS,
+  MAX_LEVEL_HATS,
+  ZERO_ID,
+  FALLBACK_ADDRESS,
+} from "./constants";
 
 export {
   HatsClient,
@@ -22,6 +29,11 @@ export {
   treeIdToTopHatId,
   hatIdToTreeId,
   hatIdIpToDecimal,
+  HATS_V1,
+  MAX_LEVELS,
+  MAX_LEVEL_HATS,
+  ZERO_ID,
+  FALLBACK_ADDRESS,
 };
 
 export type {
