@@ -135,8 +135,8 @@ export interface HatCreatedEvent extends HatsEventBase {
   __typename: "HatCreatedEvent";
   hatDetails: string;
   hatMaxSupply: string;
-  hatEligibility: string;
-  hatToggle: string;
+  hatEligibility: `0x${string}`;
+  hatToggle: `0x${string}`;
   hatMutable: boolean;
   hatImageUri: string;
 }
@@ -144,17 +144,17 @@ export interface HatCreatedEvent extends HatsEventBase {
 export interface HatMintedEvent extends HatsEventBase {
   __typename: "HatMintedEvent";
   wearer: {
-    id: string;
+    id: `0x${string}`;
   };
-  operator: string;
+  operator: `0x${string}`;
 }
 
 export interface HatBurnedEvent extends HatsEventBase {
   __typename: "HatBurnedEvent";
   wearer: {
-    id: string;
+    id: `0x${string}`;
   };
-  operator: string;
+  operator: `0x${string}`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -174,12 +174,12 @@ export interface HatDetailsChangedEvent extends HatsEventBase {
 
 export interface HatEligibilityChangedEvent extends HatsEventBase {
   __typename: "HatEligibilityChangedEvent";
-  hatNewEligibility: string;
+  hatNewEligibility: `0x${string}`;
 }
 
 export interface HatToggleChangedEvent extends HatsEventBase {
   __typename: "HatToggleChangedEvent";
-  hatNewToggle: string;
+  hatNewToggle: `0x${string}`;
 }
 
 export interface HatMaxSupplyChangedEvent extends HatsEventBase {
@@ -194,18 +194,18 @@ export interface HatImageURIChangedEvent extends HatsEventBase {
 
 export interface TopHatLinkRequestedEvent extends HatsEventBase {
   __typename: "TopHatLinkRequestedEvent";
-  newAdmin: string;
+  newAdmin: `0x${string}`;
 }
 
 export interface TopHatLinkedEvent extends HatsEventBase {
   __typename: "TopHatLinkedEvent";
-  newAdmin: string;
+  newAdmin: `0x${string}`;
 }
 
 export interface WearerStandingChangedEvent extends HatsEventBase {
   __typename: "WearerStandingChangedEvent";
   wearer: {
-    id: string;
+    id: `0x${string}`;
   };
   wearerStanding: boolean;
 }
