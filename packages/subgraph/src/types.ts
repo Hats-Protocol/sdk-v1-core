@@ -1,12 +1,12 @@
 export interface Hat {
-  id: string;
+  id: `0x${string}`;
   prettyId?: string;
   status?: boolean;
   createdAt?: string | null;
   details?: string;
   maxSupply?: string;
-  eligibility?: string;
-  toggle?: string;
+  eligibility?: `0x${string}`;
+  toggle?: `0x${string}`;
   mutable?: boolean;
   imageUri?: string;
   levelAtLocalTree?: number;
@@ -55,7 +55,7 @@ export interface HatsConfig {
 }
 
 export interface Wearer {
-  id: string;
+  id: `0x${string}`;
   currentHats?: Hat[];
   mintEvent?: HatsEvent[];
   burnEvent?: HatsEvent[];
@@ -75,7 +75,7 @@ export interface WearersConfig {
 }
 
 export interface Tree {
-  id: string;
+  id: `0x${string}`;
   hats?: Hat[];
   childOfTree?: Tree | null;
   parentOfTrees?: Tree[];
