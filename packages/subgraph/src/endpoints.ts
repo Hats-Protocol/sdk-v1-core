@@ -3,31 +3,23 @@ import type { EndpointsConfig } from "./types";
 export const DEFAULT_ENDPOINTS_CONFIG: EndpointsConfig = {
   1: {
     endpoint:
-      "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-ethereum",
-  },
-  5: {
-    endpoint:
-      "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-goerli",
+      "https://api.studio.thegraph.com/query/55784/hats-v1-ethereum/version/latest",
   },
   10: {
     endpoint:
-      "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-optimism",
+      "https://api.studio.thegraph.com/query/55784/hats-v1-optimism/version/latest",
   },
   100: {
     endpoint:
-      "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-gnosis-chain",
+      "https://api.studio.thegraph.com/query/55784/hats-v1-gnosis-chain/version/latest",
   },
   137: {
     endpoint:
-      "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-polygon",
+      "https://api.studio.thegraph.com/query/55784/hats-v1-polygon/version/latest",
   },
   42161: {
     endpoint:
-      "https://api.thegraph.com/subgraphs/name/hats-protocol/hats-v1-arbitrum",
-  },
-  424: {
-    endpoint:
-      "https://api.goldsky.com/api/public/project_clp1niaem0pe001qjhju6b9sz/subgraphs/hats-v1-pgn/1.0.0/gn",
+      "https://api.studio.thegraph.com/query/55784/hats-v1-arbitrum/version/latest",
   },
   11155111: {
     endpoint:
