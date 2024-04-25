@@ -240,7 +240,7 @@ export class HatsReadClient {
     });
     childHats.forEach((hat) => {
       if (hat.result !== undefined) {
-        res.push(hat.result as bigint);
+        res.push(hat.result as unknown as bigint);
       }
     });
 
