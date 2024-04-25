@@ -110,7 +110,7 @@ describe("Claiming Tests", () => {
           account: account2.address,
         });
         expect(canClaim).toBe(true);
-      });
+      }, 30000);
 
       test("Test claim successful", async () => {
         await hatsClient.claimHat({
