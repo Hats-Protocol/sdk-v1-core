@@ -5,11 +5,12 @@ import {
 } from "../src/errors";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { goerli } from "viem/chains";
+import { sepolia } from "viem/chains";
 import { HatsModulesClient } from "@hatsprotocol/modules-sdk";
 import { createAnvil } from "@viem/anvil";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { Anvil } from "@viem/anvil";
+import "dotenv/config";
 
 describe("Claiming Tests", () => {
   let publicClient: PublicClient;
@@ -29,7 +30,7 @@ describe("Claiming Tests", () => {
 
   beforeAll(async () => {
     anvil = createAnvil({
-      forkUrl: "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9",
+      forkUrl: process.env.SEPOLIA_RPC,
       startTimeout: 20000,
     });
     await anvil.start();
@@ -42,17 +43,17 @@ describe("Claiming Tests", () => {
     address3 = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
 
     publicClient = createPublicClient({
-      chain: goerli,
+      chain: sepolia,
       transport: http("http://127.0.0.1:8545"),
     });
 
     walletClient = createWalletClient({
-      chain: goerli,
+      chain: sepolia,
       transport: http("http://127.0.0.1:8545"),
     });
 
     hatsClient = new HatsClient({
-      chainId: goerli.id,
+      chainId: sepolia.id,
       publicClient: publicClient,
       walletClient: walletClient,
     });
@@ -71,14 +72,9 @@ describe("Claiming Tests", () => {
   describe("Tree is created", () => {
     beforeAll(async () => {
       eligibilityConditionHatId =
-        9462942102922153228531143373028481645121890183679673757657298871779328n;
+        6820866918171528300087652036522097989191031451002833601558643264716800n;
 
       // mint the criteria hat
-      await hatsClient.changeHatMaxSupply({
-        account: account1,
-        hatId: eligibilityConditionHatId,
-        newMaxSupply: 5,
-      });
       await hatsClient.mintHat({
         account: account1,
         hatId: eligibilityConditionHatId,
@@ -91,15 +87,9 @@ describe("Claiming Tests", () => {
       });
 
       claimableHatId =
-        9462941691552290999965019515050021795207471604411809704706797069139968n;
+        6820866918184082503558425398049769568037446783835038312447571333742592n;
       claimableForHatId =
-        9462941691558568101700406195813857584630679270827912060151261103652864n;
-
-      await hatsClient.changeHatMaxSupply({
-        account: account1,
-        hatId: claimableForHatId,
-        newMaxSupply: 5,
-      });
+        6820866918177805401823038717285933778614239117418935957003107299229696n;
     }, 30000);
 
     describe("Multi Claiming For Tests", () => {

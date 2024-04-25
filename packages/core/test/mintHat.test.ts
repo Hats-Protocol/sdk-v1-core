@@ -1,7 +1,7 @@
 import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http, Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { goerli } from "viem/chains";
+import { sepolia } from "viem/chains";
 import { HATS_ABI } from "../src/abi/Hats";
 import { HATS_V1 } from "../src/constants";
 import {
@@ -16,6 +16,7 @@ import { createAnvil } from "@viem/anvil";
 import type { PublicClient, WalletClient, PrivateKeyAccount } from "viem";
 import type { CreateHatResult, MintTopHatResult } from "../src/types";
 import type { Anvil } from "@viem/anvil";
+import "dotenv/config";
 
 describe("mintHat tests", () => {
   let publicClient: PublicClient;
@@ -35,7 +36,7 @@ describe("mintHat tests", () => {
   describe("Hats client is initialized", () => {
     beforeAll(async () => {
       anvil = createAnvil({
-        forkUrl: "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9",
+        forkUrl: process.env.SEPOLIA_RPC,
         startTimeout: 20000,
       });
       await anvil.start();
@@ -51,17 +52,17 @@ describe("mintHat tests", () => {
       );
 
       publicClient = createPublicClient({
-        chain: goerli,
+        chain: sepolia,
         transport: http("http://127.0.0.1:8545"),
       });
 
       walletClient = createWalletClient({
-        chain: goerli,
+        chain: sepolia,
         transport: http("http://127.0.0.1:8545"),
       });
 
       hatsClient = new HatsClient({
-        chainId: goerli.id,
+        chainId: sepolia.id,
         publicClient: publicClient,
         walletClient: walletClient,
       });

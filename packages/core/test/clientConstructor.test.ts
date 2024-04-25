@@ -1,15 +1,16 @@
 import { HatsClient } from "../src/index";
 import { createWalletClient, createPublicClient, http } from "viem";
-import { mainnet, goerli } from "viem/chains";
+import { mainnet, sepolia } from "viem/chains";
 import { createAnvil } from "@viem/anvil";
 import type { Anvil } from "@viem/anvil";
+import "dotenv/config";
 
 describe("client Constructor tests", () => {
   let anvil: Anvil;
 
   beforeAll(async () => {
     anvil = createAnvil({
-      forkUrl: "https://goerli.infura.io/v3/ffca6b624a4c42eaaa1f01ed03053ef9",
+      forkUrl: process.env.SEPOLIA_RPC,
       startTimeout: 20000,
     });
     await anvil.start();
@@ -32,7 +33,7 @@ describe("client Constructor tests", () => {
       });
       expect(() => {
         new HatsClient({
-          chainId: goerli.id,
+          chainId: sepolia.id,
           publicClient: publicClient,
           walletClient: walletClient,
         });
@@ -46,7 +47,7 @@ describe("client Constructor tests", () => {
       });
 
       const walletClient = createWalletClient({
-        chain: goerli,
+        chain: sepolia,
         transport: http("http://127.0.0.1:8545"),
       });
       expect(() => {
