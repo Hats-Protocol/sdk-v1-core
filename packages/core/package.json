@@ -25,7 +25,7 @@
     "prettier:fix": "prettier --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}' --write"
   },
   "dependencies": {
-    "@hatsprotocol/sdk-v1-subgraph": "1.0.0",
+    "@hatsprotocol/sdk-v1-subgraph": "workspace:^",
     "graphql": "^16.6.0",
     "graphql-request": "^6.1.0"
   },
