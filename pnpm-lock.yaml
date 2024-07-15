@@ -57,7 +57,7 @@ importers:
   packages/core:
     dependencies:
       '@hatsprotocol/sdk-v1-subgraph':
-        specifier: 1.0.0
+        specifier: workspace:^
         version: link:../subgraph
       graphql:
         specifier: ^16.6.0

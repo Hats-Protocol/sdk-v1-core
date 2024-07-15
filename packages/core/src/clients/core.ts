@@ -78,12 +78,6 @@ export class HatsClient extends HatsCallDataClient {
       );
     }
 
-    if (walletClient !== undefined && walletClient.chain?.id !== chainId) {
-      throw new ChainIdMismatchError(
-        "Provided chain id should match the wallet client chain id"
-      );
-    }
-
     this._walletClient = walletClient;
   }
 
