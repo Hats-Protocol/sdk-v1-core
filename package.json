@@ -1,5 +1,20 @@
 {
   "private": true,
+  "name": "hats-protocol-sdk",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": "Hats-Protocol",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hats-Protocol/sdk-v1-core"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "core": "pnpm --filter @hatsprotocol/sdk-v1-core",
+    "subgraph": "pnpm --filter @hatsprotocol/sdk-v1-subgraph"
+  },
   "devDependencies": {
     "@rollup/plugin-json": "^6.0.0",
     "@types/jest": "^29.5.2",

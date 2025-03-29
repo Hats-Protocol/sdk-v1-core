@@ -1,5 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": ["./src"],
-  "exclude": ["dist", "node_modules", "./**/*.test.ts"]
+  "extends": "../../tsconfig.base.json",
+  "include": ["./src", "../../node_modules/@hatsprotocol/sdk-v1-subgraph/dist/**/*.d.ts"],
+  "references": [
+    {
+      "path": "../subgraph/tsconfig.lib.json"
+    }
+  ],
 }

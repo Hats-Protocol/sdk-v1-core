@@ -4,6 +4,7 @@ import pkg from "./package.json" assert { type: "json" };
 
 const input = "src/index.ts";
 const external = [...Object.keys(pkg.dependencies || {})];
+console.log(external);
 
 export default [
   {

@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
-    "outDir": "./dist",
-    "baseUrl": "./src",
+    "baseUrl": ".",
+    "rootDir": ".",
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -14,5 +14,10 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true
-  }
+  },
+  "paths": {
+    "@hatsprotocol/sdk-v1-core": ["./packages/core/src/index.ts"],
+    "@hatsprotocol/sdk-v1-subgraph": ["./packages/subgraph/src/index.ts"]
+  },
+  "exclude": ["node_modules", "tmp", "dist"]
 }
