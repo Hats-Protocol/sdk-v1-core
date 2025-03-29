@@ -13,11 +13,11 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true
-  },
-  "paths": {
-    "@hatsprotocol/sdk-v1-core": ["./packages/core/src/index.ts"],
-    "@hatsprotocol/sdk-v1-subgraph": ["./packages/subgraph/src/index.ts"]
+    "isolatedModules": true,
+    "paths": {
+      "@hatsprotocol/sdk-v1-core": ["./packages/core/src/index.ts"],
+      "@hatsprotocol/sdk-v1-subgraph": ["./packages/subgraph/src/index.ts"]
+    },
   },
   "exclude": ["node_modules", "tmp", "dist"]
 }

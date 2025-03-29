@@ -643,7 +643,7 @@ export class HatsClient extends HatsCallDataClient {
   }
 
   /**
-   * Check a hat's wearer status by calling the hat's eligibilty module.
+   * Check a hat's wearer status by calling the hat's eligibility module.
    * If the wearer is in non eligible and/or in bad standing, then its hat is burned.
    *
    * @param account - A Viem account.
