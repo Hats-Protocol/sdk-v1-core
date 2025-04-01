@@ -1,5 +1,17 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": ["./src"],
-  "exclude": ["dist", "node_modules", "./**/*.test.ts"]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "isolatedModules": false,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "files": ["src/index.ts", "src/client.ts"],
+  "exclude": ["node_modules", "dist"]
 }

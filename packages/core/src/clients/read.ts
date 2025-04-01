@@ -1,12 +1,12 @@
-import { HATS_ABI } from "../abi/Hats";
+import { HATS_ABI } from '../abi/Hats';
 import {
   ChainIdMismatchError,
   MissingPublicClientError,
   MaxHatsInLevelReached,
   MaxLevelReachedError,
-} from "../errors";
-import { HATS_V1, MAX_LEVELS, MAX_LEVEL_HATS } from "../constants";
-import type { PublicClient, Address } from "viem";
+} from '../errors';
+import { HATS_V1, MAX_LEVELS, MAX_LEVEL_HATS } from '../constants';
+import type { PublicClient, Address } from 'viem';
 
 export class HatsReadClient {
   readonly chainId: number;
@@ -33,12 +33,12 @@ export class HatsReadClient {
     publicClient: PublicClient;
   }) {
     if (publicClient === undefined) {
-      throw new MissingPublicClientError("Public client is required");
+      throw new MissingPublicClientError('Public client is required');
     }
 
     if (publicClient.chain?.id !== chainId) {
       throw new ChainIdMismatchError(
-        "Provided chain id should match the public client chain id"
+        'Provided chain id should match the public client chain id'
       );
     }
 
@@ -66,7 +66,7 @@ export class HatsReadClient {
     const result = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "viewHat",
+      functionName: 'viewHat',
       args: [BigInt(hatId)],
     });
 
@@ -100,7 +100,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "isWearerOfHat",
+      functionName: 'isWearerOfHat',
       args: [wearer, hatId],
     });
 
@@ -124,7 +124,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "isAdminOfHat",
+      functionName: 'isAdminOfHat',
       args: [user, hatId],
     });
 
@@ -141,7 +141,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "isActive",
+      functionName: 'isActive',
       args: [hatId],
     });
 
@@ -165,7 +165,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "isInGoodStanding",
+      functionName: 'isInGoodStanding',
       args: [wearer, hatId],
     });
 
@@ -189,7 +189,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "isEligible",
+      functionName: 'isEligible',
       args: [wearer, hatId],
     });
 
@@ -211,7 +211,7 @@ export class HatsReadClient {
     const adminHat = await this.viewHat(admin);
     if (adminHat.numChildren + numChildren > MAX_LEVEL_HATS) {
       throw new MaxHatsInLevelReached(
-        "Maximum amount of hats per level is 65535"
+        'Maximum amount of hats per level is 65535'
       );
     }
 
@@ -227,20 +227,29 @@ export class HatsReadClient {
       abi: HATS_ABI,
     };
 
-    const calls = [];
+    type MultiCallContract = {
+      address: Address;
+      abi: typeof HATS_ABI;
+      functionName: 'buildHatId';
+      args: readonly [bigint, number];
+    };
+
+    const calls: MultiCallContract[] = [];
     for (let i = 0; i < numChildren; i++) {
       calls.push({
         ...contractDetails,
-        functionName: "buildHatId",
+        functionName: 'buildHatId',
         args: [admin, adminHat.numChildren + i + 1],
       });
     }
+
     const childHats = await this._publicClient.multicall({
       contracts: calls,
     });
+
     childHats.forEach((hat) => {
       if (hat.result !== undefined) {
-        res.push(hat.result as unknown as bigint);
+        res.push(hat.result as bigint);
       }
     });
 
@@ -256,7 +265,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "lastTopHatId",
+      functionName: 'lastTopHatId',
     });
 
     return res;
@@ -272,7 +281,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "linkedTreeRequests",
+      functionName: 'linkedTreeRequests',
       args: [topHatDomain],
     });
 
@@ -289,7 +298,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "linkedTreeAdmins",
+      functionName: 'linkedTreeAdmins',
       args: [topHatDomain],
     });
 
@@ -305,7 +314,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "getHatLevel",
+      functionName: 'getHatLevel',
       args: [hatId],
     });
 
@@ -321,7 +330,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "getLocalHatLevel",
+      functionName: 'getLocalHatLevel',
       args: [hatId],
     });
 
@@ -338,7 +347,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "getTopHatDomain",
+      functionName: 'getTopHatDomain',
       args: [hatId],
     });
 
@@ -355,7 +364,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "getTippyTopHatDomain",
+      functionName: 'getTippyTopHatDomain',
       args: [topHatDomain],
     });
 
@@ -377,7 +386,7 @@ export class HatsReadClient {
     const res = await this._publicClient.readContract({
       address: HATS_V1,
       abi: HATS_ABI,
-      functionName: "getAdminAtLevel",
+      functionName: 'getAdminAtLevel',
       args: [hatId, hatLevel - 1],
     });
 
@@ -402,7 +411,7 @@ export class HatsReadClient {
       const childHatId = await this._publicClient.readContract({
         address: HATS_V1,
         abi: HATS_ABI,
-        functionName: "buildHatId",
+        functionName: 'buildHatId',
         args: [hatId, i + 1],
       });
       res.push(childHatId);

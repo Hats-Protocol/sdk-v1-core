@@ -33,4 +33,8 @@ export const DEFAULT_ENDPOINTS_CONFIG: EndpointsConfig = {
     endpoint:
       "https://api.studio.thegraph.com/query/55784/hats-v1-celo/version/latest",
   },
+  84532: {
+    endpoint:
+      "https://api.studio.thegraph.com/query/55784/hats-v1-base-sepolia/version/latest",
+  },
 };

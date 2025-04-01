@@ -2,17 +2,17 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
-    "outDir": "./dist",
-    "baseUrl": "./src",
+    "moduleResolution": "node",
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
     "declaration": true,
+    "declarationMap": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true
-  }
+  },
+  "exclude": ["node_modules", "tmp", "dist"]
 }
