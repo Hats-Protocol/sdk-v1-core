@@ -1,9 +1,24 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["./src", "../subgraph/dist/**/*.d.ts"],
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@hatsprotocol/sdk-v1-subgraph": ["../subgraph/dist/index"]
+    },
+    "strict": true,
+    "noImplicitAny": true
+  },
+  "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../subgraph/tsconfig.lib.json"
+      "path": "../subgraph"
     }
   ]
 }

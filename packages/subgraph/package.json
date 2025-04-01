@@ -7,9 +7,26 @@
     "type": "git",
     "url": "https://github.com/Hats-Protocol/sdk-v1-core"
   },
-  "main": "dist/hats.cjs.js",
-  "module": "dist/hats.esm.js",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "hats-protocol",
     "hats",
@@ -18,7 +35,10 @@
   ],
   "scripts": {
     "test": "jest -i",
-    "build": "tsup",
+    "build:clean": "rm -rf dist",
+    "build:bundle": "tsup",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build": "pnpm build:clean && pnpm build:bundle && pnpm build:types",
     "eslint": "eslint . --ext '.ts,.tsx'",
     "eslint:fix": "eslint . --ext '.ts,.tsx' --fix"
   },

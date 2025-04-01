@@ -1,11 +1,11 @@
-import { encodeFunctionData } from "viem";
-import { HatsSubgraphClient } from "@hatsprotocol/sdk-v1-subgraph";
+import { encodeFunctionData } from 'viem';
+import { HatsSubgraphClient, Hat } from '@hatsprotocol/sdk-v1-subgraph';
 
-import { HATS_ABI } from "../abi/Hats";
-import { HatsReadClient } from "./read";
-import { ZERO_ADDRESS } from "../constants";
-import { treeIdDecimalToHex, hatIdHexToDecimal } from "../utils";
-import type { PublicClient, Address, Hex } from "viem";
+import { HATS_ABI } from '../abi/Hats';
+import { HatsReadClient } from './read';
+import { ZERO_ADDRESS } from '../constants';
+import { treeIdDecimalToHex, hatIdHexToDecimal } from '../utils';
+import type { PublicClient, Address, Hex } from 'viem';
 
 export class HatsCallDataClient extends HatsReadClient {
   protected readonly _graphqlClient: HatsSubgraphClient;
@@ -47,11 +47,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "multicall",
+      functionName: 'multicall',
       args: [calls],
     });
 
-    return { functionName: "multicall", callData };
+    return { functionName: 'multicall', callData };
   }
 
   /**
@@ -76,11 +76,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "mintTopHat",
-      args: [target, details, imageURI === undefined ? "" : imageURI],
+      functionName: 'mintTopHat',
+      args: [target, details, imageURI === undefined ? '' : imageURI],
     });
 
-    return { functionName: "mintTopHat", callData };
+    return { functionName: 'mintTopHat', callData };
   }
 
   /**
@@ -117,7 +117,7 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "createHat",
+      functionName: 'createHat',
       args: [
         admin,
         details,
@@ -125,11 +125,11 @@ export class HatsCallDataClient extends HatsReadClient {
         eligibility,
         toggle,
         mutable,
-        imageURI === undefined ? "" : imageURI,
+        imageURI === undefined ? '' : imageURI,
       ],
     });
 
-    return { functionName: "createHat", callData };
+    return { functionName: 'createHat', callData };
   }
 
   /**
@@ -154,11 +154,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "transferHat",
+      functionName: 'transferHat',
       args: [hatId, from, to],
     });
 
-    return { functionName: "transferHat", callData };
+    return { functionName: 'transferHat', callData };
   }
 
   /**
@@ -174,11 +174,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "mintHat",
+      functionName: 'mintHat',
       args: [hatId, wearer],
     });
 
-    return { functionName: "mintHat", callData };
+    return { functionName: 'mintHat', callData };
   }
 
   /**
@@ -215,7 +215,7 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "batchCreateHats",
+      functionName: 'batchCreateHats',
       args: [
         admins,
         details,
@@ -223,11 +223,11 @@ export class HatsCallDataClient extends HatsReadClient {
         eligibilityModules,
         toggleModules,
         mutables,
-        imageURIs === undefined ? Array(admins.length).fill("") : imageURIs,
+        imageURIs === undefined ? Array(admins.length).fill('') : imageURIs,
       ],
     });
 
-    return { functionName: "batchCreateHats", callData };
+    return { functionName: 'batchCreateHats', callData };
   }
 
   /**
@@ -249,11 +249,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "batchMintHats",
+      functionName: 'batchMintHats',
       args: [hatIds, wearers],
     });
 
-    return { functionName: "batchMintHats", callData };
+    return { functionName: 'batchMintHats', callData };
   }
 
   /**
@@ -275,11 +275,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "setHatStatus",
+      functionName: 'setHatStatus',
       args: [hatId, newStatus],
     });
 
-    return { functionName: "setHatStatus", callData };
+    return { functionName: 'setHatStatus', callData };
   }
 
   checkHatStatusCallData({ hatId }: { hatId: bigint }): {
@@ -288,11 +288,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "checkHatStatus",
+      functionName: 'checkHatStatus',
       args: [hatId],
     });
 
-    return { functionName: "checkHatStatus", callData };
+    return { functionName: 'checkHatStatus', callData };
   }
 
   /**
@@ -320,11 +320,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "setHatWearerStatus",
+      functionName: 'setHatWearerStatus',
       args: [hatId, wearer, eligible, standing],
     });
 
-    return { functionName: "setHatWearerStatus", callData };
+    return { functionName: 'setHatWearerStatus', callData };
   }
 
   /**
@@ -346,11 +346,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "checkHatWearerStatus",
+      functionName: 'checkHatWearerStatus',
       args: [hatId, wearer],
     });
 
-    return { functionName: "checkHatWearerStatus", callData };
+    return { functionName: 'checkHatWearerStatus', callData };
   }
 
   /**
@@ -365,11 +365,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "renounceHat",
+      functionName: 'renounceHat',
       args: [hatId],
     });
 
-    return { functionName: "renounceHat", callData };
+    return { functionName: 'renounceHat', callData };
   }
 
   /**
@@ -384,11 +384,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "makeHatImmutable",
+      functionName: 'makeHatImmutable',
       args: [hatId],
     });
 
-    return { functionName: "makeHatImmutable", callData };
+    return { functionName: 'makeHatImmutable', callData };
   }
 
   /**
@@ -410,11 +410,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "changeHatDetails",
+      functionName: 'changeHatDetails',
       args: [hatId, newDetails],
     });
 
-    return { functionName: "changeHatDetails", callData };
+    return { functionName: 'changeHatDetails', callData };
   }
 
   /**
@@ -436,11 +436,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "changeHatEligibility",
+      functionName: 'changeHatEligibility',
       args: [hatId, newEligibility],
     });
 
-    return { functionName: "changeHatEligibility", callData };
+    return { functionName: 'changeHatEligibility', callData };
   }
 
   /**
@@ -462,11 +462,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "changeHatToggle",
+      functionName: 'changeHatToggle',
       args: [hatId, newToggle],
     });
 
-    return { functionName: "changeHatToggle", callData };
+    return { functionName: 'changeHatToggle', callData };
   }
 
   /**
@@ -488,11 +488,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "changeHatImageURI",
+      functionName: 'changeHatImageURI',
       args: [hatId, newImageURI],
     });
 
-    return { functionName: "changeHatImageURI", callData };
+    return { functionName: 'changeHatImageURI', callData };
   }
 
   /**
@@ -514,11 +514,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "changeHatMaxSupply",
+      functionName: 'changeHatMaxSupply',
       args: [hatId, newMaxSupply],
     });
 
-    return { functionName: "changeHatMaxSupply", callData };
+    return { functionName: 'changeHatMaxSupply', callData };
   }
 
   /**
@@ -540,11 +540,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "requestLinkTopHatToTree",
+      functionName: 'requestLinkTopHatToTree',
       args: [topHatDomain, requestedAdminHat],
     });
 
-    return { functionName: "requestLinkTopHatToTree", callData };
+    return { functionName: 'requestLinkTopHatToTree', callData };
   }
 
   /**
@@ -578,18 +578,18 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "approveLinkTopHatToTree",
+      functionName: 'approveLinkTopHatToTree',
       args: [
         topHatDomain,
         newAdminHat,
         newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
         newToggle === undefined ? ZERO_ADDRESS : newToggle,
-        newDetails === undefined ? "" : newDetails,
-        newImageURI === undefined ? "" : newImageURI,
+        newDetails === undefined ? '' : newDetails,
+        newImageURI === undefined ? '' : newImageURI,
       ],
     });
 
-    return { functionName: "approveLinkTopHatToTree", callData };
+    return { functionName: 'approveLinkTopHatToTree', callData };
   }
 
   /**
@@ -611,11 +611,11 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "unlinkTopHatFromTree",
+      functionName: 'unlinkTopHatFromTree',
       args: [topHatDomain, wearer],
     });
 
-    return { functionName: "unlinkTopHatFromTree", callData };
+    return { functionName: 'unlinkTopHatFromTree', callData };
   }
 
   /**
@@ -649,18 +649,18 @@ export class HatsCallDataClient extends HatsReadClient {
   } {
     const callData = encodeFunctionData({
       abi: HATS_ABI,
-      functionName: "relinkTopHatWithinTree",
+      functionName: 'relinkTopHatWithinTree',
       args: [
         topHatDomain,
         newAdminHat,
         newEligibility === undefined ? ZERO_ADDRESS : newEligibility,
         newToggle === undefined ? ZERO_ADDRESS : newToggle,
-        newDetails === undefined ? "" : newDetails,
-        newImageURI === undefined ? "" : newImageURI,
+        newDetails === undefined ? '' : newDetails,
+        newImageURI === undefined ? '' : newImageURI,
       ],
     });
 
-    return { functionName: "relinkTopHatWithinTree", callData };
+    return { functionName: 'relinkTopHatWithinTree', callData };
   }
 
   /**
@@ -684,7 +684,7 @@ export class HatsCallDataClient extends HatsReadClient {
     }[]
   > {
     if (this._graphqlClient === undefined) {
-      throw new Error("Subgraph client was not initialized");
+      throw new Error('Subgraph client was not initialized');
     }
 
     const res: {
@@ -718,7 +718,7 @@ export class HatsCallDataClient extends HatsReadClient {
 
     const targetTreeHex = treeIdDecimalToHex(targetTree);
 
-    tree.hats?.forEach((hat, index) => {
+    tree.hats?.forEach((hat: Hat, index: number) => {
       if (index !== 0 && hat.createdAt !== null) {
         const adminID = hatIdHexToDecimal(
           targetTreeHex + hat.admin?.id.substring(10)
@@ -733,16 +733,16 @@ export class HatsCallDataClient extends HatsReadClient {
           imageURI: hat.imageUri as string,
         });
         res.push({
-          functionName: "createHat",
+          functionName: 'createHat',
           callData: createHatCall.callData,
         });
 
-        hat.wearers?.forEach((wearer) => {
+        hat.wearers?.forEach((wearer: { id: string }) => {
           const mintHatCall = this.mintHatCallData({
             hatId: hatIdHexToDecimal(targetTreeHex + hat.id.substring(10)),
             wearer: wearer.id as `0x${string}`,
           });
-          res.push({ functionName: "mintHat", callData: mintHatCall.callData });
+          res.push({ functionName: 'mintHat', callData: mintHatCall.callData });
         });
       }
     });

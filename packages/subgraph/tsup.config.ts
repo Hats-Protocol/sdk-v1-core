@@ -2,11 +2,11 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  outDir: './dist',
+  outDir: 'dist',
   format: ['cjs', 'esm'],
-  dts: true,
+  dts: false,
   splitting: false,
   sourcemap: true,
-  clean: true,
-  external: [],
+  clean: false,
+  external: ['graphql', 'graphql-request'],
 });

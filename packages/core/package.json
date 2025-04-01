@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules yarn exec jest -- -i",
-    "build": "tsup",
+    "build": "tsup && tsc --emitDeclarationOnly --declaration --project tsconfig.json",
     "eslint": "eslint . --ext '.ts,.tsx'",
     "eslint:fix": "eslint . --ext '.ts,.tsx' --fix",
     "prettier": "prettier --check --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}'",
