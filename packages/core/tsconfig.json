@@ -14,7 +14,8 @@
     },
     "strict": true,
     "noImplicitAny": true,
-    "disableSourceOfProjectReferenceRedirect": false
+    "disableSourceOfProjectReferenceRedirect": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "references": [
