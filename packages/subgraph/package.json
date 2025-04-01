@@ -35,7 +35,7 @@
   ],
   "scripts": {
     "test": "jest -i",
-    "build:clean": "rm -rf dist",
+    "build:clean": "rm -rf dist tsconfig.tsbuildinfo",
     "build:bundle": "tsup",
     "build:types": "tsc --emitDeclarationOnly",
     "build": "pnpm build:clean && pnpm build:bundle && pnpm build:types",

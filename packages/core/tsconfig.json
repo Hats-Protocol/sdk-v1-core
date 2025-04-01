@@ -13,7 +13,8 @@
       "@hatsprotocol/sdk-v1-subgraph": ["../subgraph/dist/index"]
     },
     "strict": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "disableSourceOfProjectReferenceRedirect": false
   },
   "include": ["src/**/*.ts"],
   "references": [
