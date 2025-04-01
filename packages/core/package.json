@@ -1,15 +1,15 @@
 {
   "name": "@hatsprotocol/sdk-v1-core",
-  "version": "0.11.0",
+  "version": "0.12.1",
   "license": "MIT",
   "author": "Hats-Protocol",
   "repository": {
     "type": "git",
     "url": "https://github.com/Hats-Protocol/sdk-v1-core"
   },
-  "main": "dist/hats.cjs.js",
-  "module": "dist/hats.esm.js",
-  "types": "dist/index.d.ts",
+  "main": "./index.js",
+  "module": "./index.mjs",
+  "types": "./index.d.ts",
   "keywords": [
     "hats-protocol",
     "hats",
@@ -25,7 +25,8 @@
     "eslint": "eslint . --ext '.ts,.tsx'",
     "eslint:fix": "eslint . --ext '.ts,.tsx' --fix",
     "prettier": "prettier --check --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}'",
-    "prettier:fix": "prettier --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}' --write"
+    "prettier:fix": "prettier --config .prettierrc './**/src/*.{.js,jsx,ts,tsx}' --write",
+    "prepublishOnly": "cp package.json dist/package.json && cp README.md dist/README.md"
   },
   "dependencies": {
     "@hatsprotocol/sdk-v1-subgraph": "workspace:*",

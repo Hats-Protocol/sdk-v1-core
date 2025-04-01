@@ -17,6 +17,30 @@ import {
   ZERO_ID,
   FALLBACK_ADDRESS,
 } from "./constants";
+import {
+  AllHatsWornError,
+  HatNotExistError,
+  InvalidAdminError,
+  NotAdminError,
+  NotEligibleError,
+  NotExplicitlyEligibleError,
+  NotActiveError,
+  AlreadyWearingError,
+  NotToggleError,
+  NotEligibilityError,
+  ImmutableHatError,
+  NotWearerError,
+  StringTooLongError,
+  InvalidMaxSupplyError,
+  NoLinkageRequestError,
+  NotAdminOrWearerError,
+  CircularLinkageError,
+  CrossLinkageError,
+  BatchParamsError,
+  MultiCallError,
+  MaxLevelReachedError,
+  MaxHatsInLevelReached,
+} from "./errors";
 
 export {
   HatsClient,
@@ -35,6 +59,32 @@ export {
   ZERO_ID,
   FALLBACK_ADDRESS,
 };
+
+// Hats Errors
+export {
+  AllHatsWornError,
+  HatNotExistError,
+  InvalidAdminError,
+  NotAdminError,
+  NotEligibleError,
+  NotExplicitlyEligibleError,
+  NotActiveError,
+  AlreadyWearingError,
+  NotToggleError,
+  NotEligibilityError,
+  ImmutableHatError,
+  NotWearerError,
+  StringTooLongError,
+  InvalidMaxSupplyError,
+  NoLinkageRequestError,
+  NotAdminOrWearerError,
+  CircularLinkageError,
+  CrossLinkageError,
+  BatchParamsError,
+  MultiCallError,
+  MaxLevelReachedError,
+  MaxHatsInLevelReached,
+}
 
 export type {
   CreateHatResult,

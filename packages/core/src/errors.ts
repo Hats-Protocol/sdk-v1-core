@@ -40,13 +40,14 @@ export class SubgraphHatNotExistError extends Error {
   }
 }
 
-export class SubgraphNotUpportedError extends Error {
+export class SubgraphNotSupportedError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "SubgraphNotUpportedError";
+    this.name = "SubgraphNotSupportedError";
   }
 }
 
+// Hats Errors
 export class ZeroAddressError extends Error {
   constructor(message: string) {
     super(message);
