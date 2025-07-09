@@ -74,7 +74,7 @@ export function getError(err: unknown): never {
         }
         case "HatDoesNotExist": {
           throw new HatNotExistError(
-            `Error: attempting to mint a non-existant hat with ID ${errorArgs[0]}`
+            `Error: attempting to mint a non-existent hat with ID ${errorArgs[0]}`
           );
         }
         case "HatNotActive": {

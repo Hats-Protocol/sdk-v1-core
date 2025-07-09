@@ -1,6 +1,6 @@
 {
   "name": "@hatsprotocol/sdk-v1-subgraph",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "license": "MIT",
   "author": "Hats-Protocol",
   "repository": {
@@ -40,12 +40,14 @@
     "build:types": "tsc --emitDeclarationOnly",
     "build": "pnpm build:clean && pnpm build:bundle && pnpm build:types",
     "eslint": "eslint . --ext '.ts,.tsx'",
-    "eslint:fix": "eslint . --ext '.ts,.tsx' --fix",
-    "publish": "npm publish"
+    "eslint:fix": "eslint . --ext '.ts,.tsx' --fix"
   },
   "dependencies": {
     "graphql": "^16.6.0",
     "graphql-request": "^6.1.0",
     "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7"
   }
 }

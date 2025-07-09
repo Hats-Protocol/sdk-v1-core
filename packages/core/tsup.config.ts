@@ -8,6 +8,6 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ['@hatsprotocol/sdk-v1-subgraph', 'graphql', 'graphql-request'],
+  external: ['@hatsprotocol/sdk-v1-subgraph', 'graphql', 'graphql-request', 'viem'],
   tsconfig: './tsconfig.json',
 });

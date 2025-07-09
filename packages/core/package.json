@@ -1,14 +1,14 @@
 {
   "name": "@hatsprotocol/sdk-v1-core",
-  "version": "0.11.0",
+  "version": "0.12.4",
   "license": "MIT",
   "author": "Hats-Protocol",
   "repository": {
     "type": "git",
     "url": "https://github.com/Hats-Protocol/sdk-v1-core"
   },
-  "main": "dist/hats.cjs.js",
-  "module": "dist/hats.esm.js",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "keywords": [
     "hats-protocol",
@@ -17,7 +17,7 @@
     "eth"
   ],
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules yarn exec jest -- -i",
+    "test": "NODE_OPTIONS=--experimental-vm-modules pnpm exec jest -i",
     "build:clean": "rm -rf dist tsconfig.tsbuildinfo",
     "build:bundle": "tsup",
     "build:types": "tsc --emitDeclarationOnly --declaration --project tsconfig.json",

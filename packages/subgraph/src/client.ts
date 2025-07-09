@@ -7,7 +7,7 @@ import {
 import { gql, Variables, GraphQLClient } from "graphql-request";
 import { DEFAULT_ENDPOINTS_CONFIG } from "./endpoints";
 import {
-  SubgraphNotUpportedError,
+  SubgraphNotSupportedError,
   SubgraphHatNotExistError,
   SubgraphTreeNotExistError,
   SubgraphWearerNotExistError,
@@ -45,11 +45,16 @@ export class HatsSubgraphClient {
     variables?: Variables
   ): Promise<ResponseType> {
     if (this._config[chainId] === undefined) {
-      throw new SubgraphNotUpportedError(
+      throw new SubgraphNotSupportedError(
         `No subgraph support for network id ${chainId}`
       );
     }
+
     const client = new GraphQLClient(this._config[chainId].endpoint);
+
+    if (this._config[chainId].authToken !== undefined) {
+      client.setHeader("Authorization", `Bearer ${this._config[chainId].authToken}`);
+    }
 
     const result = (await client.request(query, variables)) as ResponseType;
 
@@ -99,17 +104,17 @@ export class HatsSubgraphClient {
       }
     `;
 
-    const respone = await this._makeGqlRequest<{ hat: Hat }>(chainId, query, {
+    const response = await this._makeGqlRequest<{ hat: Hat }>(chainId, query, {
       id: hatIdHex,
     });
 
-    if (!respone.hat) {
+    if (!response.hat) {
       throw new SubgraphHatNotExistError(
         `Hat with an ID of ${hatId} does not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
-    return respone.hat;
+    return response.hat;
   }
 
   /**
@@ -155,7 +160,7 @@ export class HatsSubgraphClient {
       }
     `;
 
-    const respone = await this._makeGqlRequest<{ hats: Hat[] }>(
+    const response = await this._makeGqlRequest<{ hats: Hat[] }>(
       chainId,
       query,
       {
@@ -163,13 +168,13 @@ export class HatsSubgraphClient {
       }
     );
 
-    if (!respone.hats || respone.hats.length < hatIds.length) {
+    if (!response.hats || response.hats.length < hatIds.length) {
       throw new SubgraphHatNotExistError(
         `One or more of the provided hats do not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
-    return respone.hats;
+    return response.hats;
   }
 
   /**
@@ -215,17 +220,17 @@ export class HatsSubgraphClient {
       }
     `;
 
-    const respone = await this._makeGqlRequest<{ tree: Tree }>(chainId, query, {
+    const response = await this._makeGqlRequest<{ tree: Tree }>(chainId, query, {
       id: treeIdHex,
     });
 
-    if (!respone.tree) {
+    if (!response.tree) {
       throw new SubgraphTreeNotExistError(
         `Tree with an ID of ${treeId} does not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
-    return respone.tree;
+    return response.tree;
   }
 
   /**
@@ -271,7 +276,7 @@ export class HatsSubgraphClient {
     }
   `;
 
-    const respone = await this._makeGqlRequest<{ trees: Tree[] }>(
+    const response = await this._makeGqlRequest<{ trees: Tree[] }>(
       chainId,
       query,
       {
@@ -279,13 +284,13 @@ export class HatsSubgraphClient {
       }
     );
 
-    if (!respone.trees || respone.trees.length < treeIds.length) {
+    if (!response.trees || response.trees.length < treeIds.length) {
       throw new SubgraphTreeNotExistError(
         `One or more of the provided trees do not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
-    return respone.trees;
+    return response.trees;
   }
 
   /**
@@ -329,7 +334,7 @@ export class HatsSubgraphClient {
     }
   `;
 
-    const respone = await this._makeGqlRequest<{ trees: Tree[] }>(
+    const response = await this._makeGqlRequest<{ trees: Tree[] }>(
       chainId,
       query,
       {
@@ -338,11 +343,11 @@ export class HatsSubgraphClient {
       }
     );
 
-    if (!respone.trees) {
+    if (!response.trees) {
       throw new Error("Unexpected error");
     }
 
-    return respone.trees;
+    return response.trees;
   }
 
   /**
@@ -388,7 +393,7 @@ export class HatsSubgraphClient {
       }
     `;
 
-    const respone = await this._makeGqlRequest<{ wearer: Wearer }>(
+    const response = await this._makeGqlRequest<{ wearer: Wearer }>(
       chainId,
       query,
       {
@@ -396,13 +401,13 @@ export class HatsSubgraphClient {
       }
     );
 
-    if (!respone.wearer) {
+    if (!response.wearer) {
       throw new SubgraphWearerNotExistError(
         `Wearer with an address of ${wearerAddress} does not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
-    return respone.wearer;
+    return response.wearer;
   }
 
   /**
@@ -456,7 +461,7 @@ export class HatsSubgraphClient {
       }
     `;
 
-    const respone = await this._makeGqlRequest<{ hat: { wearers: Wearer[] } }>(
+    const response = await this._makeGqlRequest<{ hat: { wearers: Wearer[] } }>(
       chainId,
       query,
       {
@@ -466,13 +471,13 @@ export class HatsSubgraphClient {
       }
     );
 
-    if (!respone.hat) {
+    if (!response.hat) {
       throw new SubgraphHatNotExistError(
         `Hat with an ID of ${hatId} does not exist in the subgraph for chain ID ${chainId}`
       );
     }
 
-    return respone.hat.wearers;
+    return response.hat.wearers;
   }
 
   /**
@@ -543,7 +548,7 @@ export class HatsSubgraphClient {
       }
     `;
 
-    const respone = await this._makeGqlRequest<{
+    const response = await this._makeGqlRequest<{
       trees: Tree[];
       hats: Hat[];
       wearers: Wearer[];
@@ -551,10 +556,10 @@ export class HatsSubgraphClient {
       search: search.toLowerCase(),
     });
 
-    if (!respone.wearers || !respone.trees || !respone.hats) {
+    if (!response.wearers || !response.trees || !response.hats) {
       throw new Error("Unexpected error");
     }
 
-    return respone;
+    return response;
   }
 }
