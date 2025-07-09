@@ -1,7 +1,7 @@
-export class SubgraphNotUpportedError extends Error {
+export class SubgraphNotSupportedError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "SubgraphNotUpportedError";
+    this.name = "SubgraphNotSupportedError";
   }
 }
 

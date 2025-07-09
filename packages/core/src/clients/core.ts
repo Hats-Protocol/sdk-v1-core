@@ -1526,16 +1526,24 @@ export class HatsClient extends HatsCallDataClient {
       );
     }
 
+
     try {
+
       const callDatas = calls.map((call) => call.callData);
 
-      const { request } = await this._publicClient.simulateContract({
+      const { request, result } = await this._publicClient.simulateContract({
         address: HATS_V1,
         abi: HATS_ABI,
         functionName: "multicall",
         args: [callDatas],
         account,
       });
+
+      // } catch (err) {
+      //   console.log({ err });
+      //   throw err;
+      // }
+
 
       const hash = await this._walletClient.writeContract(request);
 

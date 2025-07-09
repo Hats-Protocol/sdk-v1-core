@@ -665,7 +665,7 @@ export class HatsCallDataClient extends HatsReadClient {
 
   /**
    * Get the call data to copy a tree's hats and wearers.
-   * Note: this doensn't include the target's top-hat. The target top-hat should be created separately.
+   * Note: this doesn't include the target's top-hat. The target top-hat should be created separately.
    *
    * @param sourceTree - The source tree domain.
    * @param targetTree - The target tree domain.
