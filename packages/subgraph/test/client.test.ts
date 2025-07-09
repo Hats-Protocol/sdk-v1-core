@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { gql } from "graphql-request";
-import { HatsSubgraphClient, DEFAULT_ENDPOINTS_CONFIG } from "../src/index";
+import { HatsSubgraphClient } from "../src/index";
 import {
-  SubgraphNotUpportedError,
+  SubgraphNotSupportedError,
   SubgraphHatNotExistError,
   SubgraphTreeNotExistError,
   SubgraphWearerNotExistError,
@@ -10,11 +11,26 @@ import {
 } from "../src/errors";
 import { GraphQLClient } from "graphql-request";
 
+const GATEWAY_URL = 'https://gateway.thegraph.com/api'
+const gatewayUrl = (id: string) => `${GATEWAY_URL}/subgraphs/id/${id}`
+
+// CURRENTLY ALL TESTS USE OPTIMISM SUBGRAPH
+
+const TEST_ENDPOINTS = {
+  10: {
+    endpoint: gatewayUrl(process.env.SUBGRAPH_ID_OPTIMISM!),
+    authToken: process.env.SUBGRAPH_NETWORK_KEY,
+  },
+}
+const opSubgraphClient = new GraphQLClient(TEST_ENDPOINTS[10].endpoint, {
+  headers: { "Authorization": `Bearer ${TEST_ENDPOINTS[10].authToken}` },
+});
+
 describe("Client Tests", () => {
   let client: HatsSubgraphClient;
 
   beforeAll(() => {
-    client = new HatsSubgraphClient({});
+    client = new HatsSubgraphClient({ config: TEST_ENDPOINTS });
   });
 
   test("Test unsupported chain ID", async () => {
@@ -26,7 +42,7 @@ describe("Client Tests", () => {
         ),
         props: {},
       });
-    }).rejects.toThrow(SubgraphNotUpportedError);
+    }).rejects.toThrow(SubgraphNotSupportedError);
   });
 
   describe("getHat Tests", () => {
@@ -99,11 +115,9 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
 
-      const ref = (await gqlClient.request(query, {
+
+      const ref = (await opSubgraphClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
       })) as { hat: any };
 
@@ -256,11 +270,8 @@ describe("Client Tests", () => {
           }
         }
       `;
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
 
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
       })) as { hat: any };
 
@@ -947,11 +958,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
       })) as { hat: any };
 
@@ -1092,11 +1099,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         id: "0x0000000100020001000100000000000000000000000000000000000000000000",
       })) as { hat: any };
 
@@ -1203,11 +1206,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         ids: [
           "0x0000000100020001000100000000000000000000000000000000000000000000",
           "0x0000000100020001000000000000000000000000000000000000000000000000",
@@ -1353,11 +1352,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         ids: [
           "0x0000000100020001000100000000000000000000000000000000000000000000",
           "0x0000000100020001000000000000000000000000000000000000000000000000",
@@ -2046,11 +2041,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         ids: [
           "0x0000000100020001000100000000000000000000000000000000000000000000",
           "0x0000000100020001000000000000000000000000000000000000000000000000",
@@ -2094,11 +2085,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         ids: [],
       })) as { hats: any };
 
@@ -2787,11 +2774,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         ids: [
           "0x0000000100020001000100000000000000000000000000000000000000000000",
           "0x0000000100020001000000000000000000000000000000000000000000000000",
@@ -2875,11 +2858,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         id: "0x00000001",
       })) as { tree: any };
 
@@ -2985,11 +2964,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         id: "0x00000001",
       })) as { tree: any };
 
@@ -3053,11 +3028,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         ids: ["0x00000001", "0x00000002"],
       })) as { trees: any };
 
@@ -3113,11 +3084,8 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
 
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         skip: 30,
         first: 10,
       })) as { trees: any };
@@ -3158,11 +3126,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         skip: 0,
         first: 100,
       })) as { trees: any };
@@ -3234,11 +3198,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         id: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c".toLowerCase(),
       })) as { wearer: any };
 
@@ -3281,11 +3241,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         id: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c".toLowerCase(),
       })) as { wearer: any };
 
@@ -3350,11 +3306,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         hatId:
           "0x0000000100020001000100000000000000000000000000000000000000000000",
         first: 2,
@@ -3389,11 +3341,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         hatId:
           "0x0000000100020001000100000000000000000000000000000000000000000000",
         first: 200,
@@ -3428,11 +3376,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         hatId:
           "0x0000000100020001000100000000000000000000000000000000000000000000",
         first: 200,
@@ -3467,11 +3411,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         hatId:
           "0x0000000100020001000100000000000000000000000000000000000000000000",
         first: 2,
@@ -3507,11 +3447,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         search:
           "0x0000000100020001000100000000000000000000000000000000000000000000",
       })) as { trees: any; hats: any; wearers: any };
@@ -3542,11 +3478,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         search: "0x00000001000200010001",
       })) as { trees: any; hats: any; wearers: any };
 
@@ -3576,11 +3508,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         search: "0xEb2ee1250DC8C954dA4efF4DF0E4467A1ca6af6c".toLowerCase(),
       })) as { trees: any; hats: any; wearers: any };
 
@@ -3610,11 +3538,7 @@ describe("Client Tests", () => {
         }
       `;
 
-      const gqlClient = new GraphQLClient(
-        DEFAULT_ENDPOINTS_CONFIG[10].endpoint
-      );
-
-      const ref = (await gqlClient.request(query, {
+      const ref = (await opSubgraphClient.request(query, {
         search: "0x11111111000200010001",
       })) as { trees: any; hats: any; wearers: any };
 

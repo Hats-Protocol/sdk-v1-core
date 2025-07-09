@@ -30,16 +30,12 @@ import type {
 
 export class HatsSubgraphClient {
   protected readonly _config: EndpointsConfig;
-  protected readonly _networkKey?: string;
 
-  constructor({ config, networkKey }: { config?: EndpointsConfig, networkKey?: string }) {
+  constructor({ config }: { config?: EndpointsConfig }) {
     if (config === undefined) {
       this._config = DEFAULT_ENDPOINTS_CONFIG;
     } else {
       this._config = config;
-    }
-    if (networkKey !== undefined) {
-      this._networkKey = networkKey;
     }
   }
 
@@ -56,8 +52,8 @@ export class HatsSubgraphClient {
 
     const client = new GraphQLClient(this._config[chainId].endpoint);
 
-    if (this._networkKey !== undefined) {
-      client.setHeader("Authorization", `Bearer ${this._networkKey}`);
+    if (this._config[chainId].authToken !== undefined) {
+      client.setHeader("Authorization", `Bearer ${this._config[chainId].authToken}`);
     }
 
     const result = (await client.request(query, variables)) as ResponseType;

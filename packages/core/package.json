@@ -17,7 +17,7 @@
     "eth"
   ],
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules yarn exec jest -- -i",
+    "test": "NODE_OPTIONS=--experimental-vm-modules pnpm exec jest -i",
     "build:clean": "rm -rf dist tsconfig.tsbuildinfo",
     "build:bundle": "tsup",
     "build:types": "tsc --emitDeclarationOnly --declaration --project tsconfig.json",
